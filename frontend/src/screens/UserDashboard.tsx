@@ -149,7 +149,7 @@ const UserDashboard: React.FC = () => {
         throw new Error(data.error || 'Failed to visit booth');
       }
 
-      setSuccess(`✅ Correct phrase! You&apos;ve successfully visited a booth`);
+      setSuccess(`✅ Correct phrase! You've successfully visited a booth`);
       setPhrase("");
       
       // Refresh progress data
@@ -259,7 +259,7 @@ const UserDashboard: React.FC = () => {
             <div className="text-6xl mb-4">🎉🎊✨</div>
             <div className="text-xl font-bold text-green-600 mb-3">Congratulations!</div>
             <div className="text-base text-gray-700 leading-relaxed">
-              You&apos;ve visited all booths and hopefully have learned about the various wonderful activities happening in the different regions of the organization. You are now entered into a raffle! Good luck! 🍀
+              You've visited all booths and hopefully have learned about the various wonderful activities happening in the different regions of the organization. You are now entered into a raffle! Good luck! 🍀
             </div>
           </div>
         ) : (
