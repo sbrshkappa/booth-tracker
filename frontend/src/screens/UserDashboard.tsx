@@ -1,7 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import PrimaryButton from "../components/PrimaryButton";
-import TextInput from "../components/TextInput";
+import React, { useState, useEffect, useCallback } from "react";
 
 interface User {
   id: number;
@@ -42,9 +40,7 @@ const HOW_IT_WORKS = [
 const UserDashboard: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
-  const [unvisitedBooths, setUnvisitedBooths] = useState<Booth[]>([]);
   const [visitHistory, setVisitHistory] = useState<VisitHistory[]>([]);
-  const [selectedBooth, setSelectedBooth] = useState<Booth | null>(null);
   const [phrase, setPhrase] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -63,13 +59,7 @@ const UserDashboard: React.FC = () => {
     if (progressData) setProgress(JSON.parse(progressData));
   }, []);
 
-  useEffect(() => {
-    if (user?.email) {
-      fetchUserProgress();
-    }
-  }, [user]);
-
-  const fetchUserProgress = async () => {
+  const fetchUserProgress = useCallback(async () => {
     if (!user?.email) return;
 
     try {
@@ -87,7 +77,6 @@ const UserDashboard: React.FC = () => {
       if (response.ok) {
         const newProgress = data.data.progress;
         setProgress(newProgress);
-        setUnvisitedBooths(data.data.unvisitedBooths);
         setVisitHistory(data.data.visitHistory);
         
         // Update localStorage with fresh data
@@ -105,7 +94,13 @@ const UserDashboard: React.FC = () => {
     } catch (err) {
       console.error('Error fetching progress:', err);
     }
-  };
+  }, [user?.email, progress]);
+
+  useEffect(() => {
+    if (user?.email) {
+      fetchUserProgress();
+    }
+  }, [user, fetchUserProgress]);
 
   const triggerGoogleSheetsWrite = async () => {
     if (!user?.email) return;
@@ -131,13 +126,6 @@ const UserDashboard: React.FC = () => {
     } catch (err) {
       console.error('Error writing to Google Sheets:', err);
     }
-  };
-
-  const handleBoothSelect = (booth: Booth) => {
-    setSelectedBooth(booth);
-    setPhrase("");
-    setError("");
-    setSuccess("");
   };
 
   const handleSubmitPhrase = async (e: React.FormEvent) => {
@@ -167,7 +155,7 @@ const UserDashboard: React.FC = () => {
         throw new Error(data.error || 'Failed to visit booth');
       }
 
-      setSuccess(`✅ Correct phrase! You've successfully visited a booth`);
+      setSuccess(`✅ Correct phrase! You&apos;ve successfully visited a booth`);
       setPhrase("");
       
       // Refresh progress data
@@ -200,10 +188,8 @@ const UserDashboard: React.FC = () => {
     return (
       <div className="relative flex items-center justify-center w-[200px] h-[200px] mx-auto">
         {/* Faded background image placeholder */}
-        <img
-          src="/assets/values_flower_faded.png"
-          alt="Background Petals"
-          className="absolute inset-0 w-full h-full object-contain opacity-20 pointer-events-none select-none"
+        <div
+          className="absolute inset-0 w-full h-full bg-gradient-to-br from-yellow-200 to-purple-200 rounded-full opacity-20"
           style={{ zIndex: 0 }}
         />
         {/* SVG Progress Circle */}
@@ -279,7 +265,7 @@ const UserDashboard: React.FC = () => {
             <div className="text-6xl mb-4">🎉🎊✨</div>
             <div className="text-xl font-bold text-green-600 mb-3">Congratulations!</div>
             <div className="text-base text-gray-700 leading-relaxed">
-              You've visited all booths and hopefully have learned about the various wonderful activities happening in the different regions of the organization. You are now entered into a raffle! Good luck! 🍀
+              You&apos;ve visited all booths and hopefully have learned about the various wonderful activities happening in the different regions of the organization. You are now entered into a raffle! Good luck! 🍀
             </div>
           </div>
         ) : (
