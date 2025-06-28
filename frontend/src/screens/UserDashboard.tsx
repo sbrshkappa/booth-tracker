@@ -294,16 +294,14 @@ const UserDashboard: React.FC = () => {
         )}
         {/* Collapsible Visit History */}
         <div className="w-full mb-4 bg-white/80 rounded-xl p-4 shadow-sm relative z-10 transition-all duration-300">
-          <div className="flex items-center justify-between mb-2">
+          <div 
+            className="flex items-center justify-between mb-2 cursor-pointer"
+            onClick={() => setVisitHistoryOpen((v) => !v)}
+          >
             <h3 className="font-semibold text-gray-800">Visit History</h3>
-            <button
-              type="button"
-              aria-label={visitHistoryOpen ? 'Hide visit history' : 'Show visit history'}
-              onClick={() => setVisitHistoryOpen((v) => !v)}
-              className="ml-2 text-orange-500 hover:text-orange-700 focus:outline-none text-lg font-bold"
-            >
+            <span className="text-orange-500 hover:text-orange-700 text-lg font-bold">
               {visitHistoryOpen ? '−' : '+'}
-            </button>
+            </span>
           </div>
           <div
             className={`transition-all duration-300 overflow-hidden relative ${visitHistoryOpen ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}
@@ -311,35 +309,35 @@ const UserDashboard: React.FC = () => {
             {visitHistory.length === 0 ? (
               <div className="text-gray-500 text-center py-2">No booths visited yet.</div>
             ) : (
-              <ul className="space-y-2">
-                {visitHistory.map((visit) => (
-                  <li key={visit.visitId} className="bg-green-50 border border-green-200 rounded-lg p-3 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center">
-                    <div>
-                      <span className="font-semibold text-green-800">{visit.boothName}</span>
-                      <span className="ml-2 text-xs text-green-600">Phrase: {visit.boothPhrase}</span>
-                    </div>
-                    <div className="text-xs text-green-600 mt-1 sm:mt-0">
-                      {new Date(visit.visitedAt).toLocaleDateString()}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <div className="max-h-[300px] overflow-y-auto pr-2">
+                <ul className="space-y-2">
+                  {visitHistory.map((visit) => (
+                    <li key={visit.visitId} className="bg-green-50 border border-green-200 rounded-lg p-3 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center">
+                      <div>
+                        <span className="font-semibold text-green-800">{visit.boothName}</span>
+                        <span className="ml-2 text-xs text-green-600">Phrase: {visit.boothPhrase}</span>
+                      </div>
+                      <div className="text-xs text-green-600 mt-1 sm:mt-0">
+                        {new Date(visit.visitedAt).toLocaleDateString()}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
           </div>
         </div>
       </div>
       {/* How it works at the bottom, collapses downward */}
       <div className="w-full max-w-md mx-auto mb-2 bg-white/80 rounded-xl p-4 shadow-sm relative z-10 transition-all duration-300">
-        <div className="flex items-center justify-between mb-2">
+        <div 
+          className="flex items-center justify-between mb-2 cursor-pointer"
+          onClick={() => setHowItWorksOpen((v) => !v)}
+        >
           <h3 className="font-semibold text-gray-800">How it works?</h3>
-          <button
-            type="button"
-            aria-label={howItWorksOpen ? 'Hide how it works' : 'Show how it works'}
-            onClick={() => setHowItWorksOpen((v) => !v)}
-            className="ml-2 text-orange-500 hover:text-orange-700 focus:outline-none text-lg font-bold"
-          >
+          <span className="text-orange-500 hover:text-orange-700 text-lg font-bold">
             {howItWorksOpen ? '−' : '+'}
-          </button>
+          </span>
         </div>
         <div
           className={`transition-all duration-300 overflow-hidden relative ${howItWorksOpen ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}
