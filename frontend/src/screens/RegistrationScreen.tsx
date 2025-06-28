@@ -76,10 +76,10 @@ const RegistrationScreen: React.FC = () => {
         <div className="w-24 h-12 sm:w-32 sm:h-16 bg-gradient-to-r from-yellow-400 to-purple-600 rounded-full mb-2 flex items-center justify-center">
           <span className="text-2xl sm:text-3xl font-bold text-white">Logo</span>
         </div>
-        <h2 className="text-lg sm:text-xl font-bold text-blue-900 text-center leading-tight">SSIO National Conference & Children's festival 2025</h2>
+        <h2 className="text-lg sm:text-xl font-bold text-blue-900 text-center leading-tight">SSIO National Conference & Children&apos;s festival 2025</h2>
       </div>
       <h1 className="text-xl sm:text-2xl font-bold text-blue-800 mb-1 sm:mb-2 text-center">Digital Seva Explorer</h1>
-      <h2 className="text-base sm:text-lg font-semibold text-blue-800 mb-6 sm:mb-8 text-center">Let's get you registered</h2>
+      <h2 className="text-base sm:text-lg font-semibold text-blue-800 mb-6 sm:mb-8 text-center">Let&apos;s get you registered</h2>
       <form onSubmit={handleSubmit} className="w-full max-w-[95vw] sm:max-w-md flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
         <TextInput
           label="Email"

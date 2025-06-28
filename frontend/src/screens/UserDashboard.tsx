@@ -17,12 +17,6 @@ interface Progress {
   isComplete: boolean;
 }
 
-interface Booth {
-  id: number;
-  phrase: string;
-  name: string;
-}
-
 interface VisitHistory {
   visitId: number;
   boothId: number;
@@ -59,6 +53,32 @@ const UserDashboard: React.FC = () => {
     if (progressData) setProgress(JSON.parse(progressData));
   }, []);
 
+  const triggerGoogleSheetsWrite = async () => {
+    if (!user?.email) return;
+    
+    try {
+      console.log('Triggering Google Sheets write for completed user:', user.email);
+      
+      const response = await fetch('/api/writeToGoogleSheet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userEmail: user.email }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log('Successfully wrote to Google Sheets:', data);
+      } else {
+        console.error('Failed to write to Google Sheets:', data.error);
+      }
+    } catch (err) {
+      console.error('Error writing to Google Sheets:', err);
+    }
+  };
+
   const fetchUserProgress = useCallback(async () => {
     if (!user?.email) return;
 
@@ -94,39 +114,13 @@ const UserDashboard: React.FC = () => {
     } catch (err) {
       console.error('Error fetching progress:', err);
     }
-  }, [user?.email, progress]);
+  }, [user?.email, progress, triggerGoogleSheetsWrite]);
 
   useEffect(() => {
     if (user?.email) {
       fetchUserProgress();
     }
   }, [user, fetchUserProgress]);
-
-  const triggerGoogleSheetsWrite = async () => {
-    if (!user?.email) return;
-    
-    try {
-      console.log('Triggering Google Sheets write for completed user:', user.email);
-      
-      const response = await fetch('/api/writeToGoogleSheet', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userEmail: user.email }),
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        console.log('Successfully wrote to Google Sheets:', data);
-      } else {
-        console.error('Failed to write to Google Sheets:', data.error);
-      }
-    } catch (err) {
-      console.error('Error writing to Google Sheets:', err);
-    }
-  };
 
   const handleSubmitPhrase = async (e: React.FormEvent) => {
     e.preventDefault();
