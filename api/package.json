@@ -1,0 +1,25 @@
+{
+  "name": "@booth-tracker/api",
+  "version": "1.0.0",
+  "description": "Supabase backend API for Booth Tracker",
+  "main": "index.js",
+  "scripts": {
+    "dev": "supabase start",
+    "build": "supabase functions build",
+    "deploy": "supabase functions deploy",
+    "new": "supabase functions new",
+    "serve": "supabase functions serve",
+    "reset": "supabase db reset",
+    "migration:new": "supabase migration new",
+    "migration:up": "supabase db push",
+    "migration:down": "supabase db reset"
+  },
+  "keywords": ["supabase", "edge-functions", "api"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "typescript": "^5.3.0",
+    "@types/node": "^20.10.0"
+  }
+} 
