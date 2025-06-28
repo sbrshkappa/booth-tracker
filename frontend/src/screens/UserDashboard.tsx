@@ -85,15 +85,51 @@ const UserDashboard: React.FC = () => {
       console.log('User progress API response:', data);
 
       if (response.ok) {
-        setProgress(data.data.progress);
+        const newProgress = data.data.progress;
+        setProgress(newProgress);
         setUnvisitedBooths(data.data.unvisitedBooths);
         setVisitHistory(data.data.visitHistory);
         
         // Update localStorage with fresh data
-        localStorage.setItem('userProgress', JSON.stringify(data.data.progress));
+        localStorage.setItem('userProgress', JSON.stringify(newProgress));
+        
+        // Check if user just completed all booths
+        const wasCompleted = progress && progress.visited === progress.total && progress.visited > 0;
+        const isNowCompleted = newProgress.visited === newProgress.total && newProgress.visited > 0;
+        
+        if (!wasCompleted && isNowCompleted) {
+          // User just completed all booths - trigger Google Sheets write
+          triggerGoogleSheetsWrite();
+        }
       }
     } catch (err) {
       console.error('Error fetching progress:', err);
+    }
+  };
+
+  const triggerGoogleSheetsWrite = async () => {
+    if (!user?.email) return;
+    
+    try {
+      console.log('Triggering Google Sheets write for completed user:', user.email);
+      
+      const response = await fetch('/api/writeToGoogleSheet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userEmail: user.email }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log('Successfully wrote to Google Sheets:', data);
+      } else {
+        console.error('Failed to write to Google Sheets:', data.error);
+      }
+    } catch (err) {
+      console.error('Error writing to Google Sheets:', err);
     }
   };
 
