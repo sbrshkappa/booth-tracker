@@ -5,6 +5,7 @@ import MenuDropdown from "@/components/MenuDropdown";
 import StarRating from "@/components/StarRating";
 import { AdminStatus, getAdminIcon } from "@/utils/admin";
 import { User, Progress, VisitHistory } from "@/utils/types";
+import { createMenuOptions } from "@/utils/menu";
 
 const HistoryPage: React.FC = () => {
   const router = useRouter();
@@ -186,41 +187,12 @@ const HistoryPage: React.FC = () => {
     setEditingRatingValue(0);
   };
 
-  const menuOptions = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      emoji: '🏠',
-      action: () => router.push('/dashboard'),
-    },
-    {
-      id: 'history',
-      label: 'History',
-      emoji: '📚',
-      action: () => {}, // Already on this page
-      isCurrent: true,
-    },
-    {
-      id: 'how-it-works',
-      label: 'How it works',
-      emoji: '❓',
-      action: () => router.push('/how-it-works'),
-    },
-    ...(adminStatus?.isAdmin ? [{
-      id: 'admin',
-      label: 'Admin Panel',
-      emoji: getAdminIcon(adminStatus.adminLevel || ''),
-      action: () => router.push('/admin'),
-      isAdmin: true,
-    }] : []),
-    {
-      id: 'logout',
-      label: 'Logout',
-      emoji: '🚪',
-      action: handleLogout,
-      isDanger: true,
-    },
-  ];
+  const menuOptions = createMenuOptions({
+    currentPage: 'history',
+    router,
+    handleLogout,
+    adminStatus,
+  });
 
   if (!user || !progress) {
     return (

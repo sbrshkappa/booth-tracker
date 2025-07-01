@@ -7,6 +7,7 @@ import BoothCard from "@/components/BoothCard";
 import BoothModal from "@/components/BoothModal";
 import { AdminStatus, getAdminIcon } from "@/utils/admin";
 import { User, Booth } from "@/utils/types";
+import { createMenuOptions } from "@/utils/menu";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -170,41 +171,12 @@ export default function AdminPage() {
     }
   };
 
-  const menuOptions = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      emoji: '🏠',
-      action: () => router.push('/dashboard'),
-    },
-    {
-      id: 'history',
-      label: 'History',
-      emoji: '📚',
-      action: () => router.push('/history'),
-    },
-    {
-      id: 'how-it-works',
-      label: 'How it works',
-      emoji: '❓',
-      action: () => router.push('/how-it-works'),
-    },
-    {
-      id: 'admin',
-      label: 'Admin Panel',
-      emoji: getAdminIcon(adminStatus?.adminLevel || ''),
-      action: () => {}, // Already on admin
-      isCurrent: true,
-      isAdmin: true,
-    },
-    {
-      id: 'logout',
-      label: 'Logout',
-      emoji: '🚪',
-      action: handleLogout,
-      isDanger: true,
-    },
-  ];
+  const menuOptions = createMenuOptions({
+    currentPage: 'admin',
+    router,
+    handleLogout,
+    adminStatus,
+  });
 
   if (!user || !adminStatus) {
     return (

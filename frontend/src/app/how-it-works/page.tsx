@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import { AdminStatus, getAdminIcon } from "@/utils/admin";
 import { User } from "@/utils/types";
+import { createMenuOptions } from "@/utils/menu";
 
 const HOW_IT_WORKS = [
   "Visit each booth to discover how SSSIO-USA uplifts communities through love and selfless service.",
@@ -56,41 +57,12 @@ const HowItWorksPage: React.FC = () => {
     router.push('/');
   };
 
-  const menuOptions = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      emoji: '🏠',
-      action: () => router.push('/dashboard'),
-    },
-    {
-      id: 'history',
-      label: 'History',
-      emoji: '📚',
-      action: () => router.push('/history'),
-    },
-    {
-      id: 'how-it-works',
-      label: 'How it works',
-      emoji: '❓',
-      action: () => {}, // Already on this page
-      isCurrent: true,
-    },
-    ...(adminStatus?.isAdmin ? [{
-      id: 'admin',
-      label: 'Admin Panel',
-      emoji: getAdminIcon(adminStatus.adminLevel || ''),
-      action: () => router.push('/admin'),
-      isAdmin: true,
-    }] : []),
-    {
-      id: 'logout',
-      label: 'Logout',
-      emoji: '🚪',
-      action: handleLogout,
-      isDanger: true,
-    },
-  ];
+  const menuOptions = createMenuOptions({
+    currentPage: 'how-it-works',
+    router,
+    handleLogout,
+    adminStatus,
+  });
 
   if (!user) {
     return (

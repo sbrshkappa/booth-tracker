@@ -5,6 +5,7 @@ import MenuDropdown from "@/components/MenuDropdown";
 import StarRating from "@/components/StarRating";
 import { AdminStatus, getAdminIcon } from "@/utils/admin";
 import { User, Progress } from "@/utils/types";
+import { createMenuOptions } from "@/utils/menu";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -177,43 +178,12 @@ export default function Dashboard() {
     router.push('/');
   };
 
-
-
-  const menuOptions = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      emoji: '🏠',
-      action: () => {}, // Already on dashboard
-      isCurrent: true,
-    },
-    {
-      id: 'history',
-      label: 'History',
-      emoji: '📚',
-      action: () => router.push('/history'),
-    },
-    {
-      id: 'how-it-works',
-      label: 'How it works',
-      emoji: '❓',
-      action: () => router.push('/how-it-works'),
-    },
-    ...(adminStatus?.isAdmin ? [{
-      id: 'admin',
-      label: 'Admin Panel',
-      emoji: getAdminIcon(adminStatus.adminLevel || ''),
-      action: () => router.push('/admin'),
-      isAdmin: true,
-    }] : []),
-    {
-      id: 'logout',
-      label: 'Logout',
-      emoji: '🚪',
-      action: handleLogout,
-      isDanger: true,
-    },
-  ];
+  const menuOptions = createMenuOptions({
+    currentPage: 'dashboard',
+    router,
+    handleLogout,
+    adminStatus,
+  });
 
   // Circular progress bar SVG
   const renderProgressCircle = () => {
