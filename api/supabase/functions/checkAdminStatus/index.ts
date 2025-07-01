@@ -49,12 +49,12 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_ANON_KEY")!
   )
 
-  // First, get the user
+  // Check if user is an admin using the is_admin column
   const { data: user, error: userError } = await supabase
     .from("users")
-    .select("id")
+    .select("id, email, is_admin")
     .eq("email", userEmail)
-    .single()
+    .single();
 
   if (userError || !user) {
     return new Response(JSON.stringify({ error: "User not found" }), { 
@@ -63,23 +63,8 @@ serve(async (req) => {
     })
   }
 
-  // Check if user is an admin
-  const { data: adminData, error: adminError } = await supabase
-    .from("admin_users")
-    .select("admin_level")
-    .eq("user_id", user.id)
-    .eq("conference_id", "sssio_usa_2025")
-    .single()
-
-  if (adminError && adminError.code !== 'PGRST116') { // PGRST116 is "not found"
-    return new Response(JSON.stringify({ error: adminError.message }), { 
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
-  }
-
-  const isAdmin = !!adminData;
-  const adminLevel = adminData?.admin_level || null;
+  const isAdmin = user.is_admin || false;
+  const adminLevel = isAdmin ? 'super_admin' : null;
 
   return new Response(
     JSON.stringify({

@@ -14,9 +14,10 @@ interface MenuOption {
 interface MenuDropdownProps {
   options: MenuOption[];
   className?: string;
+  userName?: string;
 }
 
-const MenuDropdown: React.FC<MenuDropdownProps> = ({ options, className = "" }) => {
+const MenuDropdown: React.FC<MenuDropdownProps> = ({ options, className = "", userName }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Close menu when clicking outside
@@ -53,7 +54,22 @@ const MenuDropdown: React.FC<MenuDropdownProps> = ({ options, className = "" }) 
         
         {/* Dropdown Menu */}
         {menuOpen && (
-          <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+          <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+            {/* User Header */}
+            {userName && (
+              <>
+                <div className="px-4 py-3 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">👤</span>
+                    <span className="font-semibold text-gray-900 truncate">{userName}</span>
+                  </div>
+                </div>
+                {/* Separator */}
+                <div className="border-t border-gray-200 my-1"></div>
+              </>
+            )}
+            
+            {/* Menu Options */}
             {options.map((option, index) => (
               <React.Fragment key={option.id}>
                 {index > 0 && (option.isDanger || option.isAdmin) && (

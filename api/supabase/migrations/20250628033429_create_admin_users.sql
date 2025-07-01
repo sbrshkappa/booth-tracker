@@ -1,11 +1,11 @@
--- Create admin_users table for scalable admin management
+-- Create admin_users table for scalable admin management (UUID version)
 CREATE TABLE admin_users (
-  id SERIAL PRIMARY KEY,
-  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   admin_level TEXT NOT NULL CHECK (admin_level IN ('super_admin', 'conference_admin', 'booth_admin')),
   conference_id TEXT DEFAULT 'sssio_usa_2025', -- For future multi-conference support
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  created_by INTEGER REFERENCES users(id),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  created_by UUID REFERENCES auth.users(id),
   UNIQUE(user_id, conference_id)
 );
 

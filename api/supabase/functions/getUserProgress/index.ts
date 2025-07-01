@@ -107,18 +107,23 @@ serve(async (req) => {
     const progressPercentage = totalBooths > 0 ? Math.round((visitedBooths / totalBooths) * 100) : 0
 
     // 5. Get list of booths not yet visited
-    const visitedBoothIds = visitHistory.map(visit => visit.booths.id)
+    const visitedBoothIds = visitHistory
+      .filter(visit => visit.booths && visit.booths.id) // Filter out null booths
+      .map(visit => visit.booths.id)
     const unvisitedBooths = allBooths.filter(booth => !visitedBoothIds.includes(booth.id))
 
     // 6. Format visit history
-    const formattedVisitHistory = visitHistory.map(visit => ({
-      visitId: visit.id,
-      boothId: visit.booths.id,
-      boothPhrase: visit.booths.phrase,
-      boothName: visit.booths.name,
-      visitedAt: visit.visited_at,
-      notes: visit.notes
-    }))
+    const formattedVisitHistory = visitHistory
+      .filter(visit => visit.booths && visit.booths.id) // Filter out null booths
+      .map(visit => ({
+        visitId: visit.id,
+        boothId: visit.booths.id,
+        boothPhrase: visit.booths.phrase,
+        boothName: visit.booths.name,
+        visitedAt: visit.visited_at,
+        notes: visit.notes,
+        rating: visit.rating
+      }))
 
     // 7. Return comprehensive progress data
     const response = {

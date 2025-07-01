@@ -156,7 +156,10 @@ const AdminScreen: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-x-hidden">
       {/* Menu */}
-      <MenuDropdown options={menuOptions} />
+      <MenuDropdown 
+        options={menuOptions} 
+        userName={`${user.firstName} ${user.lastName}`}
+      />
 
       {/* Main content */}
       <div className="flex-1 flex flex-col w-full max-w-4xl mx-auto">

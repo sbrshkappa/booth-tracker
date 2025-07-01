@@ -305,7 +305,10 @@ const UserDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-x-hidden">
       {/* Menu */}
-      <MenuDropdown options={menuOptions} />
+      <MenuDropdown 
+        options={menuOptions} 
+        userName={`${user.firstName} ${user.lastName}`}
+      />
 
       {/* Main content fills available space */}
       <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto">
