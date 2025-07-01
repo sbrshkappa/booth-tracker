@@ -6,6 +6,9 @@ import StarRating from "@/components/StarRating";
 import { AdminStatus, getAdminIcon } from "@/utils/admin";
 import { User, Progress, VisitHistory } from "@/utils/types";
 import { createMenuOptions } from "@/utils/menu";
+import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
+import { sendVisitNotesEmail } from "@/utils/email";
+import { LoadingScreen, LoadingSpinner } from "@/utils/ui";
 
 const HistoryPage: React.FC = () => {
   const router = useRouter();
@@ -24,37 +27,16 @@ const HistoryPage: React.FC = () => {
 
   useEffect(() => {
     // Check if user is logged in
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const userObj = getUserFromStorage();
+    if (!userObj) {
       router.push('/');
       return;
     }
-    const userObj = JSON.parse(userData);
     setUser(userObj);
     
     // Check admin status
-    checkAdminStatus(userObj.email);
+    checkAdminStatus(userObj.email).then(setAdminStatus);
   }, [router]);
-
-  const checkAdminStatus = async (email: string) => {
-    try {
-      const response = await fetch('/api/checkAdminStatus', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userEmail: email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setAdminStatus(data);
-      }
-    } catch (err) {
-      console.error('Error checking admin status:', err);
-    }
-  };
 
   const fetchUserProgress = useCallback(async () => {
     if (!user?.email) return;
@@ -89,11 +71,7 @@ const HistoryPage: React.FC = () => {
     }
   }, [user, fetchUserProgress]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('userProgress');
-    router.push('/');
-  };
+  const handleLogoutClick = () => handleLogout(router);
 
   const handleEditNotes = (visitId: number, currentNotes: string) => {
     setEditingNotes(visitId);
@@ -190,19 +168,12 @@ const HistoryPage: React.FC = () => {
   const menuOptions = createMenuOptions({
     currentPage: 'history',
     router,
-    handleLogout,
+    handleLogout: handleLogoutClick,
     adminStatus,
   });
 
   if (!user || !progress) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -235,30 +206,23 @@ const HistoryPage: React.FC = () => {
                   setIsEmailLoading(true);
                   setEmailError("");
                   setEmailSuccess("");
-                  try {
-                    const response = await fetch('/api/sendVisitNotesEmail', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        userEmail: user.email,
-                        userName: `${user.firstName} ${user.lastName}`
-                      }),
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || 'Failed to send email');
-                    setEmailSuccess(`📧 Email sent successfully! Check your inbox for your booth visit summary.`);
-                  } catch (err) {
-                    setEmailError(err instanceof Error ? err.message : 'Failed to send email. Please try again.');
-                  } finally {
-                    setIsEmailLoading(false);
+                  
+                  const result = await sendVisitNotesEmail(user);
+                  
+                  if (result.success) {
+                    setEmailSuccess(result.message);
+                  } else {
+                    setEmailError(result.message);
                   }
+                  
+                  setIsEmailLoading(false);
                 }}
                 disabled={isEmailLoading}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-300 flex items-center gap-2 mx-auto"
               >
                 {isEmailLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <LoadingSpinner size="sm" color="white" />
                     Sending...
                   </>
                 ) : (
@@ -347,73 +311,61 @@ const HistoryPage: React.FC = () => {
                         ) : (
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              {visit.notes ? (
-                                <p className="text-sm text-gray-700">
-                                  {visit.notes}
-                                </p>
-                              ) : (
-                                <p className="text-sm text-gray-500 italic">No notes added</p>
-                              )}
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                {visit.notes || 'No notes added yet.'}
+                              </p>
                             </div>
                             <button
-                              onClick={() => handleEditNotes(visit.visitId, visit.notes || "")}
-                              className="ml-4 px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                              onClick={() => handleEditNotes(visit.visitId, visit.notes || '')}
+                              className="ml-2 text-sm text-green-600 hover:text-green-800 transition-colors"
                             >
-                              {visit.notes ? 'Edit' : 'Add'} Notes
+                              Edit
                             </button>
                           </div>
                         )}
                       </div>
-
+                      
                       {/* Rating Section */}
-                      <div className="pt-4 border-t border-green-200">
-                        {editingRating === visit.visitId ? (
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm font-medium text-gray-700">Rating:</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600">Rating:</span>
+                          {editingRating === visit.visitId ? (
+                            <div className="flex items-center gap-2">
                               <StarRating 
                                 rating={editingRatingValue} 
                                 onRatingChange={setEditingRatingValue}
-                                size="md"
+                                size="sm"
                               />
-                            </div>
-                            <div className="flex gap-2">
                               <button
                                 onClick={() => handleSaveRating(visit.visitId)}
-                                className="px-4 py-2 text-sm bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                                className="text-sm text-green-600 hover:text-green-800 transition-colors"
                               >
-                                Save Rating
+                                Save
                               </button>
                               <button
                                 onClick={handleCancelRatingEdit}
-                                className="px-4 py-2 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                                className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
                               >
                                 Cancel
                               </button>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm font-medium text-gray-700">Rating:</span>
-                              {visit.rating ? (
-                                <StarRating 
-                                  rating={visit.rating} 
-                                  readonly={true}
-                                  size="md"
-                                />
-                              ) : (
-                                <span className="text-sm text-gray-500 italic">No rating</span>
-                              )}
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <StarRating 
+                                rating={visit.rating || 0} 
+                                onRatingChange={() => {}}
+                                size="sm"
+                                readonly
+                              />
+                              <button
+                                onClick={() => handleEditRating(visit.visitId, visit.rating || 0)}
+                                className="text-sm text-green-600 hover:text-green-800 transition-colors"
+                              >
+                                Edit
+                              </button>
                             </div>
-                            <button
-                              onClick={() => handleEditRating(visit.visitId, visit.rating || 0)}
-                              className="px-4 py-2 text-sm bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
-                            >
-                              {visit.rating ? 'Edit' : 'Add'} Rating
-                            </button>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
                     </li>
                   ))}
