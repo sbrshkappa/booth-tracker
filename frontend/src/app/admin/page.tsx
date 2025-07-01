@@ -6,23 +6,7 @@ import BoothForm from "@/components/BoothForm";
 import BoothCard from "@/components/BoothCard";
 import BoothModal from "@/components/BoothModal";
 import { AdminStatus, getAdminIcon } from "@/utils/admin";
-
-interface User {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  badgeNumber: string;
-}
-
-interface Booth {
-  id: number;
-  name: string;
-  phrase: string;
-  description?: string;
-  location?: string;
-  total_visits: number;
-}
+import { User, Booth } from "@/utils/types";
 
 export default function AdminPage() {
   const router = useRouter();

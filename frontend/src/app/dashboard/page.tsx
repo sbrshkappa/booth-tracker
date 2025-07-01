@@ -4,24 +4,7 @@ import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import StarRating from "@/components/StarRating";
 import { AdminStatus, getAdminIcon } from "@/utils/admin";
-
-interface User {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  badgeNumber: string;
-}
-
-interface Progress {
-  visited: number;
-  total: number;
-  remaining: number;
-  percentage: number;
-  isComplete: boolean;
-}
-
-
+import { User, Progress } from "@/utils/types";
 
 export default function Dashboard() {
   const router = useRouter();

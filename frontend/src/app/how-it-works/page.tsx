@@ -3,14 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import { AdminStatus, getAdminIcon } from "@/utils/admin";
-
-interface User {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  badgeNumber: string;
-}
+import { User } from "@/utils/types";
 
 const HOW_IT_WORKS = [
   "Visit each booth to discover how SSSIO-USA uplifts communities through love and selfless service.",

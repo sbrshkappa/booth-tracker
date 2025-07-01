@@ -4,32 +4,7 @@ import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import StarRating from "@/components/StarRating";
 import { AdminStatus, getAdminIcon } from "@/utils/admin";
-
-interface User {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  badgeNumber: string;
-}
-
-interface Progress {
-  visited: number;
-  total: number;
-  remaining: number;
-  percentage: number;
-  isComplete: boolean;
-}
-
-interface VisitHistory {
-  visitId: number;
-  boothId: number;
-  boothPhrase: string;
-  boothName: string;
-  visitedAt: string;
-  notes?: string;
-  rating?: number;
-}
+import { User, Progress, VisitHistory } from "@/utils/types";
 
 const HistoryPage: React.FC = () => {
   const router = useRouter();
