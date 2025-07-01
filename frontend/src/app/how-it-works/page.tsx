@@ -3,6 +3,14 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 
+interface User {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  badgeNumber: string;
+}
+
 const HOW_IT_WORKS = [
   "Visit each booth to discover how SSSIO-USA uplifts communities through love and selfless service.",
   "Collect secret phrases along the way to unlock your journey.",
@@ -11,7 +19,7 @@ const HOW_IT_WORKS = [
 
 const HowItWorksPage: React.FC = () => {
   const router = useRouter();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     // Check if user is logged in

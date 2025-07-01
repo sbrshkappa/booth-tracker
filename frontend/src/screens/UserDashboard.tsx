@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import StarRating from "@/components/StarRating";
@@ -20,15 +20,6 @@ interface Progress {
   isComplete: boolean;
 }
 
-interface VisitHistory {
-  visitId: number;
-  boothId: number;
-  boothPhrase: string;
-  boothName: string;
-  visitedAt: string;
-  notes?: string;
-}
-
 const UserDashboard: React.FC = () => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -39,6 +30,7 @@ const UserDashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const prevProgressRef = useRef<Progress | null>(null);
 
   // Check if user has completed all booths
   const isCompleted = progress && progress.visited > 0 && progress.visited === progress.total;
@@ -68,9 +60,10 @@ const UserDashboard: React.FC = () => {
 
       if (response.ok) {
         const newProgress = data.data.progress;
-        const oldProgress = progress;
+        const oldProgress = prevProgressRef.current;
         
         setProgress(newProgress);
+        prevProgressRef.current = newProgress;
         
         // Update localStorage with fresh data
         localStorage.setItem('userProgress', JSON.stringify(newProgress));

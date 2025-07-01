@@ -26,7 +26,7 @@ const StarRating: React.FC<StarRatingProps> = ({
     }
   };
 
-  const handleStarHover = (starValue: number) => {
+  const handleStarHover = () => {
     if (!readonly) {
       // Optional: Add hover effects here
     }
@@ -39,7 +39,7 @@ const StarRating: React.FC<StarRatingProps> = ({
           key={star}
           type="button"
           onClick={() => handleStarClick(star)}
-          onMouseEnter={() => handleStarHover(star)}
+          onMouseEnter={() => handleStarHover()}
           disabled={readonly}
           className={`transition-colors ${
             readonly ? 'cursor-default' : 'cursor-pointer hover:scale-110'
