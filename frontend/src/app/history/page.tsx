@@ -20,6 +20,12 @@ interface Progress {
   isComplete: boolean;
 }
 
+interface AdminStatus {
+  isAdmin: boolean;
+  adminLevel: string | null;
+  userId: number;
+}
+
 interface VisitHistory {
   visitId: number;
   boothId: number;
@@ -43,6 +49,7 @@ const HistoryPage: React.FC = () => {
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [adminStatus, setAdminStatus] = useState<AdminStatus | null>(null);
 
   useEffect(() => {
     // Check if user is logged in
@@ -51,8 +58,32 @@ const HistoryPage: React.FC = () => {
       router.push('/');
       return;
     }
-    setUser(JSON.parse(userData));
+    const userObj = JSON.parse(userData);
+    setUser(userObj);
+    
+    // Check admin status
+    checkAdminStatus(userObj.email);
   }, [router]);
+
+  const checkAdminStatus = async (email: string) => {
+    try {
+      const response = await fetch('/api/checkAdminStatus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userEmail: email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAdminStatus(data);
+      }
+    } catch (err) {
+      console.error('Error checking admin status:', err);
+    }
+  };
 
   const fetchUserProgress = useCallback(async () => {
     if (!user?.email) return;
@@ -185,6 +216,15 @@ const HistoryPage: React.FC = () => {
     setEditingRatingValue(0);
   };
 
+  const getAdminIcon = (level: string) => {
+    switch (level) {
+      case 'super_admin': return '👑';
+      case 'conference_admin': return '🛡️';
+      case 'booth_admin': return '⭐';
+      default: return '👤';
+    }
+  };
+
   const menuOptions = [
     {
       id: 'dashboard',
@@ -205,6 +245,13 @@ const HistoryPage: React.FC = () => {
       emoji: '❓',
       action: () => router.push('/how-it-works'),
     },
+    ...(adminStatus?.isAdmin ? [{
+      id: 'admin',
+      label: 'Admin Panel',
+      emoji: getAdminIcon(adminStatus.adminLevel || ''),
+      action: () => router.push('/admin'),
+      isAdmin: true,
+    }] : []),
     {
       id: 'logout',
       label: 'Logout',

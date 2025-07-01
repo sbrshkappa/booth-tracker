@@ -11,6 +11,12 @@ interface User {
   badgeNumber: string;
 }
 
+interface AdminStatus {
+  isAdmin: boolean;
+  adminLevel: string | null;
+  userId: number;
+}
+
 const HOW_IT_WORKS = [
   "Visit each booth to discover how SSSIO-USA uplifts communities through love and selfless service.",
   "Collect secret phrases along the way to unlock your journey.",
@@ -20,6 +26,7 @@ const HOW_IT_WORKS = [
 const HowItWorksPage: React.FC = () => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [adminStatus, setAdminStatus] = useState<AdminStatus | null>(null);
 
   useEffect(() => {
     // Check if user is logged in
@@ -28,13 +35,46 @@ const HowItWorksPage: React.FC = () => {
       router.push('/');
       return;
     }
-    setUser(JSON.parse(userData));
+    const userObj = JSON.parse(userData);
+    setUser(userObj);
+    
+    // Check admin status
+    checkAdminStatus(userObj.email);
   }, [router]);
+
+  const checkAdminStatus = async (email: string) => {
+    try {
+      const response = await fetch('/api/checkAdminStatus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userEmail: email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAdminStatus(data);
+      }
+    } catch (err) {
+      console.error('Error checking admin status:', err);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('userProgress');
     router.push('/');
+  };
+
+  const getAdminIcon = (level: string) => {
+    switch (level) {
+      case 'super_admin': return '👑';
+      case 'conference_admin': return '🛡️';
+      case 'booth_admin': return '⭐';
+      default: return '👤';
+    }
   };
 
   const menuOptions = [
@@ -48,7 +88,7 @@ const HowItWorksPage: React.FC = () => {
       id: 'history',
       label: 'History',
       emoji: '📚',
-      action: () => console.log('Navigate to history page'),
+      action: () => router.push('/history'),
     },
     {
       id: 'how-it-works',
@@ -57,6 +97,13 @@ const HowItWorksPage: React.FC = () => {
       action: () => {}, // Already on this page
       isCurrent: true,
     },
+    ...(adminStatus?.isAdmin ? [{
+      id: 'admin',
+      label: 'Admin Panel',
+      emoji: getAdminIcon(adminStatus.adminLevel || ''),
+      action: () => router.push('/admin'),
+      isAdmin: true,
+    }] : []),
     {
       id: 'logout',
       label: 'Logout',
