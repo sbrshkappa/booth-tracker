@@ -20,43 +20,50 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  if(req.method !== "GET") {
-    return new Response("Method not allowed. Only GET allowed.", { 
-      status: 405,
-      headers: corsHeaders
-    })
+  try {
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+    // Get all booths with visit counts
+    const { data: booths, error } = await supabase
+      .from('booths')
+      .select('*')
+      .order('name')
+
+    if (error) {
+      console.error('Error fetching booths:', error)
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch booths' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        booths: booths || []
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+
+  } catch (error) {
+    console.error('Unexpected error:', error)
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
   }
-
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!
-  )
-
-  // Get all booths
-  const { data, error } = await supabase
-    .from("booths")
-    .select("*")
-    .order("id", { ascending: true })
-
-  if(error) {
-    return new Response(JSON.stringify({ error: error.message }), { 
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
-  }
-
-  return new Response(
-    JSON.stringify({
-      success: true, 
-      message: "Booths retrieved successfully",
-      count: data?.length || 0,
-      data: data || []
-    }),
-    { 
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-      status: 200 
-    },
-  )
 })
 
 /* To invoke locally:

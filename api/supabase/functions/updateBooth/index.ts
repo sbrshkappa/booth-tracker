@@ -20,109 +20,111 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  if(req.method !== "PUT" && req.method !== "PATCH") {
-    return new Response("Method not allowed. Only PUT/PATCH allowed.", { 
-      status: 405,
-      headers: corsHeaders
-    })
-  }
+  try {
+    // Create Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-  const { id, phrase, name } = await req.json()
+    // Get request body
+    const { boothId, name, phrase } = await req.json()
 
-  // Validate required fields
-  if(!id) {
-    return new Response("Missing required field: id", { 
-      status: 400,
-      headers: corsHeaders
-    })
-  }
-
-  if(!phrase && !name) {
-    return new Response("At least one field to update is required: phrase or name", { 
-      status: 400,
-      headers: corsHeaders
-    })
-  }
-
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_ANON_KEY")!
-  )
-
-  // Check if booth exists
-  const { data: existingBooth, error: checkError } = await supabase
-    .from("booths")
-    .select("id, phrase, name")
-    .eq("id", id)
-    .single()
-
-  if (checkError) {
-    if (checkError.code === 'PGRST116') { // Not found
-      return new Response(JSON.stringify({ error: "Booth not found" }), { 
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+    // Validate required fields
+    if (!boothId || !name || !phrase) {
+      return new Response(
+        JSON.stringify({ error: 'Booth ID, name and phrase are required' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
     }
-    return new Response(JSON.stringify({ error: checkError.message }), { 
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
-  }
 
-  // Prepare update object
-  const updateData: { phrase?: string; name?: string } = {}
-  if (phrase !== undefined) updateData.phrase = phrase
-  if (name !== undefined) updateData.name = name
-
-  // Check if new phrase already exists (only if phrase is being updated)
-  if (phrase && phrase !== existingBooth.phrase) {
-    const { data: duplicateBooth, error: duplicateError } = await supabase
-      .from("booths")
-      .select("id, phrase")
-      .eq("phrase", phrase)
-      .neq("id", id)
+    // Check if booth exists
+    const { data: existingBooth, error: checkError } = await supabase
+      .from('booths')
+      .select('id')
+      .eq('id', boothId)
       .single()
 
-    if (duplicateError && duplicateError.code !== 'PGRST116') { // PGRST116 is "not found"
-      return new Response(JSON.stringify({ error: duplicateError.message }), { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+    if (checkError || !existingBooth) {
+      return new Response(
+        JSON.stringify({ error: 'Booth not found' }),
+        { 
+          status: 404, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
     }
 
-    if (duplicateBooth) {
-      return new Response(JSON.stringify({ error: "Booth with this phrase already exists" }), { 
-        status: 409,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
+    // Check if phrase is already used by another booth
+    const { data: phraseConflict, error: phraseError } = await supabase
+      .from('booths')
+      .select('id')
+      .eq('phrase', phrase)
+      .neq('id', boothId)
+      .single()
+
+    if (phraseError && phraseError.code !== 'PGRST116') { // PGRST116 is "not found"
+      return new Response(
+        JSON.stringify({ error: 'Error checking phrase availability' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
     }
+
+    if (phraseConflict) {
+      return new Response(
+        JSON.stringify({ error: 'A booth with this phrase already exists' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    // Update booth
+    const { data: updatedBooth, error: updateError } = await supabase
+      .from('booths')
+      .update({ name, phrase })
+      .eq('id', boothId)
+      .select()
+      .single()
+
+    if (updateError) {
+      console.error('Error updating booth:', updateError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to update booth' }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      )
+    }
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        booth: updatedBooth 
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
+
+  } catch (error) {
+    console.error('Unexpected error:', error)
+    return new Response(
+      JSON.stringify({ error: 'Internal server error' }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
+    )
   }
-
-  // Update the booth
-  const { data, error } = await supabase
-    .from("booths")
-    .update(updateData)
-    .eq("id", id)
-    .select()
-
-  if(error) {
-    return new Response(JSON.stringify({ error: error.message }), { 
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
-  }
-
-  return new Response(
-    JSON.stringify({
-      success: true, 
-      message: "Booth updated successfully",
-      data
-    }),
-    { 
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-      status: 200 
-    },
-  )
 })
 
 /* To invoke locally:

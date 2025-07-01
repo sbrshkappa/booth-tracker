@@ -82,7 +82,7 @@ serve(async (req) => {
     // 2. Find the booth by phrase
     const { data: booth, error: boothError } = await supabase
       .from("booths")
-      .select("id, phrase, name")
+      .select("id, phrase, name, total_visits")
       .eq("phrase", phrase)
       .single()
 
@@ -141,6 +141,17 @@ serve(async (req) => {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
+    }
+
+    // 4.5. Increment the booth's total_visits counter
+    const { error: updateError } = await supabase
+      .from("booths")
+      .update({ total_visits: booth.total_visits + 1 })
+      .eq("id", booth.id)
+
+    if (updateError) {
+      console.error('Error updating booth visit count:', updateError)
+      // Don't fail the request if this fails, just log it
     }
 
     // 5. Check if user has visited all booths
