@@ -26,7 +26,7 @@ interface Booth {
   phrase: string;
   description?: string;
   location?: string;
-  totalVisits: number;
+  total_visits: number;
 }
 
 const AdminScreen: React.FC = () => {
