@@ -51,32 +51,6 @@ const UserDashboard: React.FC = () => {
     if (progressData) setProgress(JSON.parse(progressData));
   }, []);
 
-  const triggerGoogleSheetsWrite = async () => {
-    if (!user?.email) return;
-    
-    try {
-      console.log('Triggering Google Sheets write for completed user:', user.email);
-      
-      const response = await fetch('/api/writeToGoogleSheet', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userEmail: user.email }),
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        console.log('Successfully wrote to Google Sheets:', data);
-      } else {
-        console.error('Failed to write to Google Sheets:', data.error);
-      }
-    } catch (err) {
-      console.error('Error writing to Google Sheets:', err);
-    }
-  };
-
   const fetchUserProgress = useCallback(async () => {
     if (!user?.email) return;
 
@@ -94,30 +68,54 @@ const UserDashboard: React.FC = () => {
 
       if (response.ok) {
         const newProgress = data.data.progress;
+        const oldProgress = progress;
+        
         setProgress(newProgress);
         
         // Update localStorage with fresh data
         localStorage.setItem('userProgress', JSON.stringify(newProgress));
         
         // Check if user just completed all booths
-        const wasCompleted = progress && progress.visited === progress.total && progress.visited > 0;
+        const wasCompleted = oldProgress && oldProgress.visited === oldProgress.total && oldProgress.visited > 0;
         const isNowCompleted = newProgress.visited === newProgress.total && newProgress.visited > 0;
         
         if (!wasCompleted && isNowCompleted) {
           // User just completed all booths - trigger Google Sheets write
-          triggerGoogleSheetsWrite();
+          if (user?.email) {
+            try {
+              console.log('Triggering Google Sheets write for completed user:', user.email);
+              
+              const sheetsResponse = await fetch('/api/writeToGoogleSheet', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userEmail: user.email }),
+              });
+
+              const sheetsData = await sheetsResponse.json();
+              
+              if (sheetsResponse.ok) {
+                console.log('Successfully wrote to Google Sheets:', sheetsData);
+              } else {
+                console.error('Failed to write to Google Sheets:', sheetsData.error);
+              }
+            } catch (err) {
+              console.error('Error writing to Google Sheets:', err);
+            }
+          }
         }
       }
     } catch (err) {
       console.error('Error fetching progress:', err);
     }
-  }, [user?.email, progress, triggerGoogleSheetsWrite]);
+  }, [user?.email]);
 
   useEffect(() => {
     if (user?.email) {
       fetchUserProgress();
     }
-  }, [user, fetchUserProgress]);
+  }, [user?.email, fetchUserProgress]);
 
   const handleSubmitPhrase = async (e: React.FormEvent) => {
     e.preventDefault();
