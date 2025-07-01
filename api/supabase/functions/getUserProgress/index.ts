@@ -75,23 +75,25 @@ serve(async (req) => {
       })
     }
 
-    // 3. Get user's booth visits with booth details
-    const { data: userVisits, error: userVisitsError } = await supabase
-      .from("user_booth_visits")
+    // 3. Get user's visit history
+    const { data: visitHistory, error: visitError } = await supabase
+      .from('user_booth_visits')
       .select(`
         id,
+        booth_id,
         visited_at,
+        notes,
+        rating,
         booths (
-          id,
           phrase,
           name
         )
       `)
-      .eq("user_id", user.id)
-      .order("visited_at", { ascending: true })
+      .eq('user_id', user.id)
+      .order('visited_at', { ascending: false })
 
-    if (userVisitsError) {
-      return new Response(JSON.stringify({ error: userVisitsError.message }), { 
+    if (visitError) {
+      return new Response(JSON.stringify({ error: visitError.message }), { 
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
@@ -99,22 +101,23 @@ serve(async (req) => {
 
     // 4. Calculate progress
     const totalBooths = allBooths.length
-    const visitedBooths = userVisits.length
+    const visitedBooths = visitHistory.length
     const remainingBooths = totalBooths - visitedBooths
     const isComplete = visitedBooths >= totalBooths
     const progressPercentage = totalBooths > 0 ? Math.round((visitedBooths / totalBooths) * 100) : 0
 
     // 5. Get list of booths not yet visited
-    const visitedBoothIds = userVisits.map(visit => visit.booths.id)
+    const visitedBoothIds = visitHistory.map(visit => visit.booths.id)
     const unvisitedBooths = allBooths.filter(booth => !visitedBoothIds.includes(booth.id))
 
     // 6. Format visit history
-    const visitHistory = userVisits.map(visit => ({
+    const formattedVisitHistory = visitHistory.map(visit => ({
       visitId: visit.id,
       boothId: visit.booths.id,
       boothPhrase: visit.booths.phrase,
       boothName: visit.booths.name,
-      visitedAt: visit.visited_at
+      visitedAt: visit.visited_at,
+      notes: visit.notes
     }))
 
     // 7. Return comprehensive progress data
@@ -136,16 +139,16 @@ serve(async (req) => {
           percentage: progressPercentage,
           isComplete: isComplete
         },
-        visitHistory: visitHistory,
+        visitHistory: formattedVisitHistory,
         unvisitedBooths: unvisitedBooths.map(booth => ({
           id: booth.id,
           phrase: booth.phrase,
           name: booth.name
         })),
         summary: {
-          firstVisit: visitHistory.length > 0 ? visitHistory[0].visitedAt : null,
-          lastVisit: visitHistory.length > 0 ? visitHistory[visitHistory.length - 1].visitedAt : null,
-          totalVisits: visitHistory.length
+          firstVisit: formattedVisitHistory.length > 0 ? formattedVisitHistory[0].visitedAt : null,
+          lastVisit: formattedVisitHistory.length > 0 ? formattedVisitHistory[formattedVisitHistory.length - 1].visitedAt : null,
+          totalVisits: formattedVisitHistory.length
         }
       }
     }

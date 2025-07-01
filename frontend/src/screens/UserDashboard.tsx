@@ -1,5 +1,8 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import MenuDropdown from "@/components/MenuDropdown";
+import StarRating from "@/components/StarRating";
 
 interface User {
   id: number;
@@ -23,24 +26,19 @@ interface VisitHistory {
   boothPhrase: string;
   boothName: string;
   visitedAt: string;
+  notes?: string;
 }
 
-const HOW_IT_WORKS = [
-  "Visit each booth to discover how SSSIO-USA uplifts communities through love and selfless service.",
-  "Collect secret phrases along the way to unlock your journey.",
-  "Complete all booths to experience the full impact—and qualify for a raffle!"
-];
-
 const UserDashboard: React.FC = () => {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
-  const [visitHistory, setVisitHistory] = useState<VisitHistory[]>([]);
   const [phrase, setPhrase] = useState("");
+  const [notes, setNotes] = useState("");
+  const [rating, setRating] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [howItWorksOpen, setHowItWorksOpen] = useState(true);
-  const [visitHistoryOpen, setVisitHistoryOpen] = useState(false);
 
   // Check if user has completed all booths
   const isCompleted = progress && progress.visited > 0 && progress.visited === progress.total;
@@ -97,7 +95,6 @@ const UserDashboard: React.FC = () => {
       if (response.ok) {
         const newProgress = data.data.progress;
         setProgress(newProgress);
-        setVisitHistory(data.data.visitHistory);
         
         // Update localStorage with fresh data
         localStorage.setItem('userProgress', JSON.stringify(newProgress));
@@ -124,7 +121,7 @@ const UserDashboard: React.FC = () => {
 
   const handleSubmitPhrase = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('handleSubmitPhrase called', { phrase });
+    console.log('handleSubmitPhrase called', { phrase, notes, rating });
     if (!phrase.trim()) return;
 
     setIsLoading(true);
@@ -140,6 +137,8 @@ const UserDashboard: React.FC = () => {
         body: JSON.stringify({
           userEmail: user?.email,
           phrase: phrase.trim(),
+          notes: notes.trim() || null,
+          rating: rating > 0 ? rating : null,
         }),
       });
 
@@ -151,6 +150,8 @@ const UserDashboard: React.FC = () => {
 
       setSuccess(`✅ Correct phrase! You've successfully visited a booth`);
       setPhrase("");
+      setNotes("");
+      setRating(0);
       
       // Refresh progress data
       setTimeout(() => {
@@ -167,8 +168,37 @@ const UserDashboard: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('userProgress');
-    window.location.href = '/';
+    router.push('/');
   };
+
+  const menuOptions = [
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
+      emoji: '🏠',
+      action: () => {}, // Already on dashboard
+      isCurrent: true,
+    },
+    {
+      id: 'history',
+      label: 'History',
+      emoji: '📚',
+      action: () => router.push('/history'),
+    },
+    {
+      id: 'how-it-works',
+      label: 'How it works',
+      emoji: '❓',
+      action: () => router.push('/how-it-works'),
+    },
+    {
+      id: 'logout',
+      label: 'Logout',
+      emoji: '🚪',
+      action: handleLogout,
+      isDanger: true,
+    },
+  ];
 
   // Circular progress bar SVG
   const renderProgressCircle = () => {
@@ -235,15 +265,9 @@ const UserDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-x-hidden">
-      {/* Logout button only, menu removed */}
-      <div className="absolute top-6 right-6 z-30 flex items-center gap-4">
-        <button
-          onClick={handleLogout}
-          className="px-3 py-1 text-sm font-semibold text-white bg-red-500 rounded-lg shadow hover:bg-red-600 focus:outline-none"
-        >
-          Logout
-        </button>
-      </div>
+      {/* Menu */}
+      <MenuDropdown options={menuOptions} />
+
       {/* Main content fills available space */}
       <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto">
         {/* Header */}
@@ -276,6 +300,24 @@ const UserDashboard: React.FC = () => {
                 onChange={e => setPhrase(e.target.value)}
                 placeholder="Enter the phrase"
               />
+              <textarea
+                className="w-full rounded-xl border-2 border-orange-400 px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Enter any notes about the booth"
+              />
+              <div className="w-full">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Rate this booth (optional)
+                </label>
+                <div className="flex justify-center">
+                  <StarRating 
+                    rating={rating} 
+                    onRatingChange={setRating}
+                    size="lg"
+                  />
+                </div>
+              </div>
               <button
                 type="submit"
                 disabled={isLoading}
@@ -292,64 +334,6 @@ const UserDashboard: React.FC = () => {
             </form>
           </>
         )}
-        {/* Collapsible Visit History */}
-        <div className="w-full mb-4 bg-white/80 rounded-xl p-4 shadow-sm relative z-10 transition-all duration-300">
-          <div 
-            className="flex items-center justify-between mb-2 cursor-pointer"
-            onClick={() => setVisitHistoryOpen((v) => !v)}
-          >
-            <h3 className="font-semibold text-gray-800">Visit History</h3>
-            <span className="text-orange-500 hover:text-orange-700 text-lg font-bold">
-              {visitHistoryOpen ? '−' : '+'}
-            </span>
-          </div>
-          <div
-            className={`transition-all duration-300 overflow-hidden relative ${visitHistoryOpen ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}
-          >
-            {visitHistory.length === 0 ? (
-              <div className="text-gray-500 text-center py-2">No booths visited yet.</div>
-            ) : (
-              <div className="max-h-[300px] overflow-y-auto pr-2">
-                <ul className="space-y-2">
-                  {visitHistory.map((visit) => (
-                    <li key={visit.visitId} className="bg-green-50 border border-green-200 rounded-lg p-3 flex flex-col sm:flex-row sm:justify-between items-start sm:items-center">
-                      <div>
-                        <span className="font-semibold text-green-800">{visit.boothName}</span>
-                        <span className="ml-2 text-xs text-green-600">Phrase: {visit.boothPhrase}</span>
-                      </div>
-                      <div className="text-xs text-green-600 mt-1 sm:mt-0">
-                        {new Date(visit.visitedAt).toLocaleDateString()}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      {/* How it works at the bottom, collapses downward */}
-      <div className="w-full max-w-md mx-auto mb-2 bg-white/80 rounded-xl p-4 shadow-sm relative z-10 transition-all duration-300">
-        <div 
-          className="flex items-center justify-between mb-2 cursor-pointer"
-          onClick={() => setHowItWorksOpen((v) => !v)}
-        >
-          <h3 className="font-semibold text-gray-800">How it works?</h3>
-          <span className="text-orange-500 hover:text-orange-700 text-lg font-bold">
-            {howItWorksOpen ? '−' : '+'}
-          </span>
-        </div>
-        <div
-          className={`transition-all duration-300 overflow-hidden relative ${howItWorksOpen ? 'max-h-[400px] opacity-100' : 'max-h-0 opacity-0'}`}
-        >
-          <ul className="list-disc pl-5 space-y-1 text-gray-800 text-[15px] sm:text-base relative z-10">
-            {HOW_IT_WORKS.map((item, i) => (
-              <li key={i}>{item}</li>
-            ))}
-          </ul>
-          {/* Decorative background art now inside the section */}
-          <div className="absolute left-0 bottom-0 w-full h-full pointer-events-none select-none z-0" style={{ background: 'radial-gradient(circle at 70% 80%, #fbeee6 40%, transparent 80%)' }} />
-        </div>
       </div>
     </div>
   );

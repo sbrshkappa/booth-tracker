@@ -27,9 +27,9 @@ serve(async (req) => {
     })
   }
 
-  let phrase, userEmail;
+  let phrase, userEmail, notes, rating;
   try {
-    ({ phrase, userEmail } = await req.json());
+    ({ phrase, userEmail, notes, rating } = await req.json());
   } catch {
     return new Response(JSON.stringify({ error: "Missing required fields: phrase and userEmail" }), {
       status: 400,
@@ -38,10 +38,18 @@ serve(async (req) => {
   }
 
   // Validate required fields
-  if(!phrase || !userEmail) {
-    return new Response(JSON.stringify({ error: "Missing required fields: phrase and userEmail" }), {
+  if(!userEmail || !phrase) {
+    return new Response("Missing required fields", { 
       status: 400,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      headers: corsHeaders
+    })
+  }
+
+  // Validate rating if provided
+  if (rating !== undefined && (rating < 1 || rating > 5 || !Number.isInteger(rating))) {
+    return new Response("Rating must be an integer between 1 and 5", { 
+      status: 400,
+      headers: corsHeaders
     })
   }
 
@@ -122,7 +130,9 @@ serve(async (req) => {
       .insert([{
         user_id: user.id,
         booth_id: booth.id,
-        visited_at: new Date().toISOString()
+        visited_at: new Date().toISOString(),
+        notes: notes,
+        rating: rating
       }])
       .select()
 
