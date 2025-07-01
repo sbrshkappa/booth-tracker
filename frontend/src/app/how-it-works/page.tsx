@@ -2,14 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
-
-interface User {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  badgeNumber: string;
-}
+import { AdminStatus } from "@/utils/admin";
+import { User } from "@/utils/types";
+import { createMenuOptions } from "@/utils/menu";
+import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
+import { LoadingScreen } from "@/utils/ui";
 
 const HOW_IT_WORKS = [
   "Visit each booth to discover how SSSIO-USA uplifts communities through love and selfless service.",
@@ -20,61 +17,32 @@ const HOW_IT_WORKS = [
 const HowItWorksPage: React.FC = () => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [adminStatus, setAdminStatus] = useState<AdminStatus | null>(null);
 
   useEffect(() => {
     // Check if user is logged in
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const userObj = getUserFromStorage();
+    if (!userObj) {
       router.push('/');
       return;
     }
-    setUser(JSON.parse(userData));
+    setUser(userObj);
+    
+    // Check admin status
+    checkAdminStatus(userObj.email).then(setAdminStatus);
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('userProgress');
-    router.push('/');
-  };
+  const handleLogoutClick = () => handleLogout(router);
 
-  const menuOptions = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      emoji: '🏠',
-      action: () => router.push('/dashboard'),
-    },
-    {
-      id: 'history',
-      label: 'History',
-      emoji: '📚',
-      action: () => console.log('Navigate to history page'),
-    },
-    {
-      id: 'how-it-works',
-      label: 'How it works',
-      emoji: '❓',
-      action: () => {}, // Already on this page
-      isCurrent: true,
-    },
-    {
-      id: 'logout',
-      label: 'Logout',
-      emoji: '🚪',
-      action: handleLogout,
-      isDanger: true,
-    },
-  ];
+  const menuOptions = createMenuOptions({
+    currentPage: 'how-it-works',
+    router,
+    handleLogout: handleLogoutClick,
+    adminStatus,
+  });
 
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -87,51 +55,40 @@ const HowItWorksPage: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-orange-500 mb-4" style={{ letterSpacing: 0.5 }}>
-            How It Works? 🤔
+            How It Works ❓
           </h1>
           <p className="text-lg text-gray-600">
-            Discover the journey of exploring SSSIO-USA booths
+            Your guide to the SSSIO-USA booth tracking experience
           </p>
         </div>
 
         {/* How it works content */}
-        <div className="w-full bg-white/80 rounded-xl p-8 shadow-lg relative z-10">
-          <div className="space-y-6 relative z-20">
-            {HOW_IT_WORKS.map((item, index) => (
+        <div className="bg-white/80 rounded-xl p-8 shadow-lg w-full">
+          <div className="space-y-6">
+            {HOW_IT_WORKS.map((step, index) => (
               <div key={index} className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
-                  <span className="text-orange-600 font-bold text-sm">{index + 1}</span>
+                <div className="flex-shrink-0 w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm">
+                  {index + 1}
                 </div>
-                <div className="flex-1">
-                  <p className="text-gray-800 text-lg leading-relaxed">{item}</p>
-                </div>
+                <p className="text-gray-700 leading-relaxed">
+                  {step}
+                </p>
               </div>
             ))}
           </div>
           
-          {/* Decorative background - moved behind content */}
-          <div 
-            className="absolute left-0 bottom-0 w-full h-full pointer-events-none select-none z-0 opacity-30" 
-            style={{ background: 'radial-gradient(circle at 70% 80%, #fbeee6 40%, transparent 80%)' }} 
-          />
-        </div>
-
-        {/* Additional info section */}
-        <div className="w-full mt-8 bg-blue-50 rounded-xl p-6">
-          <h3 className="text-xl font-semibold text-blue-800 mb-4 flex items-center gap-2">
-            <span>💡</span>
-            Pro Tips
-          </h3>
-          <ul className="space-y-2 text-blue-700">
-            <li className="flex items-start gap-2">
-              <span className="text-blue-500 mt-1">•</span>
-              <span>Take notes at each booth to remember what you learned</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="text-blue-500 mt-1">•</span>
-              <span>Visit booths in any order - there's no specific sequence</span>
-            </li>
-          </ul>
+          {/* Call to action */}
+          <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+            <p className="text-gray-600 mb-4">
+              Ready to start your journey?
+            </p>
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="bg-orange-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-orange-600 transition-colors"
+            >
+              Go to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     </div>

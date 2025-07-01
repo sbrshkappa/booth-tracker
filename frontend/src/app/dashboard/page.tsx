@@ -3,28 +3,12 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import StarRating from "@/components/StarRating";
-
-interface User {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  badgeNumber: string;
-}
-
-interface Progress {
-  visited: number;
-  total: number;
-  remaining: number;
-  percentage: number;
-  isComplete: boolean;
-}
-
-interface AdminStatus {
-  isAdmin: boolean;
-  adminLevel: string | null;
-  userId: number;
-}
+import { AdminStatus } from "@/utils/admin";
+import { User, Progress } from "@/utils/types";
+import { createMenuOptions } from "@/utils/menu";
+import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
+import { sendVisitNotesEmail } from "@/utils/email";
+import { LoadingScreen, LoadingSpinner } from "@/utils/ui";
 
 export default function Dashboard() {
   const router = useRouter();
@@ -47,36 +31,15 @@ export default function Dashboard() {
 
   useEffect(() => {
     // Load user data from localStorage
-    const userData = localStorage.getItem('user');
+    const userObj = getUserFromStorage();
     const progressData = localStorage.getItem('userProgress');
-    if (userData) {
-      const userObj = JSON.parse(userData);
+    if (userObj) {
       setUser(userObj);
       // Check admin status
-      checkAdminStatus(userObj.email);
+      checkAdminStatus(userObj.email).then(setAdminStatus);
     }
     if (progressData) setProgress(JSON.parse(progressData));
   }, []);
-
-  const checkAdminStatus = async (email: string) => {
-    try {
-      const response = await fetch('/api/checkAdminStatus', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userEmail: email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setAdminStatus(data);
-      }
-    } catch (err) {
-      console.error('Error checking admin status:', err);
-    }
-  };
 
   const fetchUserProgress = useCallback(async () => {
     if (!user?.email) return;
@@ -191,56 +154,14 @@ export default function Dashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('userProgress');
-    router.push('/');
-  };
+  const handleLogoutClick = () => handleLogout(router);
 
-  const getAdminIcon = (level: string) => {
-    switch (level) {
-      case 'super_admin': return '👑';
-      case 'conference_admin': return '🛡️';
-      case 'booth_admin': return '⭐';
-      default: return '👤';
-    }
-  };
-
-  const menuOptions = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      emoji: '🏠',
-      action: () => {}, // Already on dashboard
-      isCurrent: true,
-    },
-    {
-      id: 'history',
-      label: 'History',
-      emoji: '📚',
-      action: () => router.push('/history'),
-    },
-    {
-      id: 'how-it-works',
-      label: 'How it works',
-      emoji: '❓',
-      action: () => router.push('/how-it-works'),
-    },
-    ...(adminStatus?.isAdmin ? [{
-      id: 'admin',
-      label: 'Admin Panel',
-      emoji: getAdminIcon(adminStatus.adminLevel || ''),
-      action: () => router.push('/admin'),
-      isAdmin: true,
-    }] : []),
-    {
-      id: 'logout',
-      label: 'Logout',
-      emoji: '🚪',
-      action: handleLogout,
-      isDanger: true,
-    },
-  ];
+  const menuOptions = createMenuOptions({
+    currentPage: 'dashboard',
+    router,
+    handleLogout: handleLogoutClick,
+    adminStatus,
+  });
 
   // Circular progress bar SVG
   const renderProgressCircle = () => {
@@ -289,14 +210,7 @@ export default function Dashboard() {
   };
 
   if (!user || !progress) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   // Dynamic header
@@ -339,30 +253,23 @@ export default function Dashboard() {
                   setIsEmailLoading(true);
                   setEmailError("");
                   setEmailSuccess("");
-                  try {
-                    const response = await fetch('/api/sendVisitNotesEmail', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({
-                        userEmail: user.email,
-                        userName: `${user.firstName} ${user.lastName}`
-                      }),
-                    });
-                    const data = await response.json();
-                    if (!response.ok) throw new Error(data.error || 'Failed to send email');
-                    setEmailSuccess(`📧 Email sent successfully! Check your inbox for your booth visit summary.`);
-                  } catch (err) {
-                    setEmailError(err instanceof Error ? err.message : 'Failed to send email. Please try again.');
-                  } finally {
-                    setIsEmailLoading(false);
+                  
+                  const result = await sendVisitNotesEmail(user);
+                  
+                  if (result.success) {
+                    setEmailSuccess(result.message);
+                  } else {
+                    setEmailError(result.message);
                   }
+                  
+                  setIsEmailLoading(false);
                 }}
                 disabled={isEmailLoading}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-300 flex items-center gap-2 mx-auto"
               >
                 {isEmailLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <LoadingSpinner size="sm" color="white" />
                     Sending...
                   </>
                 ) : (
@@ -404,27 +311,36 @@ export default function Dashboard() {
                   Rate this booth (optional)
                 </label>
                 <div className="flex justify-center">
-                  <StarRating 
-                    rating={rating} 
-                    onRatingChange={setRating}
-                    size="lg"
-                  />
+                  <StarRating rating={rating} onRatingChange={setRating} />
                 </div>
               </div>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-[#1453A3] text-white text-xl font-bold py-3 rounded-xl mt-2 hover:bg-blue-900 transition-colors disabled:bg-blue-300"
+                className="w-full bg-orange-500 text-white py-3 px-6 rounded-xl font-semibold hover:bg-orange-600 transition-colors disabled:bg-orange-300 flex items-center justify-center gap-2"
               >
-                Submit
+                {isLoading ? (
+                  <>
+                    <LoadingSpinner size="sm" color="white" />
+                    Visiting...
+                  </>
+                ) : (
+                  'Visit Booth'
+                )}
               </button>
-              {error && (
-                <div className="text-red-600 text-sm text-center w-full">{error}</div>
-              )}
-              {success && (
-                <div className="text-green-600 text-sm text-center w-full">{success}</div>
-              )}
             </form>
+            
+            {/* Success/Error Messages */}
+            {success && (
+              <div className="text-green-600 text-sm text-center bg-green-50 p-3 rounded-lg">
+                {success}
+              </div>
+            )}
+            {error && (
+              <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg">
+                {error}
+              </div>
+            )}
           </>
         )}
       </div>

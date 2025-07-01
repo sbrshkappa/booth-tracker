@@ -5,29 +5,11 @@ import MenuDropdown from "@/components/MenuDropdown";
 import BoothForm from "@/components/BoothForm";
 import BoothCard from "@/components/BoothCard";
 import BoothModal from "@/components/BoothModal";
-
-interface User {
-  id: number;
-  email: string;
-  firstName: string;
-  lastName: string;
-  badgeNumber: string;
-}
-
-interface AdminStatus {
-  isAdmin: boolean;
-  adminLevel: string | null;
-  userId: number;
-}
-
-interface Booth {
-  id: number;
-  name: string;
-  phrase: string;
-  description?: string;
-  location?: string;
-  total_visits: number;
-}
+import { AdminStatus, getAdminIcon } from "@/utils/admin";
+import { User, Booth } from "@/utils/types";
+import { createMenuOptions } from "@/utils/menu";
+import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
+import { LoadingScreen, LoadingSpinner } from "@/utils/ui";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -44,59 +26,46 @@ export default function AdminPage() {
 
   useEffect(() => {
     // Check if user is logged in
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const userObj = getUserFromStorage();
+    if (!userObj) {
       router.push('/');
       return;
     }
-    
-    const userObj = JSON.parse(userData);
     setUser(userObj);
     
     // Check admin status
-    checkAdminStatus(userObj.email);
+    checkAdminStatus(userObj.email).then(setAdminStatus);
   }, [router]);
 
-  // Fetch booths when booths tab is active
   useEffect(() => {
     if (activeTab === 'booths') {
       fetchBooths();
     }
   }, [activeTab]);
 
-  const checkAdminStatus = async (email: string) => {
+  const handleLogoutClick = () => handleLogout(router);
+
+  const fetchBooths = async () => {
+    setIsLoadingBooths(true);
     try {
-      const response = await fetch('/api/checkAdminStatus', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userEmail: email }),
-      });
-
+      const response = await fetch('/api/getBooths');
       const data = await response.json();
-
+      
       if (response.ok) {
-        setAdminStatus(data);
-        
-        // Redirect if not admin
-        if (!data.isAdmin) {
-          router.push('/dashboard');
-        }
+        setBooths(data.booths || []);
+      } else {
+        console.error('Failed to fetch booths:', data.error);
       }
     } catch (err) {
-      console.error('Error checking admin status:', err);
-      router.push('/dashboard');
+      console.error('Error fetching booths:', err);
+    } finally {
+      setIsLoadingBooths(false);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    localStorage.removeItem('userProgress');
-    router.push('/');
-  };
-
-  const handleCreateBooth = async (data: { name: string; phrase: string }) => {
+  const handleCreateBooth = async (boothData: { name: string; phrase: string }) => {
+    if (!user?.email) return;
+    
     setIsCreatingBooth(true);
     setBoothMessage(null);
     
@@ -106,152 +75,96 @@ export default function AdminPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          ...boothData,
+          userEmail: user.email,
+        }),
       });
 
-      const result = await response.json();
+      const data = await response.json();
 
-      if (response.ok) {
-        setBoothMessage({ type: 'success', text: 'Booth created successfully!' });
-        setShowBoothForm(false);
-        // Refresh booths list
-        fetchBooths();
-        // Clear message after 3 seconds
-        setTimeout(() => setBoothMessage(null), 3000);
-      } else {
-        setBoothMessage({ type: 'error', text: result.error || 'Failed to create booth' });
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create booth');
       }
-    } catch (error) {
-      console.error('Error creating booth:', error);
-      setBoothMessage({ type: 'error', text: 'An error occurred while creating the booth' });
+
+      setBoothMessage({ type: 'success', text: 'Booth created successfully!' });
+      setShowBoothForm(false);
+      
+      // Refresh booths list
+      setTimeout(() => {
+        fetchBooths();
+      }, 1000);
+    } catch (err) {
+      setBoothMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to create booth' });
     } finally {
       setIsCreatingBooth(false);
     }
   };
 
-  const fetchBooths = async () => {
-    setIsLoadingBooths(true);
-    try {
-      const response = await fetch('/api/getBooths');
-      const data = await response.json();
-
-      if (response.ok) {
-        setBooths(data.booths || []);
-      } else {
-        console.error('Failed to fetch booths:', data.error);
-      }
-    } catch (error) {
-      console.error('Error fetching booths:', error);
-    } finally {
-      setIsLoadingBooths(false);
-    }
-  };
-
-  const handleUpdateBooth = async (boothId: number, data: { name: string; phrase: string }) => {
+  const handleUpdateBooth = async (boothId: number, boothData: { name: string; phrase: string }) => {
+    if (!user?.email) return;
+    
     try {
       const response = await fetch('/api/updateBooth', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ boothId, ...data }),
+        body: JSON.stringify({
+          boothId,
+          ...boothData,
+          userEmail: user.email,
+        }),
       });
 
-      const result = await response.json();
+      const data = await response.json();
 
-      if (response.ok) {
-        // Refresh booths list
-        fetchBooths();
-        return result;
-      } else {
-        throw new Error(result.error || 'Failed to update booth');
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update booth');
       }
-    } catch (error) {
-      console.error('Error updating booth:', error);
-      throw error;
+
+      // Update local state
+      setBooths(prev => prev.map(booth => 
+        booth.id === boothId 
+          ? { ...booth, name: boothData.name, phrase: boothData.phrase }
+          : booth
+      ));
+
+      return Promise.resolve();
+    } catch (err) {
+      return Promise.reject(err);
     }
   };
 
-  const handleBoothClick = (booth: Booth) => {
+  const handleBoothCardClick = (booth: Booth) => {
     setSelectedBooth(booth);
     setIsModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedBooth(null);
-  };
-
-  const getAdminIcon = (level: string) => {
-    switch (level) {
-      case 'super_admin': return '👑';
-      case 'conference_admin': return '🛡️';
-      case 'booth_admin': return '⭐';
-      default: return '👤';
-    }
-  };
-
-  const getAdminLevelDisplay = (level: string) => {
-    switch (level) {
-      case 'super_admin': return 'Super Administrator';
-      case 'conference_admin': return 'Conference Administrator';
-      case 'booth_admin': return 'Booth Administrator';
-      default: return 'User';
-    }
-  };
-
-  const menuOptions = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      emoji: '🏠',
-      action: () => router.push('/dashboard'),
-    },
-    {
-      id: 'history',
-      label: 'History',
-      emoji: '📚',
-      action: () => router.push('/history'),
-    },
-    {
-      id: 'how-it-works',
-      label: 'How it works',
-      emoji: '❓',
-      action: () => router.push('/how-it-works'),
-    },
-    {
-      id: 'admin',
-      label: 'Admin Panel',
-      emoji: getAdminIcon(adminStatus?.adminLevel || ''),
-      action: () => {}, // Already on admin
-      isCurrent: true,
-      isAdmin: true,
-    },
-    {
-      id: 'logout',
-      label: 'Logout',
-      emoji: '🚪',
-      action: handleLogout,
-      isDanger: true,
-    },
-  ];
+  const menuOptions = createMenuOptions({
+    currentPage: 'admin',
+    router,
+    handleLogout: handleLogoutClick,
+    adminStatus,
+  });
 
   if (!user || !adminStatus) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-800 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!adminStatus.isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
-          <p className="text-gray-600">Access denied. Redirecting...</p>
+          <div className="text-6xl mb-4">🚫</div>
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
+          <p className="text-gray-600 mb-6">You don't have permission to access the admin panel.</p>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Go to Dashboard
+          </button>
         </div>
       </div>
     );
@@ -268,72 +181,59 @@ export default function AdminPage() {
       {/* Main content */}
       <div className="flex-1 flex flex-col w-full max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
-            <p className="text-gray-600 mt-1">
-              Welcome, {getAdminLevelDisplay(adminStatus.adminLevel || '')}
-            </p>
-          </div>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-orange-500 mb-4" style={{ letterSpacing: 0.5 }}>
+            Admin Panel {getAdminIcon(adminStatus.adminLevel || '')}
+          </h1>
+          <p className="text-lg text-gray-600">
+            Manage booths and monitor user activity
+          </p>
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'overview'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Overview
-          </button>
-          <button
-            onClick={() => setActiveTab('booths')}
-            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-              activeTab === 'booths'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Booths
-          </button>
+        <div className="flex justify-center mb-8">
+          <div className="bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                activeTab === 'overview'
+                  ? 'bg-white text-orange-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('booths')}
+              className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                activeTab === 'booths'
+                  ? 'bg-white text-orange-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Booths
+            </button>
+          </div>
         </div>
 
         {/* Tab Content */}
         {activeTab === 'overview' && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Admin Overview</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="text-2xl mr-3">🏢</div>
-                  <div>
-                    <p className="text-sm text-blue-600 font-medium">Total Booths</p>
-                    <p className="text-2xl font-bold text-blue-900">{booths.length}</p>
-                  </div>
-                </div>
+          <div className="bg-white/80 rounded-xl p-8 shadow-lg">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Admin Overview</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-blue-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-blue-800 mb-2">Total Booths</h3>
+                <p className="text-3xl font-bold text-blue-600">{booths.length}</p>
               </div>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="text-2xl mr-3">👥</div>
-                  <div>
-                    <p className="text-sm text-green-600 font-medium">Active Users</p>
-                    <p className="text-2xl font-bold text-green-900">-</p>
-                  </div>
-                </div>
+              <div className="bg-green-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-green-800 mb-2">Admin Level</h3>
+                <p className="text-lg font-medium text-green-600 capitalize">
+                  {adminStatus.adminLevel?.replace('_', ' ') || 'Unknown'}
+                </p>
               </div>
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="text-2xl mr-3">📊</div>
-                  <div>
-                    <p className="text-sm text-purple-600 font-medium">Total Visits</p>
-                    <p className="text-2xl font-bold text-purple-900">
-                      {booths.reduce((sum, booth) => sum + booth.total_visits, 0)}
-                    </p>
-                  </div>
-                </div>
+              <div className="bg-purple-50 p-6 rounded-lg">
+                <h3 className="text-lg font-semibold text-purple-800 mb-2">User ID</h3>
+                <p className="text-lg font-medium text-purple-600">#{adminStatus.userId}</p>
               </div>
             </div>
           </div>
@@ -342,76 +242,77 @@ export default function AdminPage() {
         {activeTab === 'booths' && (
           <div className="space-y-6">
             {/* Add Booth Section */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white/80 rounded-xl p-6 shadow-lg">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900">Manage Booths</h2>
+                <h2 className="text-2xl font-semibold text-gray-800">Manage Booths</h2>
                 <button
                   onClick={() => setShowBoothForm(!showBoothForm)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
+                  className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors"
                 >
-                  {showBoothForm ? '✕' : '➕'} Add Booth
+                  {showBoothForm ? 'Cancel' : '+ Add Booth'}
                 </button>
               </div>
-
-              {/* Booth Form */}
-              {showBoothForm && (
-                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                  <BoothForm
-                    onSubmit={handleCreateBooth}
-                    isLoading={isCreatingBooth}
-                  />
-                </div>
-              )}
-
-              {/* Message */}
+              
               {boothMessage && (
-                <div className={`mb-4 p-3 rounded-lg ${
+                <div className={`p-4 rounded-md mb-4 ${
                   boothMessage.type === 'success' 
-                    ? 'bg-green-100 text-green-700 border border-green-200' 
-                    : 'bg-red-100 text-red-700 border border-red-200'
+                    ? 'bg-green-50 border border-green-200 text-green-800' 
+                    : 'bg-red-50 border border-red-200 text-red-800'
                 }`}>
                   {boothMessage.text}
                 </div>
               )}
 
-              {/* Booths List */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Existing Booths</h3>
-                {isLoadingBooths ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-800"></div>
-                    <span className="ml-2 text-gray-600">Loading booths...</span>
-                  </div>
-                ) : booths.length === 0 ? (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>No booths found. Create your first booth above!</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {booths.map((booth) => (
-                      <BoothCard
-                        key={booth.id}
-                        booth={booth}
-                        onClick={() => handleBoothClick(booth)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+              {showBoothForm && (
+                <div className="border-t border-gray-200 pt-6">
+                  <BoothForm
+                    onSubmit={handleCreateBooth}
+                    isLoading={isCreatingBooth}
+                    onCancel={() => setShowBoothForm(false)}
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Booths List */}
+            <div className="bg-white/80 rounded-xl p-6 shadow-lg">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">All Booths</h3>
+              
+              {isLoadingBooths ? (
+                <div className="flex justify-center py-8">
+                  <LoadingSpinner size="lg" />
+                </div>
+              ) : booths.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">🏪</div>
+                  <p className="text-gray-600">No booths found. Create your first booth!</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {booths.map((booth) => (
+                    <BoothCard
+                      key={booth.id}
+                      booth={booth}
+                      onClick={handleBoothCardClick}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
       </div>
 
       {/* Booth Modal */}
-      {selectedBooth && (
-        <BoothModal
-          booth={selectedBooth}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-          onUpdate={handleUpdateBooth}
-        />
-      )}
+      <BoothModal
+        booth={selectedBooth}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedBooth(null);
+        }}
+        onUpdate={handleUpdateBooth}
+      />
     </div>
   );
 }

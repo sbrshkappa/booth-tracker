@@ -1,13 +1,6 @@
 'use client'
 
-interface Booth {
-  id: number
-  name: string
-  phrase: string
-  description?: string
-  location?: string
-  total_visits: number
-}
+import { Booth } from '@/utils/types'
 
 interface BoothCardProps {
   booth: Booth
