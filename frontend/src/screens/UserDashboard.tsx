@@ -20,6 +20,12 @@ interface Progress {
   isComplete: boolean;
 }
 
+interface AdminStatus {
+  isAdmin: boolean;
+  adminLevel: string | null;
+  userId: number;
+}
+
 const UserDashboard: React.FC = () => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -31,6 +37,7 @@ const UserDashboard: React.FC = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const prevProgressRef = useRef<Progress | null>(null);
+  const [adminStatus, setAdminStatus] = useState<AdminStatus | null>(null);
 
   // Check if user has completed all booths
   const isCompleted = progress && progress.visited > 0 && progress.visited === progress.total;
@@ -39,9 +46,34 @@ const UserDashboard: React.FC = () => {
     // Load user data from localStorage
     const userData = localStorage.getItem('user');
     const progressData = localStorage.getItem('userProgress');
-    if (userData) setUser(JSON.parse(userData));
+    if (userData) {
+      const userObj = JSON.parse(userData);
+      setUser(userObj);
+      // Check admin status
+      checkAdminStatus(userObj.email);
+    }
     if (progressData) setProgress(JSON.parse(progressData));
   }, []);
+
+  const checkAdminStatus = async (email: string) => {
+    try {
+      const response = await fetch('/api/checkAdminStatus', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userEmail: email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setAdminStatus(data);
+      }
+    } catch (err) {
+      console.error('Error checking admin status:', err);
+    }
+  };
 
   const fetchUserProgress = useCallback(async () => {
     if (!user?.email) return;
@@ -162,6 +194,15 @@ const UserDashboard: React.FC = () => {
     router.push('/');
   };
 
+  const getAdminIcon = (level: string) => {
+    switch (level) {
+      case 'super_admin': return '👑';
+      case 'conference_admin': return '🛡️';
+      case 'booth_admin': return '⭐';
+      default: return '👤';
+    }
+  };
+
   const menuOptions = [
     {
       id: 'dashboard',
@@ -182,6 +223,13 @@ const UserDashboard: React.FC = () => {
       emoji: '❓',
       action: () => router.push('/how-it-works'),
     },
+    ...(adminStatus?.isAdmin ? [{
+      id: 'admin',
+      label: 'Admin Panel',
+      emoji: getAdminIcon(adminStatus.adminLevel || ''),
+      action: () => router.push('/admin'),
+      isAdmin: true,
+    }] : []),
     {
       id: 'logout',
       label: 'Logout',
@@ -257,7 +305,10 @@ const UserDashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-x-hidden">
       {/* Menu */}
-      <MenuDropdown options={menuOptions} />
+      <MenuDropdown 
+        options={menuOptions} 
+        userName={`${user.firstName} ${user.lastName}`}
+      />
 
       {/* Main content fills available space */}
       <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto">
