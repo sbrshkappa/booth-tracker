@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import StarRating from "@/components/StarRating";
-import { AdminStatus, getAdminIcon } from "@/utils/admin";
+import { AdminStatus } from "@/utils/admin";
 import { User, Progress, VisitHistory } from "@/utils/types";
 import { createMenuOptions } from "@/utils/menu";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
