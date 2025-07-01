@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import StarRating from "@/components/StarRating";
+import { AdminStatus, getAdminIcon } from "@/utils/admin";
 
 interface User {
   id: number;
@@ -18,12 +19,6 @@ interface Progress {
   remaining: number;
   percentage: number;
   isComplete: boolean;
-}
-
-interface AdminStatus {
-  isAdmin: boolean;
-  adminLevel: string | null;
-  userId: number;
 }
 
 interface VisitHistory {
@@ -214,15 +209,6 @@ const HistoryPage: React.FC = () => {
   const handleCancelRatingEdit = () => {
     setEditingRating(null);
     setEditingRatingValue(0);
-  };
-
-  const getAdminIcon = (level: string) => {
-    switch (level) {
-      case 'super_admin': return '👑';
-      case 'conference_admin': return '🛡️';
-      case 'booth_admin': return '⭐';
-      default: return '👤';
-    }
   };
 
   const menuOptions = [

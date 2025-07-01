@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
+import { AdminStatus, getAdminIcon } from "@/utils/admin";
 
 interface User {
   id: number;
@@ -9,12 +10,6 @@ interface User {
   firstName: string;
   lastName: string;
   badgeNumber: string;
-}
-
-interface AdminStatus {
-  isAdmin: boolean;
-  adminLevel: string | null;
-  userId: number;
 }
 
 const HOW_IT_WORKS = [
@@ -66,15 +61,6 @@ const HowItWorksPage: React.FC = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('userProgress');
     router.push('/');
-  };
-
-  const getAdminIcon = (level: string) => {
-    switch (level) {
-      case 'super_admin': return '👑';
-      case 'conference_admin': return '🛡️';
-      case 'booth_admin': return '⭐';
-      default: return '👤';
-    }
   };
 
   const menuOptions = [

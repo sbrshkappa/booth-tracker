@@ -5,6 +5,7 @@ import MenuDropdown from "@/components/MenuDropdown";
 import BoothForm from "@/components/BoothForm";
 import BoothCard from "@/components/BoothCard";
 import BoothModal from "@/components/BoothModal";
+import { AdminStatus, getAdminIcon } from "@/utils/admin";
 
 interface User {
   id: number;
@@ -12,12 +13,6 @@ interface User {
   firstName: string;
   lastName: string;
   badgeNumber: string;
-}
-
-interface AdminStatus {
-  isAdmin: boolean;
-  adminLevel: string | null;
-  userId: number;
 }
 
 interface Booth {
@@ -180,15 +175,6 @@ export default function AdminPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedBooth(null);
-  };
-
-  const getAdminIcon = (level: string) => {
-    switch (level) {
-      case 'super_admin': return '👑';
-      case 'conference_admin': return '🛡️';
-      case 'booth_admin': return '⭐';
-      default: return '👤';
-    }
   };
 
   const getAdminLevelDisplay = (level: string) => {

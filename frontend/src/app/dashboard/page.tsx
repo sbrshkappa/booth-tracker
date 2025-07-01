@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import StarRating from "@/components/StarRating";
+import { AdminStatus, getAdminIcon } from "@/utils/admin";
 
 interface User {
   id: number;
@@ -20,11 +21,7 @@ interface Progress {
   isComplete: boolean;
 }
 
-interface AdminStatus {
-  isAdmin: boolean;
-  adminLevel: string | null;
-  userId: number;
-}
+
 
 export default function Dashboard() {
   const router = useRouter();
@@ -197,14 +194,7 @@ export default function Dashboard() {
     router.push('/');
   };
 
-  const getAdminIcon = (level: string) => {
-    switch (level) {
-      case 'super_admin': return '👑';
-      case 'conference_admin': return '🛡️';
-      case 'booth_admin': return '⭐';
-      default: return '👤';
-    }
-  };
+
 
   const menuOptions = [
     {
