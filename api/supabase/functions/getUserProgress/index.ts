@@ -75,7 +75,7 @@ serve(async (req) => {
       })
     }
 
-    // 3. Get user's visit history
+    // 3. Get user's visit history with booth details
     const { data: visitHistory, error: visitError } = await supabase
       .from('user_booth_visits')
       .select(`
@@ -83,11 +83,7 @@ serve(async (req) => {
         booth_id,
         visited_at,
         notes,
-        rating,
-        booths (
-          phrase,
-          name
-        )
+        rating
       `)
       .eq('user_id', user.id)
       .order('visited_at', { ascending: false })
@@ -99,22 +95,48 @@ serve(async (req) => {
       })
     }
 
-    // 4. Calculate progress
+    // 4. Get booth details for each visit
+    const visitHistoryWithBooths = await Promise.all(
+      visitHistory.map(async (visit) => {
+        if (!visit.booth_id) {
+          return null; // Skip visits without booth_id
+        }
+        
+        const { data: booth, error: boothError } = await supabase
+          .from('booths')
+          .select('id, phrase, name')
+          .eq('id', visit.booth_id)
+          .single()
+        
+        if (boothError || !booth) {
+          console.error(`Error fetching booth ${visit.booth_id}:`, boothError)
+          return null; // Skip visits with invalid booth_id
+        }
+        
+        return {
+          ...visit,
+          booths: booth
+        }
+      })
+    )
+
+    // Filter out null entries
+    const validVisitHistory = visitHistoryWithBooths.filter(visit => visit !== null)
+
+    // 5. Calculate progress
     const totalBooths = allBooths.length
-    const visitedBooths = visitHistory.length
+    const visitedBooths = validVisitHistory.length
     const remainingBooths = totalBooths - visitedBooths
     const isComplete = visitedBooths >= totalBooths
     const progressPercentage = totalBooths > 0 ? Math.round((visitedBooths / totalBooths) * 100) : 0
 
-    // 5. Get list of booths not yet visited
-    const visitedBoothIds = visitHistory
-      .filter(visit => visit.booths && visit.booths.id) // Filter out null booths
+    // 6. Get list of booths not yet visited
+    const visitedBoothIds = validVisitHistory
       .map(visit => visit.booths.id)
     const unvisitedBooths = allBooths.filter(booth => !visitedBoothIds.includes(booth.id))
 
-    // 6. Format visit history
-    const formattedVisitHistory = visitHistory
-      .filter(visit => visit.booths && visit.booths.id) // Filter out null booths
+    // 7. Format visit history
+    const formattedVisitHistory = validVisitHistory
       .map(visit => ({
         visitId: visit.id,
         boothId: visit.booths.id,

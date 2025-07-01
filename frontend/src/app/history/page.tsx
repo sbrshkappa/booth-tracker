@@ -40,6 +40,9 @@ const HistoryPage: React.FC = () => {
   const [editingRating, setEditingRating] = useState<number | null>(null);
   const [editingRatingValue, setEditingRatingValue] = useState(0);
   const [error, setError] = useState("");
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [emailSuccess, setEmailSuccess] = useState("");
+  const [emailError, setEmailError] = useState("");
 
   useEffect(() => {
     // Check if user is logged in
@@ -240,6 +243,56 @@ const HistoryPage: React.FC = () => {
           {progress && (
             <div className="mt-4 text-sm text-gray-500">
               {progress.visited} of {progress.total} booths visited
+            </div>
+          )}
+          
+          {/* Email Button */}
+          {visitHistory.length > 0 && (
+            <div className="mt-6">
+              <button
+                onClick={async () => {
+                  if (!user?.email) return;
+                  setIsEmailLoading(true);
+                  setEmailError("");
+                  setEmailSuccess("");
+                  try {
+                    const response = await fetch('/api/sendVisitNotesEmail', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        userEmail: user.email,
+                        userName: `${user.firstName} ${user.lastName}`
+                      }),
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Failed to send email');
+                    setEmailSuccess(`📧 Email sent successfully! Check your inbox for your booth visit summary.`);
+                  } catch (err) {
+                    setEmailError(err instanceof Error ? err.message : 'Failed to send email. Please try again.');
+                  } finally {
+                    setIsEmailLoading(false);
+                  }
+                }}
+                disabled={isEmailLoading}
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-300 flex items-center gap-2 mx-auto"
+              >
+                {isEmailLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    📧 Email My Visit Summary
+                  </>
+                )}
+              </button>
+              {emailSuccess && (
+                <div className="text-green-600 text-sm mt-2">{emailSuccess}</div>
+              )}
+              {emailError && (
+                <div className="text-red-600 text-sm mt-2">{emailError}</div>
+              )}
             </div>
           )}
         </div>
