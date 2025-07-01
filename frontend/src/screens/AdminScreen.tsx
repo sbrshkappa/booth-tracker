@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
+import BoothForm from "@/components/BoothForm";
+import BoothCard from "@/components/BoothCard";
+import BoothModal from "@/components/BoothModal";
 
 interface User {
   id: number;
@@ -17,11 +20,27 @@ interface AdminStatus {
   userId: number;
 }
 
+interface Booth {
+  id: number;
+  name: string;
+  phrase: string;
+  description?: string;
+  location?: string;
+  totalVisits: number;
+}
+
 const AdminScreen: React.FC = () => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [adminStatus, setAdminStatus] = useState<AdminStatus | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [showBoothForm, setShowBoothForm] = useState(false);
+  const [isCreatingBooth, setIsCreatingBooth] = useState(false);
+  const [boothMessage, setBoothMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [booths, setBooths] = useState<Booth[]>([]);
+  const [isLoadingBooths, setIsLoadingBooths] = useState(false);
+  const [selectedBooth, setSelectedBooth] = useState<Booth | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -37,6 +56,13 @@ const AdminScreen: React.FC = () => {
     // Check admin status
     checkAdminStatus(userObj.email);
   }, [router]);
+
+  // Fetch booths when booths tab is active
+  useEffect(() => {
+    if (activeTab === 'booths') {
+      fetchBooths();
+    }
+  }, [activeTab]);
 
   const checkAdminStatus = async (email: string) => {
     try {
@@ -68,6 +94,92 @@ const AdminScreen: React.FC = () => {
     localStorage.removeItem('user');
     localStorage.removeItem('userProgress');
     router.push('/');
+  };
+
+  const handleCreateBooth = async (data: { name: string; phrase: string }) => {
+    setIsCreatingBooth(true);
+    setBoothMessage(null);
+    
+    try {
+      const response = await fetch('/api/registerBooth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setBoothMessage({ type: 'success', text: 'Booth created successfully!' });
+        setShowBoothForm(false);
+        // Refresh booths list
+        fetchBooths();
+        // Clear message after 3 seconds
+        setTimeout(() => setBoothMessage(null), 3000);
+      } else {
+        setBoothMessage({ type: 'error', text: result.error || 'Failed to create booth' });
+      }
+    } catch (error) {
+      console.error('Error creating booth:', error);
+      setBoothMessage({ type: 'error', text: 'An error occurred while creating the booth' });
+    } finally {
+      setIsCreatingBooth(false);
+    }
+  };
+
+  const fetchBooths = async () => {
+    setIsLoadingBooths(true);
+    try {
+      const response = await fetch('/api/getBooths');
+      const data = await response.json();
+
+      if (response.ok) {
+        setBooths(data.booths || []);
+      } else {
+        console.error('Failed to fetch booths:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching booths:', error);
+    } finally {
+      setIsLoadingBooths(false);
+    }
+  };
+
+  const handleUpdateBooth = async (boothId: number, data: { name: string; phrase: string }) => {
+    try {
+      const response = await fetch('/api/updateBooth', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ boothId, ...data }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        // Refresh booths list
+        fetchBooths();
+        return result;
+      } else {
+        throw new Error(result.error || 'Failed to update booth');
+      }
+    } catch (error) {
+      console.error('Error updating booth:', error);
+      throw error;
+    }
+  };
+
+  const handleBoothClick = (booth: Booth) => {
+    setSelectedBooth(booth);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedBooth(null);
   };
 
   const getAdminIcon = (level: string) => {
@@ -279,10 +391,69 @@ const AdminScreen: React.FC = () => {
             )}
 
             {activeTab === 'booths' && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🏢</div>
-                <h3 className="text-xl font-semibold text-gray-700 mb-2">Booth Management</h3>
-                <p className="text-gray-500">Booth configuration features coming soon!</p>
+              <div className="space-y-6">
+                {/* Header */}
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-800 mb-2">🏢 Booth Management</h3>
+                  <p className="text-gray-600 mb-4">Create and manage conference booths</p>
+                  <button
+                    onClick={() => setShowBoothForm(!showBoothForm)}
+                    className="px-3 py-1.5 text-sm border border-blue-300 text-blue-700 bg-blue-50 rounded-md hover:bg-blue-100 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  >
+                    {showBoothForm ? 'Cancel' : '+ Add Booth'}
+                  </button>
+                </div>
+
+                {/* Success/Error Message */}
+                {boothMessage && (
+                  <div className={`p-4 rounded-md ${
+                    boothMessage.type === 'success' 
+                      ? 'bg-green-50 border border-green-200 text-green-800' 
+                      : 'bg-red-50 border border-red-200 text-red-800'
+                  }`}>
+                    {boothMessage.text}
+                  </div>
+                )}
+
+                {/* Booth Creation Form */}
+                {showBoothForm && (
+                  <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-4">Create New Booth</h4>
+                    <BoothForm
+                      onSubmit={handleCreateBooth}
+                      isLoading={isCreatingBooth}
+                      onCancel={() => setShowBoothForm(false)}
+                    />
+                  </div>
+                )}
+
+                {/* Booth List */}
+                <div className="bg-white p-6 rounded-lg border border-gray-200">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4">Existing Booths</h4>
+                  
+                  {isLoadingBooths ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-500">Loading booths...</p>
+                    </div>
+                  ) : booths.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {booths.map((booth) => (
+                        <BoothCard
+                          key={booth.id}
+                          booth={booth}
+                          onClick={handleBoothClick}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <div className="text-4xl mb-2">📋</div>
+                      <p>No booths found</p>
+                      <p className="text-sm mt-1">Create your first booth using the form above</p>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -296,6 +467,14 @@ const AdminScreen: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Booth Modal */}
+      <BoothModal
+        booth={selectedBooth}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onUpdate={handleUpdateBooth}
+      />
     </div>
   );
 };
