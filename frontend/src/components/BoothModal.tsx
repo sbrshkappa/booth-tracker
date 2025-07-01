@@ -42,7 +42,7 @@ export default function BoothModal({ booth, isOpen, onClose, onUpdate }: BoothMo
       setMessage({ type: 'success', text: 'Booth updated successfully!' })
       setIsEditing(false)
       setTimeout(() => setMessage(null), 3000)
-    } catch (error) {
+    } catch {
       setMessage({ type: 'error', text: 'Failed to update booth' })
     } finally {
       setIsUpdating(false)
