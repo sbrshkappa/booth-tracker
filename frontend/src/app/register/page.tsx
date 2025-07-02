@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import TextInput from "../../components/TextInput";
 import PrimaryButton from "../../components/PrimaryButton";
-import InfoIcon from "../../components/InfoIcon";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -10,7 +9,6 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [badgeNumber, setBadgeNumber] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
@@ -22,7 +20,7 @@ export default function Register() {
     setSuccess(false);
 
     // Client-side validation
-    if (!email || !firstName || !lastName || !badgeNumber) {
+    if (!email || !firstName || !lastName) {
       setError("All fields are required. Please fill in all information.");
       setIsLoading(false);
       return;
@@ -46,7 +44,6 @@ export default function Register() {
           email,
           first_name: firstName,
           last_name: lastName,
-          badge_number: badgeNumber,
         }),
       });
 
@@ -108,17 +105,7 @@ export default function Register() {
           onChange={setLastName}
           required
         />
-        <div className="relative">
-          <TextInput
-            label="Badge Number"
-            value={badgeNumber}
-            onChange={setBadgeNumber}
-            required
-          />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2">
-            <InfoIcon />
-          </span>
-        </div>
+
         <PrimaryButton type="submit" disabled={isLoading}>
           {isLoading ? "Registering..." : "Register"}
         </PrimaryButton>
