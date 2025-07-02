@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { getUserFromStorage } from '@/utils/auth';
 
 interface Session {
   id: number;
@@ -25,6 +26,76 @@ interface SessionModalProps {
 }
 
 export default function SessionModal({ session, isOpen, onClose }: SessionModalProps) {
+  const [notes, setNotes] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [user, setUser] = useState<any>(null);
+
+  // Get user on component mount
+  useEffect(() => {
+    const currentUser = getUserFromStorage();
+    setUser(currentUser);
+  }, []);
+
+  // Load existing notes when modal opens
+  useEffect(() => {
+    if (session && isOpen && user) {
+      loadSessionNotes();
+    }
+  }, [session, isOpen, user]);
+
+  const loadSessionNotes = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/getSessionNotes?userEmail=${encodeURIComponent(user.email)}`);
+      if (response.ok) {
+        const data = await response.json();
+        const sessionNote = data.data?.find((note: any) => note.session_id === session?.id);
+        if (sessionNote) {
+          setNotes(sessionNote.notes || '');
+        } else {
+          setNotes('');
+        }
+      }
+    } catch (error) {
+      console.error('Error loading session notes:', error);
+    }
+  };
+
+  const saveNotes = async () => {
+    if (!session || !user) return;
+
+    setIsSaving(true);
+    setSaveStatus('idle');
+
+    try {
+      const response = await fetch('/api/saveSessionNotes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          session_id: session.id,
+          notes: notes.trim() || null,
+          userEmail: user.email,
+        }),
+      });
+
+      if (response.ok) {
+        setSaveStatus('success');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } else {
+        setSaveStatus('error');
+      }
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      setSaveStatus('error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (!session || !isOpen) return null;
 
   const formatTime = (timeStr: string) => {
@@ -104,10 +175,48 @@ export default function SessionModal({ session, isOpen, onClose }: SessionModalP
             </div>
           )}
 
-          {/* Placeholder for future notes and rating functionality */}
+          {/* Notes Section */}
           <div className="border-t pt-6 mb-6">
-            <div className="text-center text-gray-500">
-              <p className="text-sm">Notes and rating functionality coming soon!</p>
+            <div className="mb-4">
+              <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
+                📝 My Notes
+              </h3>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Add your notes about this session..."
+                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-[#fba758] focus:border-transparent"
+                rows={4}
+                maxLength={1000}
+              />
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-xs text-gray-500">
+                  {notes.length}/1000 characters
+                </span>
+                <button
+                  onClick={saveNotes}
+                  disabled={isSaving || !user}
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                    isSaving || !user
+                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      : 'bg-[#fba758] text-white hover:bg-[#fba758]/90'
+                  }`}
+                >
+                  {isSaving ? 'Saving...' : 'Save Notes'}
+                </button>
+              </div>
+              
+              {/* Save Status */}
+              {saveStatus === 'success' && (
+                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-green-800 text-sm">✅ Notes saved successfully!</p>
+                </div>
+              )}
+              {saveStatus === 'error' && (
+                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-red-800 text-sm">❌ Failed to save notes. Please try again.</p>
+                </div>
+              )}
             </div>
           </div>
 
