@@ -25,7 +25,7 @@ export default function Dashboard() {
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState("");
   const [emailError, setEmailError] = useState("");
-  const [activeTab, setActiveTab] = useState<'sessions' | 'booths'>('sessions');
+
 
   // Check if user has completed all booths
   const isCompleted = progress && progress.visited > 0 && progress.visited === progress.total;
@@ -229,43 +229,11 @@ export default function Dashboard() {
       />
 
       {/* Main content fills available space */}
-      <div className="flex-1 flex flex-col w-full max-w-md mx-auto">
-        {/* Tab Navigation */}
-        <div className="flex bg-gray-100 rounded-lg p-1 mt-6 mb-6">
-          <button
-            onClick={() => setActiveTab('sessions')}
-            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-              activeTab === 'sessions'
-                ? 'bg-white text-[#fba758] shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            Sessions
-          </button>
-          <button
-            onClick={() => setActiveTab('booths')}
-            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
-              activeTab === 'booths'
-                ? 'bg-white text-[#fba758] shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            Booths
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        {activeTab === 'sessions' ? (
-          /* Sessions Tab Content */
-          <div className="flex flex-col items-center justify-center">
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">📅</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">Conference Sessions</h3>
-              <p className="text-gray-500">Session schedule coming soon...</p>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center">
+      <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto">
+            {/* Page Title */}
+            <h1 className="text-3xl font-bold text-black text-center mb-6" style={{ letterSpacing: 0.5 }}>
+              Booth Tracker
+            </h1>
             {/* Header */}
             <h2 className="text-2xl font-semibold text-[#fba758] text-center mb-4" style={{ letterSpacing: 0.5 }}>
               {headerText}
@@ -380,8 +348,6 @@ export default function Dashboard() {
                 )}
               </>
             )}
-          </div>
-        )}
       </div>
     </div>
   );
