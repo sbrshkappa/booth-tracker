@@ -39,7 +39,7 @@ const MenuDropdown: React.FC<MenuDropdownProps> = ({ options, className = "", us
   };
 
   return (
-    <div className={`absolute top-6 right-6 z-30 menu-container ${className}`}>
+    <div className={`fixed top-6 right-6 z-50 menu-container ${className}`}>
       <div className="relative">
         <button
           onClick={() => setMenuOpen(!menuOpen)}

@@ -229,7 +229,7 @@ export default function Dashboard() {
       />
 
       {/* Main content fills available space */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto">
+      <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto mt-20">
             {/* Page Title */}
             <h1 className="text-3xl font-bold text-black text-center mb-6" style={{ letterSpacing: 0.5 }}>
               Booth Tracker

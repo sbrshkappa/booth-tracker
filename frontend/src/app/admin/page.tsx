@@ -160,10 +160,10 @@ export default function AdminPage() {
           <h2 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h2>
           <p className="text-gray-600 mb-6">You don't have permission to access the admin panel.</p>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/sessions')}
             className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Go to Dashboard
+            Go to Sessions
           </button>
         </div>
       </div>
@@ -179,7 +179,7 @@ export default function AdminPage() {
       />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col w-full max-w-6xl mx-auto">
+      <div className="flex-1 flex flex-col w-full max-w-6xl mx-auto mt-20">
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-orange-500 mb-4" style={{ letterSpacing: 0.5 }}>
