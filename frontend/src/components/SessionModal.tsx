@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getUserFromStorage } from '@/utils/auth';
+import { User, UserSessionNotes } from '@/utils/types';
 
 interface Session {
   id: number;
@@ -25,11 +26,22 @@ interface SessionModalProps {
   onClose: () => void;
 }
 
+interface SessionNoteWithSession extends UserSessionNotes {
+  sessions: {
+    id: number;
+    topic: string;
+    speaker: string | null;
+    start_time: string;
+    type: string;
+    room: string | null;
+  };
+}
+
 export default function SessionModal({ session, isOpen, onClose }: SessionModalProps) {
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   // Get user on component mount
   useEffect(() => {
@@ -37,21 +49,14 @@ export default function SessionModal({ session, isOpen, onClose }: SessionModalP
     setUser(currentUser);
   }, []);
 
-  // Load existing notes when modal opens
-  useEffect(() => {
-    if (session && isOpen && user) {
-      loadSessionNotes();
-    }
-  }, [session, isOpen, user]);
-
-  const loadSessionNotes = async () => {
-    if (!user) return;
+  const loadSessionNotes = useCallback(async () => {
+    if (!user || !session) return;
     
     try {
       const response = await fetch(`/api/getSessionNotes?userEmail=${encodeURIComponent(user.email)}`);
       if (response.ok) {
         const data = await response.json();
-        const sessionNote = data.data?.find((note: any) => note.session_id === session?.id);
+        const sessionNote = data.data?.find((note: SessionNoteWithSession) => note.session_id === session.id);
         if (sessionNote) {
           setNotes(sessionNote.notes || '');
         } else {
@@ -61,7 +66,14 @@ export default function SessionModal({ session, isOpen, onClose }: SessionModalP
     } catch (error) {
       console.error('Error loading session notes:', error);
     }
-  };
+  }, [user, session]);
+
+  // Load existing notes when modal opens
+  useEffect(() => {
+    if (session && isOpen && user) {
+      loadSessionNotes();
+    }
+  }, [session, isOpen, user, loadSessionNotes]);
 
   const saveNotes = async () => {
     if (!session || !user) return;
