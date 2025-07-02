@@ -222,136 +222,134 @@ export default function Dashboard() {
   else headerText = `Only ${progress.remaining} more to go!`;
 
   return (
-    <div className="relative h-screen overflow-hidden">
+    <div className="h-screen bg-white flex flex-col px-4 py-6 relative overflow-hidden">
       <BackgroundImage />
-      <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-x-hidden">
-        {/* Menu */}
-        <MenuDropdown 
-          options={menuOptions} 
-          userName={`${user.firstName} ${user.lastName}`}
-        />
+      {/* Menu */}
+      <MenuDropdown 
+        options={menuOptions} 
+        userName={`${user.firstName} ${user.lastName}`}
+      />
 
-        {/* Main content fills available space */}
-        <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto mt-20">
-              {/* Page Title */}
-              <h1 className="text-3xl font-bold text-black text-center mb-6" style={{ letterSpacing: 0.5 }}>
-                Booth Tracker
-              </h1>
-              {/* Header */}
-              <h2 className="text-2xl font-semibold text-[#fba758] text-center mb-4" style={{ letterSpacing: 0.5 }}>
-                {headerText}
-              </h2>
-              {/* Progress Circle */}
-              {renderProgressCircle()}
-              
-              {isCompleted ? (
-                /* Completion Message */
-                <div className="mt-8 mb-4 text-center">
-                  <div className="text-6xl mb-4">🎉🎊✨</div>
-                  <div className="text-xl font-bold text-green-600 mb-3">Congratulations!</div>
-                  <div className="text-base text-gray-700 leading-relaxed">
-                    You've visited all booths and hopefully have learned about the various wonderful activities happening in the different regions of the organization. You are now entered into a raffle! Good luck! 🍀
-                  </div>
+      {/* Main content fills available space */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto">
+        {/* Page Title */}
+        <h1 className="text-3xl font-bold text-black text-center mb-6" style={{ letterSpacing: 0.5 }}>
+          Booth Tracker
+        </h1>
+        {/* Header */}
+        <h2 className="text-2xl font-semibold text-[#fba758] text-center mb-4" style={{ letterSpacing: 0.5 }}>
+          {headerText}
+        </h2>
+        {/* Progress Circle */}
+        {renderProgressCircle()}
+        
+        {isCompleted ? (
+          /* Completion Message */
+          <div className="mt-8 mb-4 text-center">
+            <div className="text-6xl mb-4">🎉🎊✨</div>
+            <div className="text-xl font-bold text-green-600 mb-3">Congratulations!</div>
+            <div className="text-base text-gray-700 leading-relaxed">
+              You've visited all booths and hopefully have learned about the various wonderful activities happening in the different regions of the organization. You are now entered into a raffle! Good luck! 🍀
+            </div>
+            
+            {/* Email Button */}
+            <div className="mt-6">
+              <button
+                onClick={async () => {
+                  if (!user?.email) return;
+                  setIsEmailLoading(true);
+                  setEmailError("");
+                  setEmailSuccess("");
                   
-                  {/* Email Button */}
-                  <div className="mt-6">
-                    <button
-                      onClick={async () => {
-                        if (!user?.email) return;
-                        setIsEmailLoading(true);
-                        setEmailError("");
-                        setEmailSuccess("");
-                        
-                        const result = await sendVisitNotesEmail(user);
-                        
-                        if (result.success) {
-                          setEmailSuccess(result.message);
-                        } else {
-                          setEmailError(result.message);
-                        }
-                        
-                        setIsEmailLoading(false);
-                      }}
-                      disabled={isEmailLoading}
-                      className="bg-[#fe84a0] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#fba758] transition-colors disabled:bg-gray-300 flex items-center gap-2 mx-auto"
-                    >
-                      {isEmailLoading ? (
-                        <>
-                          <LoadingSpinner size="sm" color="white" />
-                          Sending...
-                        </>
-                      ) : (
-                        <>
-                          📧 Email My Visit Summary
-                        </>
-                      )}
-                    </button>
-                    {emailSuccess && (
-                      <div className="text-green-600 text-sm mt-2">{emailSuccess}</div>
-                    )}
-                    {emailError && (
-                      <div className="text-red-600 text-sm mt-2">{emailError}</div>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                /* Input Form */
-                <>
-                  {/* Instruction */}
-                  <div className="mt-8 mb-2 text-lg text-center text-gray-900 font-medium">Visit a booth, get a phrase</div>
-                  {/* Phrase Input */}
-                  <form onSubmit={handleSubmitPhrase} className="w-full flex flex-col items-center gap-4 mb-4">
-                    <input
-                      className="w-full rounded-xl border-2 border-[#fba758] px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fba758]"
-                      type="text"
-                      value={phrase}
-                      onChange={e => setPhrase(e.target.value)}
-                      placeholder="Enter the phrase"
-                    />
-                    <textarea
-                      className="w-full rounded-xl border-2 border-[#fba758] px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fba758]"
-                      value={notes}
-                      onChange={e => setNotes(e.target.value)}
-                      placeholder="Enter any notes about the booth"
-                    />
-                    <div className="w-full">
-                      <label className="block text-lg font-medium text-gray-700 mb-3 text-center">
-                        Rate this booth (optional)
-                      </label>
-                      <div className="flex justify-center">
-                        <StarRating rating={rating} onRatingChange={setRating} size="lg" />
-                      </div>
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full bg-[#fba758] text-white py-3 px-6 rounded-xl font-semibold hover:bg-[#fdbc3f] transition-colors disabled:bg-gray-300 flex items-center justify-center gap-2"
-                    >
-                      {isLoading ? (
-                        <>
-                          <LoadingSpinner size="sm" color="white" />
-                          Visiting...
-                        </>
-                      ) : (
-                        'Visit Booth'
-                      )}
-                    </button>
-                  </form>
+                  const result = await sendVisitNotesEmail(user);
                   
-                  {/* Success/Error Messages */}
-                  {success && (
-                    <div className="text-green-600 text-sm text-center bg-green-50 p-3 rounded-lg">
-                      {success}
-                    </div>
-                  )}
-                  {error && (
-                    <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg">
-                      {error}
-                    </div>
-                  )}
-                </>
+                  if (result.success) {
+                    setEmailSuccess(result.message);
+                  } else {
+                    setEmailError(result.message);
+                  }
+                  
+                  setIsEmailLoading(false);
+                }}
+                disabled={isEmailLoading}
+                className="bg-[#fe84a0] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#fba758] transition-colors disabled:bg-gray-300 flex items-center gap-2 mx-auto"
+              >
+                {isEmailLoading ? (
+                  <>
+                    <LoadingSpinner size="sm" color="white" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    📧 Email My Visit Summary
+                  </>
+                )}
+              </button>
+              {emailSuccess && (
+                <div className="text-green-600 text-sm mt-2">{emailSuccess}</div>
               )}
-        </div>
+              {emailError && (
+                <div className="text-red-600 text-sm mt-2">{emailError}</div>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* Input Form */
+          <>
+            {/* Instruction */}
+            <div className="mt-8 mb-2 text-lg text-center text-gray-900 font-medium">Visit a booth, get a phrase</div>
+            {/* Phrase Input */}
+            <form onSubmit={handleSubmitPhrase} className="w-full flex flex-col items-center gap-4 mb-4">
+              <input
+                className="w-full rounded-xl border-2 border-[#fba758] px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fba758]"
+                type="text"
+                value={phrase}
+                onChange={e => setPhrase(e.target.value)}
+                placeholder="Enter the phrase"
+              />
+              <textarea
+                className="w-full rounded-xl border-2 border-[#fba758] px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fba758]"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Enter any notes about the booth"
+              />
+              <div className="w-full">
+                <label className="block text-lg font-medium text-gray-700 mb-3 text-center">
+                  Rate this booth (optional)
+                </label>
+                <div className="flex justify-center">
+                  <StarRating rating={rating} onRatingChange={setRating} size="lg" />
+                </div>
+              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-[#fba758] text-white py-3 px-6 rounded-xl font-semibold hover:bg-[#fdbc3f] transition-colors disabled:bg-gray-300 flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <LoadingSpinner size="sm" color="white" />
+                    Visiting...
+                  </>
+                ) : (
+                  'Visit Booth'
+                )}
+              </button>
+            </form>
+            
+            {/* Success/Error Messages */}
+            {success && (
+              <div className="text-green-600 text-sm text-center bg-green-50 p-3 rounded-lg">
+                {success}
+              </div>
+            )}
+            {error && (
+              <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg">
+                {error}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

@@ -39,16 +39,16 @@ const MenuDropdown: React.FC<MenuDropdownProps> = ({ options, className = "", us
   };
 
   return (
-    <div className={`fixed top-6 right-6 z-50 menu-container ${className}`}>
+    <div className={`fixed top-6 right-6 z-[100] menu-container ${className}`}>
       <div className="relative">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="p-2 bg-white rounded-lg shadow-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-400 transition-all duration-200"
+          className="p-3 bg-gradient-to-r from-orange-500 to-pink-500 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 transition-all duration-300"
         >
           <div className="w-6 h-6 flex flex-col justify-center items-center">
-            <div className={`w-5 h-0.5 bg-gray-700 transition-all duration-200 ${menuOpen ? 'rotate-45 translate-y-1' : ''}`}></div>
-            <div className={`w-5 h-0.5 bg-gray-700 transition-all duration-200 mt-1 ${menuOpen ? 'opacity-0' : ''}`}></div>
-            <div className={`w-5 h-0.5 bg-gray-700 transition-all duration-200 mt-1 ${menuOpen ? '-rotate-45 -translate-y-1' : ''}`}></div>
+            <div className={`w-6 h-0.5 bg-white transition-all duration-300 ease-in-out ${menuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></div>
+            <div className={`w-6 h-0.5 bg-white transition-all duration-300 ease-in-out mt-1.5 ${menuOpen ? 'opacity-0 scale-0' : ''}`}></div>
+            <div className={`w-6 h-0.5 bg-white transition-all duration-300 ease-in-out mt-1.5 ${menuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
           </div>
         </button>
         
@@ -94,11 +94,6 @@ const MenuDropdown: React.FC<MenuDropdownProps> = ({ options, className = "", us
                   }`}>
                     {option.label}
                   </span>
-                  {option.isCurrent && (
-                    <span className="ml-auto text-xs text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
-                      Current
-                    </span>
-                  )}
                 </button>
               </React.Fragment>
             ))}

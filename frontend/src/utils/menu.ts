@@ -32,7 +32,7 @@ export const createMenuOptions = (config: MenuConfig): MenuOption[] => {
     },
     {
       id: 'dashboard',
-      label: 'Booths',
+      label: 'Booth Tracker',
       emoji: '🏠',
       action: currentPage === 'dashboard' ? () => {} : () => router.push('/dashboard'),
       isCurrent: currentPage === 'dashboard',

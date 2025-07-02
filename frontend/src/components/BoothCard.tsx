@@ -5,11 +5,22 @@ import { Booth } from '@/utils/types'
 
 interface BoothCardProps {
   booth: Booth
+<<<<<<< HEAD
+=======
+  onClick?: (booth: Booth) => void
+>>>>>>> feature/ui-improvements-and-session-enhancements
 }
 
 export default function BoothCard({ booth }: BoothCardProps) {
   return (
+<<<<<<< HEAD
     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+=======
+    <div 
+      className={`bg-white/90 border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={() => onClick?.(booth)}
+    >
+>>>>>>> feature/ui-improvements-and-session-enhancements
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900 mb-1">{booth.name}</h3>

@@ -10,6 +10,7 @@ import { User, Booth } from "@/utils/types";
 import { createMenuOptions } from "@/utils/menu";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
 import { LoadingScreen } from "@/utils/ui";
+import BackgroundImage from '@/components/BackgroundImage';
 
 interface Session {
   id: number;
@@ -27,6 +28,17 @@ interface Session {
   tags: string[] | null;
   created_at: string;
   updated_at: string;
+}
+
+interface BreakData {
+  startTime: string;
+  endTime: string;
+  isLunch: boolean;
+}
+
+interface TimelineItem {
+  type: 'session' | 'break';
+  data: Session | BreakData;
 }
 
 export default function SessionsPage() {
@@ -127,6 +139,43 @@ export default function SessionsPage() {
     return { morningSessions, afternoonSessions };
   };
 
+  const getChronologicalSessionsWithBreaks = (day: number) => {
+    const daySessions = getSessionsForDay(day);
+    
+    // Sort sessions by start time
+    const sortedSessions = daySessions.sort((a, b) => {
+      return a.start_time.localeCompare(b.start_time);
+    });
+
+    // Only return sessions from the data, no automatic breaks
+    return sortedSessions.map(session => ({
+      type: 'session' as const,
+      data: session
+    }));
+  };
+
+  const getSessionEndTime = (session: Session) => {
+    // Assume sessions are 1 hour by default, or extract from session data if available
+    const startHour = parseInt(session.start_time.split(':')[0]);
+    const startMinute = parseInt(session.start_time.split(':')[1]);
+    const endHour = startHour + 1;
+    return `${endHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
+  };
+
+  const getTimeDifference = (time1: string, time2: string) => {
+    const [hour1, minute1] = time1.split(':').map(Number);
+    const [hour2, minute2] = time2.split(':').map(Number);
+    return (hour2 * 60 + minute2) - (hour1 * 60 + minute1);
+  };
+
+  const formatTime = (timeStr: string) => {
+    const [hours, minutes] = timeStr.split(':');
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+    return `${displayHour}:${minutes} ${ampm}`;
+  };
+
   const openSessionModal = (session: Session) => {
     setSelectedSession(session);
     setIsModalOpen(true);
@@ -182,30 +231,9 @@ export default function SessionsPage() {
 
   return (
     <div className="h-screen bg-white flex flex-col px-4 py-6 relative overflow-hidden">
-      {/* Background image */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none select-none absolute inset-0 w-full h-full z-0 flex justify-center items-center"
-        style={{
-          overflow: 'hidden',
-        }}
-      >
-        <img
-          src="/assets/background.png"
-          alt="background"
-          className="object-cover object-center opacity-10 w-[200vw] max-w-none h-full mx-auto hidden sm:block"
-          style={{ left: '-50vw', position: 'absolute', top: 0, height: '100%', zIndex: 0 }}
-        />
-        <img
-          src="/assets/background.png"
-          alt="background"
-          className="object-cover object-center opacity-10 w-[200vw] max-w-none h-full mx-auto block sm:hidden"
-          style={{ left: '-50vw', position: 'absolute', top: 0, height: '100%', zIndex: 0 }}
-        />
-      </div>
-
+      <BackgroundImage />
       {/* Header with title and menu */}
-      <div className="flex flex-col-reverse sm:flex-row justify-between items-start mb-6 gap-2 sm:gap-0 relative z-10">
+      <div className="flex flex-col-reverse sm:flex-row justify-between items-start mb-6 gap-2 sm:gap-0">
         <div className="flex-1 sm:pr-8 max-w-2xl">
           <h1 className="text-3xl font-bold text-[#fba758]" style={{ letterSpacing: 0.5 }}>
             Conference Schedule
@@ -223,7 +251,7 @@ export default function SessionsPage() {
       </div>
 
       {/* Main content */}
-      <div className="flex flex-col w-full max-w-4xl mx-auto flex-1 min-h-0 relative z-10">
+      <div className="relative z-10 flex flex-col w-full max-w-4xl mx-auto flex-1 min-h-0">
         {/* Day Tabs */}
         <div className="flex bg-gray-100 rounded-lg p-1 mb-6 flex-shrink-0">
           {[1, 2, 3].map((day) => (
@@ -258,52 +286,35 @@ export default function SessionsPage() {
         <div className="flex-1 min-h-0 overflow-hidden">
           {activeTab === 'sessions' ? (
             (() => {
-              const { morningSessions, afternoonSessions } = getSessionsByTimeSlot(activeDay);
+              const timelineItems = getChronologicalSessionsWithBreaks(activeDay);
               
               return (
                 <div className="h-full overflow-y-auto pr-2">
                   <div className="space-y-6">
-                    {/* Morning Session */}
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                        <span className="mr-2">🌅</span>
-                        Morning Session
-                      </h2>
-                      <div className="space-y-6">
-                        {morningSessions.length > 0 ? (
-                          morningSessions.map((session) => (
-                            <SessionCard key={session.id} session={session} onClick={openSessionModal} />
-                          ))
-                        ) : (
-                          <p className="text-gray-500 text-center py-4">No morning sessions scheduled</p>
-                        )}
+                    {timelineItems.length > 0 ? (
+                      timelineItems.map((item, index) => (
+                        <div key={index}>
+                          {(item.data as Session).type === 'lunch' || (item.data as Session).type === 'break' ? (
+                            <div className="text-center py-6">
+                              <div className="bg-gray-50 rounded-lg p-4">
+                                <h3 className="text-lg font-medium text-gray-700 mb-2">
+                                  {(item.data as Session).type === 'lunch' ? '🍽️ Lunch Break' : '☕ Break'}
+                                </h3>
+                                <p className="text-gray-600">
+                                  {formatTime((item.data as Session).start_time)}
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <SessionCard session={item.data as Session} onClick={openSessionModal} />
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-12">
+                        <p className="text-gray-500">No sessions scheduled for this day.</p>
                       </div>
-                    </div>
-
-                    {/* Lunch Break */}
-                    <div className="text-center py-6">
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-lg font-medium text-gray-700 mb-2">🍽️ Lunch Break</h3>
-                        <p className="text-gray-600">12:00 PM - 1:30 PM</p>
-                      </div>
-                    </div>
-
-                    {/* Afternoon Session */}
-                    <div>
-                      <h2 className="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-                        <span className="mr-2">🌆</span>
-                        Afternoon Session
-                      </h2>
-                      <div className="space-y-6">
-                        {afternoonSessions.length > 0 ? (
-                          afternoonSessions.map((session) => (
-                            <SessionCard key={session.id} session={session} onClick={openSessionModal} />
-                          ))
-                        ) : (
-                          <p className="text-gray-500 text-center py-4">No afternoon sessions scheduled</p>
-                        )}
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               );
