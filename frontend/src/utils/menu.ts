@@ -11,7 +11,7 @@ export interface MenuOption {
 }
 
 export interface MenuConfig {
-  currentPage: 'dashboard' | 'history' | 'how-it-works' | 'admin';
+  currentPage: 'dashboard' | 'sessions' | 'history' | 'how-it-works' | 'admin';
   router: {
     push: (path: string) => void;
   };
@@ -24,8 +24,15 @@ export const createMenuOptions = (config: MenuConfig): MenuOption[] => {
 
   const baseOptions: MenuOption[] = [
     {
+      id: 'sessions',
+      label: 'Sessions',
+      emoji: '📅',
+      action: currentPage === 'sessions' ? () => {} : () => router.push('/sessions'),
+      isCurrent: currentPage === 'sessions',
+    },
+    {
       id: 'dashboard',
-      label: 'Dashboard',
+      label: 'Booths',
       emoji: '🏠',
       action: currentPage === 'dashboard' ? () => {} : () => router.push('/dashboard'),
       isCurrent: currentPage === 'dashboard',
@@ -39,7 +46,7 @@ export const createMenuOptions = (config: MenuConfig): MenuOption[] => {
     },
     {
       id: 'how-it-works',
-      label: 'How it works',
+      label: 'Help',
       emoji: '❓',
       action: currentPage === 'how-it-works' ? () => {} : () => router.push('/how-it-works'),
       isCurrent: currentPage === 'how-it-works',
