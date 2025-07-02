@@ -1,6 +1,8 @@
 /**
  * Google Apps Script to receive webhook data from Supabase
  * and write user completion data to Google Sheets
+ * 
+ * This script handles booth tracking data only.
  */
 
 // Replace this with your actual Google Sheet ID
@@ -109,44 +111,6 @@ function writeToSheet(data) {
 }
 
 /**
- * Manual function to test the sheet writing
- * You can run this function manually to test the setup
- */
-function testWriteToSheet() {
-  const testData = {
-    timestamp: new Date().toISOString(),
-    user: {
-      email: 'test@example.com',
-      firstName: 'Test',
-      lastName: 'User',
-      badgeNumber: 'TEST001',
-      registrationDate: '2025-01-27T10:00:00Z',
-      completionDate: new Date().toISOString()
-    },
-    progress: {
-      visitedCount: 5,
-      totalBooths: 5,
-      completionPercentage: 100
-    },
-    visitHistory: [
-      {
-        boothName: 'Test Booth 1',
-        boothPhrase: 'test phrase 1',
-        visitedAt: '2025-01-27T10:30:00Z'
-      },
-      {
-        boothName: 'Test Booth 2',
-        boothPhrase: 'test phrase 2',
-        visitedAt: '2025-01-27T10:35:00Z'
-      }
-    ]
-  };
-  
-  const result = writeToSheet(testData);
-  console.log('Test result:', result);
-}
-
-/**
  * Function to get the webhook URL for this Apps Script
  * Run this function to get the URL you need to set in Supabase
  */
@@ -195,4 +159,42 @@ function setupSheet() {
   sheet.autoResizeColumns(1, headers.length);
   
   console.log('Sheet setup complete!');
+}
+
+/**
+ * Manual function to test the sheet writing
+ * You can run this function manually to test the setup
+ */
+function testWriteToSheet() {
+  const testData = {
+    timestamp: new Date().toISOString(),
+    user: {
+      email: 'test@example.com',
+      firstName: 'Test',
+      lastName: 'User',
+      badgeNumber: 'TEST001',
+      registrationDate: '2025-01-27T10:00:00Z',
+      completionDate: new Date().toISOString()
+    },
+    progress: {
+      visitedCount: 5,
+      totalBooths: 5,
+      completionPercentage: 100
+    },
+    visitHistory: [
+      {
+        boothName: 'Test Booth 1',
+        boothPhrase: 'test phrase 1',
+        visitedAt: '2025-01-27T10:30:00Z'
+      },
+      {
+        boothName: 'Test Booth 2',
+        boothPhrase: 'test phrase 2',
+        visitedAt: '2025-01-27T10:35:00Z'
+      }
+    ]
+  };
+  
+  const result = writeToSheet(testData);
+  console.log('Test result:', result);
 } 
