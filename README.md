@@ -1,23 +1,98 @@
-# Booth Tracker
+# Conference Companion
 
-A full-stack application for tracking booths with a Supabase backend and modern frontend.
+A full-stack conference management application for tracking booth visits and managing conference schedules, built with Supabase backend and Next.js frontend.
 
 ## Project Structure
 
 ```
 booth-tracker/
-├── api/                    # Supabase backend
-│   ├── supabase/          # Supabase configuration and functions
-│   │   ├── config.toml    # Supabase configuration
-│   │   ├── functions/     # Edge functions
-│   │   ├── migrations/    # Database migrations
-│   │   └── seed.sql      # Seed data
-│   └── package.json      # API dependencies
-├── frontend/              # Frontend application
-│   ├── package.json      # Frontend dependencies
-│   └── README.md         # Frontend setup guide
-├── package.json          # Root package.json (monorepo)
-└── README.md            # This file
+├── api/                           # Supabase backend
+│   ├── supabase/                  # Supabase configuration and functions
+│   │   ├── config.toml           # Supabase configuration
+│   │   ├── functions/            # Edge functions
+│   │   │   ├── checkAdminStatus/ # Admin status verification
+│   │   │   ├── createBooth/      # Booth creation
+│   │   │   ├── deleteBooth/      # Booth deletion
+│   │   │   ├── deleteUser/       # User deletion
+│   │   │   ├── getBooths/        # Fetch all booths
+│   │   │   ├── getSessions/      # Fetch conference sessions
+│   │   │   ├── getUserProgress/  # User visit progress
+│   │   │   ├── hello/            # Sample function
+│   │   │   ├── registerBooth/    # Booth registration
+│   │   │   ├── registerUser/     # User registration
+│   │   │   ├── sendVisitNotesEmail/ # Email visit summaries
+│   │   │   ├── updateBooth/      # Booth updates
+│   │   │   ├── updateBoothRating/ # Booth rating updates
+│   │   │   ├── updateVisitNotes/ # Visit notes updates
+│   │   │   ├── visitBooth/       # Booth visit tracking
+│   │   │   └── writeToGoogleSheet/ # Google Sheets integration
+│   │   ├── migrations/           # Database migrations
+│   │   │   ├── 20250628033436_create_sessions_table.sql
+│   │   │   ├── 20250628033437_add_sample_sessions.sql
+│   │   │   ├── 20250628033441_clean_reseed_final.sql
+│   │   │   ├── 20250628033445_add_auth_uuid_to_users.sql
+│   │   │   └── 20250628033446_admin_user_setup_guide.sql
+│   │   └── seed.sql              # Seed data
+│   ├── add_demo_user.sql         # Demo user setup
+│   ├── check_rating.sql          # Rating verification
+│   ├── test_data.sql             # Test data
+│   └── package.json              # API dependencies
+├── frontend/                      # Next.js frontend application
+│   ├── public/                   # Static assets
+│   │   └── assets/               # Images and logos
+│   │       ├── conference-companion.png
+│   │       ├── ssio-logo-english.png
+│   │       └── 100-birthday-logo-final-*.png
+│   ├── src/
+│   │   ├── app/                  # Next.js App Router
+│   │   │   ├── admin/            # Admin panel page
+│   │   │   ├── api/              # Frontend API routes
+│   │   │   │   ├── checkAdminStatus/
+│   │   │   │   ├── createBooth/
+│   │   │   │   ├── getBooths/
+│   │   │   │   ├── getSessions/
+│   │   │   │   ├── registerBooth/
+│   │   │   │   ├── registerUser/
+│   │   │   │   ├── sendVisitNotesEmail/
+│   │   │   │   ├── updateBooth/
+│   │   │   │   ├── updateBoothRating/
+│   │   │   │   ├── updateVisitNotes/
+│   │   │   │   └── visitBooth/
+│   │   │   ├── dashboard/        # Booth tracking page
+│   │   │   ├── history/          # Visit history page
+│   │   │   ├── how-it-works/     # Help & guide page
+│   │   │   ├── register/         # User registration page
+│   │   │   ├── sessions/         # Conference schedule page
+│   │   │   ├── favicon.ico       # App icon
+│   │   │   ├── globals.css       # Global styles
+│   │   │   ├── layout.tsx        # Root layout
+│   │   │   └── page.tsx          # Login page
+│   │   ├── components/           # Reusable components
+│   │   │   ├── BoothCard.tsx     # Booth display card
+│   │   │   ├── BoothForm.tsx     # Booth creation/editing form
+│   │   │   ├── BoothModal.tsx    # Booth editing modal
+│   │   │   ├── InfoIcon.tsx      # Information icon component
+│   │   │   ├── MenuDropdown.tsx  # Navigation menu
+│   │   │   ├── PrimaryButton.tsx # Primary button component
+│   │   │   ├── StarRating.tsx    # Rating component
+│   │   │   └── TextInput.tsx     # Text input component
+│   │   ├── hooks/                # Custom React hooks
+│   │   └── utils/                # Utility functions
+│   │       ├── admin.ts          # Admin utilities
+│   │       ├── auth.ts           # Authentication utilities
+│   │       ├── email.ts          # Email utilities
+│   │       ├── menu.ts           # Menu configuration
+│   │       ├── types.ts          # TypeScript types
+│   │       └── ui.tsx            # UI utilities
+│   ├── package.json              # Frontend dependencies
+│   ├── tsconfig.json             # TypeScript configuration
+│   ├── next.config.ts            # Next.js configuration
+│   └── README.md                 # Frontend setup guide
+├── google-apps-script/           # Google Apps Script integration
+│   └── Code.gs                   # Google Sheets integration script
+├── GOOGLE_SHEETS_SETUP.md        # Google Sheets setup guide
+├── package.json                  # Root package.json (monorepo)
+└── README.md                     # This file
 ```
 
 ## Prerequisites
