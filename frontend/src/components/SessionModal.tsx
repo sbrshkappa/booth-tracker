@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { getUserFromStorage } from '@/utils/auth';
 import { User, UserSessionNotes } from '@/utils/types';
+import StarRating from '@/components/StarRating';
 
 interface Session {
   id: number;
@@ -39,6 +40,7 @@ interface SessionNoteWithSession extends UserSessionNotes {
 
 export default function SessionModal({ session, isOpen, onClose }: SessionModalProps) {
   const [notes, setNotes] = useState('');
+  const [rating, setRating] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [user, setUser] = useState<User | null>(null);
@@ -59,8 +61,10 @@ export default function SessionModal({ session, isOpen, onClose }: SessionModalP
         const sessionNote = data.data?.find((note: SessionNoteWithSession) => note.session_id === session.id);
         if (sessionNote) {
           setNotes(sessionNote.notes || '');
+          setRating(sessionNote.rating || 0);
         } else {
           setNotes('');
+          setRating(0);
         }
       }
     } catch (error) {
@@ -90,6 +94,7 @@ export default function SessionModal({ session, isOpen, onClose }: SessionModalP
         body: JSON.stringify({
           session_id: session.id,
           notes: notes.trim() || null,
+          rating: rating > 0 ? rating : 0,
           userEmail: user.email,
         }),
       });
@@ -187,9 +192,9 @@ export default function SessionModal({ session, isOpen, onClose }: SessionModalP
             </div>
           )}
 
-          {/* Notes Section */}
+          {/* Notes and Rating Section */}
           <div className="border-t pt-6 mb-6">
-            <div className="mb-4">
+            <div className="mb-6">
               <h3 className="font-semibold text-gray-900 mb-2 flex items-center">
                 📝 My Notes
               </h3>
@@ -201,35 +206,51 @@ export default function SessionModal({ session, isOpen, onClose }: SessionModalP
                 rows={4}
                 maxLength={1000}
               />
-              <div className="flex justify-between items-center mt-2">
-                <span className="text-xs text-gray-500">
-                  {notes.length}/1000 characters
-                </span>
-                <button
-                  onClick={saveNotes}
-                  disabled={isSaving || !user}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                    isSaving || !user
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-[#fba758] text-white hover:bg-[#fba758]/90'
-                  }`}
-                >
-                  {isSaving ? 'Saving...' : 'Save Notes'}
-                </button>
+              <div className="text-xs text-gray-500 mt-1">
+                {notes.length}/1000 characters
               </div>
-              
-              {/* Save Status */}
-              {saveStatus === 'success' && (
-                <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-green-800 text-sm">✅ Notes saved successfully!</p>
-                </div>
-              )}
-              {saveStatus === 'error' && (
-                <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
-                  <p className="text-red-800 text-sm">❌ Failed to save notes. Please try again.</p>
-                </div>
-              )}
             </div>
+
+            {/* Rating Section */}
+            <div className="mb-6">
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                Rate this Session
+              </h3>
+              <div className="flex justify-center">
+                <StarRating 
+                  rating={rating} 
+                  onRatingChange={setRating} 
+                  size="lg" 
+                />
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-center">
+              <button
+                onClick={saveNotes}
+                disabled={isSaving || !user}
+                className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                  isSaving || !user
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-[#fba758] text-white hover:bg-[#fba758]/90'
+                }`}
+              >
+                {isSaving ? 'Saving...' : 'Save Notes & Rating'}
+              </button>
+            </div>
+            
+            {/* Save Status */}
+            {saveStatus === 'success' && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                <p className="text-green-800 text-sm text-center">✅ Notes and rating saved successfully!</p>
+              </div>
+            )}
+            {saveStatus === 'error' && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-800 text-sm text-center">❌ Failed to save. Please try again.</p>
+              </div>
+            )}
           </div>
 
           {session.tags && session.tags.length > 0 && (
