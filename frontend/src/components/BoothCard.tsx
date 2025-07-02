@@ -1,48 +1,32 @@
 'use client'
 
+import React from 'react'
 import { Booth } from '@/utils/types'
 
 interface BoothCardProps {
   booth: Booth
-  onClick: (booth: Booth) => void
 }
 
-export default function BoothCard({ booth, onClick }: BoothCardProps) {
+export default function BoothCard({ booth }: BoothCardProps) {
   return (
-    <div 
-      onClick={() => onClick(booth)}
-      className="bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group"
-    >
-      <div className="flex items-start justify-between mb-3">
-        <h3 className="text-lg font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
-          {booth.name}
-        </h3>
-        <div className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-          #{booth.id}
-        </div>
-      </div>
-      
-      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-        {booth.description || 'No description available'}
-      </p>
-      
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <div className="text-center">
-            <div className="text-lg font-bold text-blue-600">{booth.total_visits}</div>
-            <div className="text-xs text-gray-500">Visits</div>
-          </div>
+    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex justify-between items-start mb-3">
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-900 mb-1">{booth.name}</h3>
           {booth.location && (
-            <div className="text-xs text-gray-500">
-              📍 {booth.location}
-            </div>
+            <p className="text-sm text-gray-600 mb-1">📍 {booth.location}</p>
           )}
+          <p className="text-xs text-gray-500">
+            {booth.total_visits} visits
+          </p>
         </div>
-        
-        <div className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded font-mono">
-          "{booth.phrase}"
-        </div>
+        <span className="text-xs px-2 py-1 rounded-full bg-[#fba758]/20 text-[#fba758] border border-[#fba758]/30">
+          Booth
+        </span>
       </div>
+      {booth.description && (
+        <p className="text-sm text-gray-700 mb-3">{booth.description}</p>
+      )}
     </div>
   )
 } 

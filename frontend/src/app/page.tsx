@@ -4,6 +4,7 @@ import TextInput from "../components/TextInput";
 import PrimaryButton from "../components/PrimaryButton";
 import Link from "next/link";
 import Image from "next/image";
+import BackgroundImage from '@/components/BackgroundImage';
 
 export default function Home() {
   const [email, setEmail] = useState("");
@@ -98,42 +99,45 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white px-2 py-4 sm:px-4 w-full overflow-x-hidden">
-      <div className="flex flex-col items-center mb-8 w-full">
-        <div className="mb-4">
-          <Image
-            src="/assets/conference-companion.png"
-            alt="Conference Companion Logo"
-            width={200}
-            height={100}
-            className="w-auto h-16 sm:h-20 object-contain"
-            priority
+    <div className="relative h-screen overflow-hidden">
+      <BackgroundImage />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white px-2 py-4 sm:px-4 w-full overflow-x-hidden">
+        <div className="flex flex-col items-center mb-8 w-full">
+          <div className="mb-4">
+            <Image
+              src="/assets/conference-companion.png"
+              alt="Conference Companion Logo"
+              width={200}
+              height={100}
+              className="w-auto h-16 sm:h-20 object-contain"
+              priority
+            />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-black mb-1 sm:mb-2 text-center">Conference Companion</h1>
+        </div>
+        <form onSubmit={handleSubmit} className="w-full max-w-[95vw] sm:max-w-md flex flex-col gap-4 mb-4">
+          <TextInput
+            label="Email"
+            value={email}
+            onChange={handleEmailChange}
+            type="email"
+            required
           />
+          <PrimaryButton type="submit" disabled={isLoading}>
+            {isLoading ? "Logging in..." : "Continue"}
+          </PrimaryButton>
+        </form>
+        
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-800 text-sm text-center mt-2 max-w-[95vw] sm:max-w-md p-3 rounded-lg">
+            <div className="font-semibold">{error}</div>
+          </div>
+        )}
+        
+        <div className="text-center mt-2 text-sm text-gray-700">
+          New User?{' '}
+          <Link href="/register" className="text-[#fe84a0] font-semibold underline">Register Here</Link>
         </div>
-        <h1 className="text-xl sm:text-2xl font-bold text-black mb-1 sm:mb-2 text-center">Conference Companion</h1>
-      </div>
-      <form onSubmit={handleSubmit} className="w-full max-w-[95vw] sm:max-w-md flex flex-col gap-4 mb-4">
-        <TextInput
-          label="Email"
-          value={email}
-          onChange={handleEmailChange}
-          type="email"
-          required
-        />
-        <PrimaryButton type="submit" disabled={isLoading}>
-          {isLoading ? "Logging in..." : "Continue"}
-        </PrimaryButton>
-      </form>
-      
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-800 text-sm text-center mt-2 max-w-[95vw] sm:max-w-md p-3 rounded-lg">
-          <div className="font-semibold">{error}</div>
-        </div>
-      )}
-      
-      <div className="text-center mt-2 text-sm text-gray-700">
-        New User?{' '}
-        <Link href="/register" className="text-[#fe84a0] font-semibold underline">Register Here</Link>
       </div>
     </div>
   );
