@@ -5,11 +5,15 @@ import { Booth } from '@/utils/types'
 
 interface BoothCardProps {
   booth: Booth
+  onClick?: (booth: Booth) => void
 }
 
-export default function BoothCard({ booth }: BoothCardProps) {
+export default function BoothCard({ booth, onClick }: BoothCardProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+    <div 
+      className={`bg-white/90 border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={() => onClick?.(booth)}
+    >
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
           <h3 className="font-semibold text-gray-900 mb-1">{booth.name}</h3>

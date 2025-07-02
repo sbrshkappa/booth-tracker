@@ -10,6 +10,7 @@ import { User, Booth } from "@/utils/types";
 import { createMenuOptions } from "@/utils/menu";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
 import { LoadingScreen, LoadingSpinner } from "@/utils/ui";
+import BackgroundImage from '@/components/BackgroundImage';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -171,25 +172,28 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-x-hidden">
-      {/* Menu */}
-      <MenuDropdown 
-        options={menuOptions} 
-        userName={`${user.firstName} ${user.lastName}`}
-      />
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col w-full max-w-6xl mx-auto mt-20">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-orange-500 mb-4" style={{ letterSpacing: 0.5 }}>
+    <div className="h-screen bg-white flex flex-col px-4 py-6 relative overflow-hidden">
+      <BackgroundImage />
+      {/* Header with title and menu */}
+      <div className="flex flex-col-reverse sm:flex-row justify-between items-start mb-6 gap-2 sm:gap-0">
+        <div className="flex-1 sm:pr-8 max-w-2xl">
+          <h1 className="text-3xl font-bold text-orange-500 mb-4" style={{ letterSpacing: 0.5 }}>
             Admin Panel {getAdminIcon(adminStatus.adminLevel || '')}
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-gray-600 mt-1">
             Manage booths and monitor user activity
           </p>
         </div>
+        <div className="mb-2 sm:mb-0">
+          <MenuDropdown 
+            options={menuOptions} 
+            userName={`${user.firstName} ${user.lastName}`}
+          />
+        </div>
+      </div>
 
+      {/* Main content */}
+      <div className="relative z-10 flex-1 flex flex-col w-full max-w-6xl mx-auto min-h-0">
         {/* Tabs */}
         <div className="flex justify-center mb-8">
           <div className="bg-gray-100 rounded-lg p-1">
@@ -240,11 +244,11 @@ export default function AdminPage() {
         )}
 
         {activeTab === 'booths' && (
-          <div className="space-y-6">
-            {/* Add Booth Section */}
-            <div className="bg-white/80 rounded-xl p-6 shadow-lg">
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* Booths List */}
+            <div className="bg-white/80 rounded-xl p-6 shadow-lg flex-1 flex flex-col min-h-0">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-semibold text-gray-800">Manage Booths</h2>
+                <h3 className="text-xl font-semibold text-gray-800">Manage Booths</h3>
                 <button
                   onClick={() => setShowBoothForm(!showBoothForm)}
                   className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors"
@@ -264,7 +268,7 @@ export default function AdminPage() {
               )}
 
               {showBoothForm && (
-                <div className="border-t border-gray-200 pt-6">
+                <div className="border-t border-gray-200 pt-6 mb-6">
                   <BoothForm
                     onSubmit={handleCreateBooth}
                     isLoading={isCreatingBooth}
@@ -272,11 +276,6 @@ export default function AdminPage() {
                   />
                 </div>
               )}
-            </div>
-
-            {/* Booths List */}
-            <div className="bg-white/80 rounded-xl p-6 shadow-lg">
-              <h3 className="text-xl font-semibold text-gray-800 mb-4">All Booths</h3>
               
               {isLoadingBooths ? (
                 <div className="flex justify-center py-8">
@@ -288,14 +287,16 @@ export default function AdminPage() {
                   <p className="text-gray-600">No booths found. Create your first booth!</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {booths.map((booth) => (
-                    <BoothCard
-                      key={booth.id}
-                      booth={booth}
-                      onClick={handleBoothCardClick}
-                    />
-                  ))}
+                <div className="h-full overflow-y-auto pr-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {booths.map((booth) => (
+                      <BoothCard
+                        key={booth.id}
+                        booth={booth}
+                        onClick={handleBoothCardClick}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

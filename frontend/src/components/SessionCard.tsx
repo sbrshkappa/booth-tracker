@@ -52,10 +52,10 @@ export default function SessionCard({ session, onClick }: SessionCardProps) {
 
   return (
     <div 
-      className={`p-4 rounded-lg border-l-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+      className={`bg-white/90 p-4 rounded-lg border-l-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
         session.is_children_friendly 
-          ? 'bg-[#fe84a0]/10 border-[#fe84a0] hover:bg-[#fe84a0]/15' 
-          : 'bg-white border-[#fba758] shadow-sm hover:bg-gray-50'
+          ? 'border-[#fe84a0] hover:bg-[#fe84a0]/15' 
+          : 'border-[#fba758] shadow-sm hover:bg-gray-50'
       }`}
       onClick={() => onClick(session)}
     >
