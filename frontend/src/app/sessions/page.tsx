@@ -30,17 +30,6 @@ interface Session {
   updated_at: string;
 }
 
-interface BreakData {
-  startTime: string;
-  endTime: string;
-  isLunch: boolean;
-}
-
-interface TimelineItem {
-  type: 'session' | 'break';
-  data: Session | BreakData;
-}
-
 export default function SessionsPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
@@ -125,20 +114,6 @@ export default function SessionsPage() {
     return sessions.filter(session => session.day === day);
   };
 
-  const getSessionsByTimeSlot = (day: number) => {
-    const sessions = getSessionsForDay(day);
-    const morningSessions = sessions.filter(s => {
-      const startHour = parseInt(s.start_time.split(':')[0]);
-      return startHour < 12;
-    });
-    const afternoonSessions = sessions.filter(s => {
-      const startHour = parseInt(s.start_time.split(':')[0]);
-      return startHour >= 12;
-    });
-    
-    return { morningSessions, afternoonSessions };
-  };
-
   const getChronologicalSessionsWithBreaks = (day: number) => {
     const daySessions = getSessionsForDay(day);
     
@@ -152,20 +127,6 @@ export default function SessionsPage() {
       type: 'session' as const,
       data: session
     }));
-  };
-
-  const getSessionEndTime = (session: Session) => {
-    // Assume sessions are 1 hour by default, or extract from session data if available
-    const startHour = parseInt(session.start_time.split(':')[0]);
-    const startMinute = parseInt(session.start_time.split(':')[1]);
-    const endHour = startHour + 1;
-    return `${endHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
-  };
-
-  const getTimeDifference = (time1: string, time2: string) => {
-    const [hour1, minute1] = time1.split(':').map(Number);
-    const [hour2, minute2] = time2.split(':').map(Number);
-    return (hour2 * 60 + minute2) - (hour1 * 60 + minute1);
   };
 
   const formatTime = (timeStr: string) => {
