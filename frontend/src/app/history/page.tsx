@@ -185,11 +185,11 @@ const HistoryPage: React.FC = () => {
       <div className="flex-1 flex flex-col w-full max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold text-orange-500 mb-4" style={{ letterSpacing: 0.5 }}>
+          <h1 className="text-4xl font-bold text-[#fba758] mb-4" style={{ letterSpacing: 0.5 }}>
             Visit History 📚
           </h1>
           <p className="text-lg text-gray-600">
-            Your journey through SSSIO-USA booths
+            Your journey through conference booths
           </p>
           {progress && (
             <div className="mt-4 text-sm text-gray-500">
@@ -218,7 +218,7 @@ const HistoryPage: React.FC = () => {
                   setIsEmailLoading(false);
                 }}
                 disabled={isEmailLoading}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-300 flex items-center gap-2 mx-auto"
+                className="bg-[#fe84a0] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#fba758] transition-colors disabled:bg-gray-300 flex items-center gap-2 mx-auto"
               >
                 {isEmailLoading ? (
                   <>

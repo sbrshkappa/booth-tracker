@@ -9,7 +9,7 @@ import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth
 import { LoadingScreen } from "@/utils/ui";
 
 const HOW_IT_WORKS = [
-  "Visit each booth to discover how SSSIO-USA uplifts communities through love and selfless service.",
+  "Visit each booth to discover the amazing activities and services at the conference.",
   "Collect secret phrases along the way to unlock your journey.",
   "Complete all booths to experience the full impact—and qualify for a raffle!"
 ];
@@ -58,7 +58,7 @@ const HowItWorksPage: React.FC = () => {
             How It Works ❓
           </h1>
           <p className="text-lg text-gray-600">
-            Your guide to the SSSIO-USA booth tracking experience
+            Your guide to the Conference Companion experience
           </p>
         </div>
 

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SSSIO USA 2025 Booths",
-  description: "Digital Seva Explorer - Visit booths to discover how SSSIO-USA uplifts communities through love and selfless service",
+  title: "Conference Companion",
+  description: "Conference Companion - Your digital guide to explore conference booths and sessions",
 };
 
 export default function RootLayout({
