@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { EMAIL_TEMPLATE, generateVisitCard, generateNoNotesMessage } from './template.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -124,84 +125,29 @@ function generateEmailContent(visits: any[], userName: string): string {
   const totalVisits = visits.length
   const visitsWithNotes = visits.filter(visit => visit.notes && visit.notes.trim())
   const totalNotes = visitsWithNotes.length
+  const completionRate = Math.round((totalVisits / 8) * 100)
 
-  let htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-        .stats { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center; }
-        .visit-card { background: white; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #667eea; }
-        .booth-name { font-weight: bold; color: #667eea; font-size: 18px; margin-bottom: 10px; }
-        .visit-date { color: #666; font-size: 14px; margin-bottom: 10px; }
-        .notes { background: #f0f8ff; padding: 15px; border-radius: 5px; margin-top: 10px; }
-        .rating { color: #ffa500; font-weight: bold; }
-        .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <h1>🎪 SSSIO USA 2025 Booth Visit Summary</h1>
-        <p>Hello ${userName}, here's a summary of your booth visits!</p>
-      </div>
-      
-      <div class="content">
-        <div class="stats">
-          <h2>📊 Your Visit Statistics</h2>
-          <p><strong>Total Booths Visited:</strong> ${totalVisits}</p>
-          <p><strong>Booths with Notes:</strong> ${totalNotes}</p>
-          <p><strong>Completion Rate:</strong> ${Math.round((totalVisits / 8) * 100)}%</p>
-        </div>
-  `
+  // Start with the template and replace basic variables
+  let htmlContent = EMAIL_TEMPLATE
+    .replace(/\{\{userName\}\}/g, userName)
+    .replace(/\{\{totalVisits\}\}/g, totalVisits.toString())
+    .replace(/\{\{totalNotes\}\}/g, totalNotes.toString())
+    .replace(/\{\{completionRate\}\}/g, completionRate.toString())
 
   if (visitsWithNotes.length > 0) {
-    htmlContent += `<h2>📝 Your Visit Notes</h2>`
-    
-    visitsWithNotes.forEach(visit => {
-      const booth = visit.booths
-      const visitDate = new Date(visit.visited_at).toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })
-      
-      htmlContent += `
-        <div class="visit-card">
-          <div class="booth-name">🏢 ${booth.name}</div>
-          <div class="visit-date">📅 Visited on ${visitDate}</div>
-          ${visit.rating ? `<div class="rating">⭐ Rating: ${visit.rating}/5</div>` : ''}
-          <div class="notes">
-            <strong>Your Notes:</strong><br>
-            ${visit.notes}
-          </div>
-        </div>
-      `
-    })
+    // Replace the conditional block with actual visit cards
+    const visitsHtml = visitsWithNotes.map(generateVisitCard).join('')
+    htmlContent = htmlContent.replace(
+      /\{\{#if hasNotes\}\}\s*<h2>📝 Your Visit Notes<\/h2>\s*\{\{#each visitsWithNotes\}\}([\s\S]*?)\{\{\/each\}\}\s*\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/,
+      `<h2>📝 Your Visit Notes</h2>${visitsHtml}`
+    )
   } else {
-    htmlContent += `
-      <div style="text-align: center; padding: 40px; color: #666;">
-        <h3>📝 No Notes Yet</h3>
-        <p>You haven't taken any notes during your booth visits yet. Consider adding notes next time to keep track of important information!</p>
-      </div>
-    `
+    // Replace with no notes message
+    htmlContent = htmlContent.replace(
+      /\{\{#if hasNotes\}\}\s*<h2>📝 Your Visit Notes<\/h2>\s*\{\{#each visitsWithNotes\}\}([\s\S]*?)\{\{\/each\}\}\s*\{\{else\}\}([\s\S]*?)\{\{\/if\}\}/,
+      generateNoNotesMessage()
+    )
   }
-
-  htmlContent += `
-        <div class="footer">
-          <p>Thank you for participating in SSSIO USA 2025!</p>
-          <p>This email was generated automatically from your booth visit data.</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `
 
   return htmlContent
 }
