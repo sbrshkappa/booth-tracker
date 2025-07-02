@@ -236,7 +236,7 @@ export default function Dashboard() {
             onClick={() => setActiveTab('sessions')}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
               activeTab === 'sessions'
-                ? 'bg-white text-orange-500 shadow-sm'
+                ? 'bg-white text-[#fba758] shadow-sm'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
@@ -246,7 +246,7 @@ export default function Dashboard() {
             onClick={() => setActiveTab('booths')}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
               activeTab === 'booths'
-                ? 'bg-white text-orange-500 shadow-sm'
+                ? 'bg-white text-[#fba758] shadow-sm'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
@@ -267,7 +267,7 @@ export default function Dashboard() {
         ) : (
           <div className="flex flex-col items-center justify-center">
             {/* Header */}
-            <h2 className="text-2xl font-semibold text-orange-500 text-center mb-4" style={{ letterSpacing: 0.5 }}>
+            <h2 className="text-2xl font-semibold text-[#fba758] text-center mb-4" style={{ letterSpacing: 0.5 }}>
               {headerText}
             </h2>
             {/* Progress Circle */}
@@ -302,7 +302,7 @@ export default function Dashboard() {
                       setIsEmailLoading(false);
                     }}
                     disabled={isEmailLoading}
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-300 flex items-center gap-2 mx-auto"
+                    className="bg-[#fe84a0] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#fba758] transition-colors disabled:bg-gray-300 flex items-center gap-2 mx-auto"
                   >
                     {isEmailLoading ? (
                       <>
@@ -331,14 +331,14 @@ export default function Dashboard() {
                 {/* Phrase Input */}
                 <form onSubmit={handleSubmitPhrase} className="w-full flex flex-col items-center gap-4 mb-4">
                   <input
-                    className="w-full rounded-xl border-2 border-orange-400 px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="w-full rounded-xl border-2 border-[#fba758] px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fba758]"
                     type="text"
                     value={phrase}
                     onChange={e => setPhrase(e.target.value)}
                     placeholder="Enter the phrase"
                   />
                   <textarea
-                    className="w-full rounded-xl border-2 border-orange-400 px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    className="w-full rounded-xl border-2 border-[#fba758] px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fba758]"
                     value={notes}
                     onChange={e => setNotes(e.target.value)}
                     placeholder="Enter any notes about the booth"
@@ -354,7 +354,7 @@ export default function Dashboard() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-orange-500 text-white py-3 px-6 rounded-xl font-semibold hover:bg-orange-600 transition-colors disabled:bg-orange-300 flex items-center justify-center gap-2"
+                    className="w-full bg-[#fba758] text-white py-3 px-6 rounded-xl font-semibold hover:bg-[#fdbc3f] transition-colors disabled:bg-gray-300 flex items-center justify-center gap-2"
                   >
                     {isLoading ? (
                       <>
