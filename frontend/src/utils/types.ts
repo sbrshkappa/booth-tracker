@@ -31,4 +31,32 @@ export interface VisitHistory {
   visitedAt: string;
   notes?: string;
   rating?: number;
+}
+
+export interface Session {
+  id: number;
+  day: number;
+  start_time: string;
+  topic: string;
+  speaker: string | null;
+  description: string | null;
+  type: string;
+  location: string | null;
+  room: string | null;
+  capacity: number | null;
+  is_children_friendly: boolean;
+  requires_registration: boolean;
+  tags: string[] | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserSessionNotes {
+  id: number;
+  user_id: number;
+  session_id: number;
+  notes: string | null;
+  rating: number;
+  created_at: string;
+  updated_at: string;
 } 
