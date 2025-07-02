@@ -182,7 +182,7 @@ const HistoryPage: React.FC = () => {
       <MenuDropdown options={menuOptions} />
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col w-full max-w-2xl mx-auto">
+      <div className="flex-1 flex flex-col w-full max-w-2xl mx-auto mt-20">
         {/* Header */}
         <div className="text-center mb-6">
           <h1 className="text-4xl font-bold text-[#fba758] mb-4" style={{ letterSpacing: 0.5 }}>
@@ -249,10 +249,10 @@ const HistoryPage: React.FC = () => {
               <h3 className="text-xl font-semibold text-gray-700 mb-2">No booths visited yet</h3>
               <p className="text-gray-500 mb-6">Start your journey by visiting your first booth!</p>
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push('/sessions')}
                 className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
               >
-                Go to Dashboard
+                Go to Sessions
               </button>
             </div>
           ) : (
