@@ -128,7 +128,7 @@ export default function HomePage() {
     adminStatus,
   });
 
-  const openSessionModal = (session: Session) => {
+  const openSessionModal = () => {
     // Navigate to sessions page
     router.push('/sessions');
   };

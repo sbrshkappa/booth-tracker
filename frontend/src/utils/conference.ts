@@ -38,11 +38,16 @@ export const isSessionPast = (session: Session, currentTime: Date) => {
 };
 
 // Helper function to check if session is current
-export const isSessionCurrent = (session: Session, currentTime: Date) => {
-  const sessionDate = CONFERENCE_DATES[session.day];
-  const startTime = new Date(`${sessionDate}T${session.start_time}`);
-  const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // Assume 1 hour sessions
-  return currentTime >= startTime && currentTime < endTime;
+export const isSessionCurrent = (session: Session, now: Date): boolean => {
+  const currentTimeStr = now.toTimeString().slice(0, 5);
+  const startTime = session.start_time;
+  
+  // Calculate end time as 1 hour after start time
+  const startDate = new Date(`2000-01-01T${startTime}`);
+  const endDate = new Date(startDate.getTime() + 60 * 60 * 1000); // 1 hour later
+  const endTime = endDate.toTimeString().slice(0, 5);
+  
+  return currentTimeStr >= startTime && currentTimeStr <= endTime;
 };
 
 // Helper function to check if a day is in the past

@@ -1,4 +1,4 @@
-import { AdminStatus, getAdminIcon } from './admin';
+import { AdminStatus } from './admin';
 
 export interface MenuOption {
   id: string;
