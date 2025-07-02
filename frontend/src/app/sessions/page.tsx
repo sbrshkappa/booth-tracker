@@ -6,44 +6,37 @@ import SessionCard from "@/components/SessionCard";
 import SessionModal from "@/components/SessionModal";
 import BoothCard from "@/components/BoothCard";
 import { AdminStatus } from "@/utils/admin";
-import { User, Booth } from "@/utils/types";
+import { User, Booth, Session } from "@/utils/types";
 import { createMenuOptions } from "@/utils/menu";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
 import { LoadingScreen } from "@/utils/ui";
 import BackgroundImage from '@/components/BackgroundImage';
-
-interface Session {
-  id: number;
-  day: number;
-  start_time: string;
-  topic: string;
-  speaker: string | null;
-  description: string | null;
-  type: string;
-  location: string | null;
-  room: string | null;
-  capacity: number | null;
-  is_children_friendly: boolean;
-  requires_registration: boolean;
-  tags: string[] | null;
-  created_at: string;
-  updated_at: string;
-}
+import { 
+  getCurrentSession, 
+  getCurrentDay, 
+  isSessionPast, 
+  isSessionCurrent,
+  isDayCurrent,
+  isDayPast
+} from "@/utils/conference";
 
 export default function SessionsPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [adminStatus, setAdminStatus] = useState<AdminStatus | null>(null);
-  const [activeDay, setActiveDay] = useState(1);
-  const [activeTab, setActiveTab] = useState<'sessions' | 'booths'>('sessions');
   const [sessions, setSessions] = useState<Session[]>([]);
   const [booths, setBooths] = useState<Booth[]>([]);
   const [loading, setLoading] = useState(true);
   const [boothsLoading, setBoothsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [boothsError, setBoothsError] = useState<string | null>(null);
+  const [activeDay, setActiveDay] = useState(1);
+  const [activeTab, setActiveTab] = useState<'sessions' | 'booths'>('sessions');
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [currentSession, setCurrentSession] = useState<Session | null>(null);
+  const [hasManuallyNavigated, setHasManuallyNavigated] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -57,6 +50,35 @@ export default function SessionsPage() {
     // Check admin status
     checkAdminStatus(userObj.email).then(setAdminStatus);
   }, [router]);
+
+  // Update current time every minute and auto-detect current day/session
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(now);
+      
+      // Auto-detect current day
+      const detectedDay = getCurrentDay(now);
+      
+      // Only auto-switch if user hasn't manually navigated or if we're on the current day
+      if (!hasManuallyNavigated && detectedDay !== activeDay) {
+        setActiveDay(detectedDay);
+        setActiveTab('sessions');
+      }
+      
+      // Auto-detect current session
+      const current = getCurrentSession(sessions, now);
+      setCurrentSession(current || null);
+    };
+
+    // Update immediately
+    updateTime();
+    
+    // Update every minute
+    const interval = setInterval(updateTime, 60000);
+    
+    return () => clearInterval(interval);
+  }, [sessions, activeDay, hasManuallyNavigated]);
 
   useEffect(() => {
     const fetchSessions = async () => {
@@ -147,6 +169,33 @@ export default function SessionsPage() {
     setSelectedSession(null);
   };
 
+  // Auto-scroll to current session when it changes
+  useEffect(() => {
+    if (currentSession && activeTab === 'sessions' && activeDay === currentSession.day) {
+      // Find the session element and scroll to it
+      const sessionElement = document.querySelector(`[data-session-id="${currentSession.id}"]`);
+      if (sessionElement) {
+        sessionElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+      }
+    }
+  }, [currentSession, activeTab, activeDay]);
+
+  const handleDayClick = (day: number) => {
+    setActiveDay(day);
+    setActiveTab('sessions');
+    
+    // If user clicks on the current day, reset manual navigation flag
+    const currentDay = getCurrentDay(currentTime);
+    if (day === currentDay) {
+      setHasManuallyNavigated(false);
+    } else {
+      setHasManuallyNavigated(true);
+    }
+  };
+
   if (!user) {
     return <LoadingScreen />;
   }
@@ -194,49 +243,81 @@ export default function SessionsPage() {
     <div className="h-screen bg-white flex flex-col px-4 py-6 relative overflow-hidden">
       <BackgroundImage />
       {/* Header with title and menu */}
-      <div className="flex flex-col-reverse sm:flex-row justify-between items-start mb-6 gap-2 sm:gap-0">
-        <div className="flex-1 sm:pr-8 max-w-2xl">
-          <h1 className="text-3xl font-bold text-[#fba758]" style={{ letterSpacing: 0.5 }}>
-            Conference Schedule
-          </h1>
-          <p className="text-xs text-gray-500 mt-1">
-            Discover inspiring sessions, workshops, and unforgettable moments
-          </p>
-        </div>
-        <div className="mb-2 sm:mb-0">
+      <div className="mb-6">
+        {/* Top row: Logo and Menu */}
+        <div className="flex justify-between items-center mb-4">
+          <img 
+            src="/assets/conference-companion.png" 
+            alt="Conference Companion" 
+            className="h-12 w-auto"
+          />
           <MenuDropdown 
             options={menuOptions} 
             userName={`${user.firstName} ${user.lastName}`}
           />
+        </div>
+        
+        {/* Bottom row: Title and subtitle */}
+        <div className="max-w-2xl">
+          <h1 className="text-3xl font-bold text-[#fba758] mb-2" style={{ letterSpacing: 0.5 }}>
+            Schedule
+          </h1>
+          <p className="text-xs text-gray-500 mb-2">
+            Discover inspiring sessions, workshops, and unforgettable moments
+          </p>
         </div>
       </div>
 
       {/* Main content */}
       <div className="relative z-10 flex flex-col w-full max-w-4xl mx-auto flex-1 min-h-0">
         {/* Day Tabs */}
-        <div className="flex bg-gray-100 rounded-lg p-1 mb-6 flex-shrink-0">
-          {[1, 2, 3].map((day) => (
-            <button
-              key={day}
-              onClick={() => {
-                setActiveDay(day);
-                setActiveTab('sessions');
-              }}
-              className={`flex-1 py-3 px-4 rounded-md font-medium transition-colors ${
-                activeDay === day && activeTab === 'sessions'
-                  ? 'bg-white text-[#fba758] shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Day {day}
-            </button>
-          ))}
+        <div className="flex bg-gray-100 rounded-lg p-1 mb-6 flex-shrink-0 relative">
+          {/* Animated sliding indicator */}
+          <div 
+            className={`absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-all duration-300 ease-in-out ${
+              activeTab === 'booths' 
+                ? 'left-[75%] right-1' 
+                : activeDay === 1 
+                  ? 'left-1 w-[calc(25%-0.25rem)]' 
+                  : activeDay === 2 
+                    ? 'left-[calc(25%+0.25rem)] w-[calc(25%-0.25rem)]' 
+                    : 'left-[calc(50%+0.5rem)] w-[calc(25%-0.25rem)]'
+            }`}
+          ></div>
+          
+          {[1, 2, 3].map((day) => {
+            const isCurrentDay = isDayCurrent(day, currentTime);
+            const isPastDay = isDayPast(day, currentTime);
+            
+            return (
+              <button
+                key={day}
+                onClick={() => handleDayClick(day)}
+                className={`flex-1 py-3 px-4 rounded-md font-medium transition-all duration-300 ease-in-out relative z-10 ${
+                  activeDay === day && activeTab === 'sessions'
+                    ? 'text-[#fba758] font-semibold'
+                    : isCurrentDay
+                      ? 'text-[#f97316] font-medium'
+                      : isPastDay
+                        ? 'text-gray-400'
+                        : 'text-gray-600 hover:text-gray-800 hover:scale-105'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-1">
+                  Day {day}
+                  {isCurrentDay && (
+                    <span className="w-2 h-2 bg-[#f97316] rounded-full animate-pulse"></span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
           <button
             onClick={() => setActiveTab('booths')}
-            className={`flex-1 py-3 px-4 rounded-md font-medium transition-colors ${
+            className={`flex-1 py-3 px-4 rounded-md font-medium transition-all duration-300 ease-in-out relative z-10 ${
               activeTab === 'booths'
-                ? 'bg-white text-[#fba758] shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'text-[#fba758] font-semibold'
+                : 'text-gray-600 hover:text-gray-800 hover:scale-105'
             }`}
           >
             Exhibition
@@ -267,7 +348,12 @@ export default function SessionsPage() {
                               </div>
                             </div>
                           ) : (
-                            <SessionCard session={item.data as Session} onClick={openSessionModal} />
+                            <SessionCard 
+                              session={item.data as Session} 
+                              onClick={openSessionModal}
+                              isCurrent={isSessionCurrent(item.data as Session, currentTime)}
+                              isPast={isSessionPast(item.data as Session, currentTime)}
+                            />
                           )}
                         </div>
                       ))

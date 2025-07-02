@@ -168,23 +168,23 @@ export default function Dashboard() {
   // Circular progress bar SVG
   const renderProgressCircle = () => {
     if (!progress) return null;
-    const radius = 90;
-    const stroke = 12;
+    const radius = 120;
+    const stroke = 16;
     const normalizedRadius = radius - stroke / 2;
     const circumference = normalizedRadius * 2 * Math.PI;
     const percent = Math.min(progress.visited / progress.total, 1);
     const strokeDashoffset = circumference - percent * circumference;
     return (
-      <div className="relative flex items-center justify-center w-[200px] h-[200px] mx-auto">
+      <div className="relative flex items-center justify-center w-[280px] h-[280px] mx-auto">
         {/* Faded background image placeholder */}
         <div
-          className="absolute inset-0 w-full h-full bg-gradient-to-br from-yellow-200 to-purple-200 rounded-full opacity-20"
+          className="absolute inset-0 w-full h-full bg-gradient-to-br from-orange-200 via-pink-200 to-yellow-200 rounded-full opacity-30"
           style={{ zIndex: 0 }}
         />
         {/* SVG Progress Circle */}
         <svg height={radius * 2} width={radius * 2} className="relative z-10">
           <circle
-            stroke="#E5E7EB"
+            stroke="#f3f4f6"
             fill="transparent"
             strokeWidth={stroke}
             r={normalizedRadius}
@@ -192,19 +192,32 @@ export default function Dashboard() {
             cy={radius}
           />
           <circle
-            stroke="#4B6FAE"
+            stroke="url(#progressGradient)"
             fill="transparent"
             strokeWidth={stroke}
             strokeLinecap="round"
             strokeDasharray={circumference + ' ' + circumference}
-            style={{ strokeDashoffset, transition: 'stroke-dashoffset 0.5s' }}
+            style={{ 
+              strokeDashoffset, 
+              transition: 'stroke-dashoffset 0.5s',
+              transform: 'rotate(-90deg)',
+              transformOrigin: 'center'
+            }}
             r={normalizedRadius}
             cx={radius}
             cy={radius}
           />
+          {/* Gradient definition */}
+          <defs>
+            <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fba758" />
+              <stop offset="50%" stopColor="#fe84a0" />
+              <stop offset="100%" stopColor="#fdbc3f" />
+            </linearGradient>
+          </defs>
         </svg>
         {/* Progress Text */}
-        <span className="absolute inset-0 flex items-center justify-center text-4xl font-light text-gray-500 z-20">
+        <span className="absolute inset-0 flex items-center justify-center text-5xl font-light text-gray-700 z-20">
           {progress.visited}/{progress.total}
         </span>
       </div>
@@ -224,22 +237,34 @@ export default function Dashboard() {
   return (
     <div className="h-screen bg-white flex flex-col px-4 py-6 relative overflow-hidden">
       <BackgroundImage />
-      {/* Menu */}
-      <MenuDropdown 
-        options={menuOptions} 
-        userName={`${user.firstName} ${user.lastName}`}
-      />
+      {/* Header with title and menu */}
+      <div className="mb-6">
+        {/* Top row: Logo and Menu */}
+        <div className="flex justify-between items-center mb-4">
+          <img 
+            src="/assets/conference-companion.png" 
+            alt="Conference Companion" 
+            className="h-12 w-auto"
+          />
+          <MenuDropdown 
+            options={menuOptions} 
+            userName={`${user.firstName} ${user.lastName}`}
+          />
+        </div>
+        
+        {/* Bottom row: Title and subtitle */}
+        <div className="max-w-2xl">
+          <h1 className="text-3xl font-bold text-black mb-2" style={{ letterSpacing: 0.5 }}>
+            Booth Tracker
+          </h1>
+          <h2 className="text-2xl font-semibold text-[#fba758]" style={{ letterSpacing: 0.5 }}>
+            {headerText}
+          </h2>
+        </div>
+      </div>
 
       {/* Main content fills available space */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto">
-        {/* Page Title */}
-        <h1 className="text-3xl font-bold text-black text-center mb-6" style={{ letterSpacing: 0.5 }}>
-          Booth Tracker
-        </h1>
-        {/* Header */}
-        <h2 className="text-2xl font-semibold text-[#fba758] text-center mb-4" style={{ letterSpacing: 0.5 }}>
-          {headerText}
-        </h2>
         {/* Progress Circle */}
         {renderProgressCircle()}
         

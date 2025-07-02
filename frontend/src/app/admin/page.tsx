@@ -175,20 +175,28 @@ export default function AdminPage() {
     <div className="h-screen bg-white flex flex-col px-4 py-6 relative overflow-hidden">
       <BackgroundImage />
       {/* Header with title and menu */}
-      <div className="flex flex-col-reverse sm:flex-row justify-between items-start mb-6 gap-2 sm:gap-0">
-        <div className="flex-1 sm:pr-8 max-w-2xl">
-          <h1 className="text-3xl font-bold text-orange-500 mb-4" style={{ letterSpacing: 0.5 }}>
-            Admin Panel {getAdminIcon(adminStatus.adminLevel || '')}
-          </h1>
-          <p className="text-lg text-gray-600 mt-1">
-            Manage booths and monitor user activity
-          </p>
-        </div>
-        <div className="mb-2 sm:mb-0">
+      <div className="mb-6">
+        {/* Top row: Logo and Menu */}
+        <div className="flex justify-between items-center mb-4">
+          <img 
+            src="/assets/conference-companion.png" 
+            alt="Conference Companion" 
+            className="h-12 w-auto"
+          />
           <MenuDropdown 
             options={menuOptions} 
             userName={`${user.firstName} ${user.lastName}`}
           />
+        </div>
+        
+        {/* Bottom row: Title and subtitle */}
+        <div className="max-w-2xl">
+          <h1 className="text-3xl font-bold text-orange-500 mb-2" style={{ letterSpacing: 0.5 }}>
+            Admin Panel {getAdminIcon(adminStatus.adminLevel || '')}
+          </h1>
+          <p className="text-lg text-gray-600">
+            Manage booths and monitor user activity
+          </p>
         </div>
       </div>
 

@@ -11,7 +11,7 @@ export interface MenuOption {
 }
 
 export interface MenuConfig {
-  currentPage: 'dashboard' | 'sessions' | 'history' | 'how-it-works' | 'admin';
+  currentPage: 'home' | 'dashboard' | 'sessions' | 'history' | 'how-it-works' | 'admin';
   router: {
     push: (path: string) => void;
   };
@@ -24,30 +24,37 @@ export const createMenuOptions = (config: MenuConfig): MenuOption[] => {
 
   const baseOptions: MenuOption[] = [
     {
+      id: 'home',
+      label: 'Home',
+      emoji: '',
+      action: currentPage === 'home' ? () => {} : () => router.push('/home'),
+      isCurrent: currentPage === 'home',
+    },
+    {
       id: 'sessions',
       label: 'Sessions',
-      emoji: '📅',
+      emoji: '',
       action: currentPage === 'sessions' ? () => {} : () => router.push('/sessions'),
       isCurrent: currentPage === 'sessions',
     },
     {
       id: 'dashboard',
       label: 'Booth Tracker',
-      emoji: '🏠',
+      emoji: '',
       action: currentPage === 'dashboard' ? () => {} : () => router.push('/dashboard'),
       isCurrent: currentPage === 'dashboard',
     },
     {
       id: 'history',
       label: 'History',
-      emoji: '📚',
+      emoji: '',
       action: currentPage === 'history' ? () => {} : () => router.push('/history'),
       isCurrent: currentPage === 'history',
     },
     {
       id: 'how-it-works',
       label: 'Help',
-      emoji: '❓',
+      emoji: '',
       action: currentPage === 'how-it-works' ? () => {} : () => router.push('/how-it-works'),
       isCurrent: currentPage === 'how-it-works',
     },
@@ -56,7 +63,7 @@ export const createMenuOptions = (config: MenuConfig): MenuOption[] => {
   const adminOption: MenuOption[] = adminStatus?.isAdmin ? [{
     id: 'admin',
     label: 'Admin Panel',
-    emoji: getAdminIcon(adminStatus.adminLevel || ''),
+    emoji: '',
     action: currentPage === 'admin' ? () => {} : () => router.push('/admin'),
     isCurrent: currentPage === 'admin',
     isAdmin: true,
@@ -65,7 +72,7 @@ export const createMenuOptions = (config: MenuConfig): MenuOption[] => {
   const logoutOption: MenuOption = {
     id: 'logout',
     label: 'Logout',
-    emoji: '🚪',
+    emoji: '',
     action: handleLogout,
     isDanger: true,
   };

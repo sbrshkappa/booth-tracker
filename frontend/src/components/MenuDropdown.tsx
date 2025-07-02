@@ -43,29 +43,46 @@ const MenuDropdown: React.FC<MenuDropdownProps> = ({ options, className = "", us
       <div className="relative">
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className="p-3 bg-gradient-to-r from-orange-500 to-pink-500 rounded-xl shadow-lg hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 transition-all duration-300"
+          className="p-3 bg-gradient-to-r from-[#f97316] to-[#ec4899] rounded-xl shadow-lg hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#f97316] focus:ring-offset-2 transition-all duration-300"
         >
-          <div className="w-6 h-6 flex flex-col justify-center items-center">
-            <div className={`w-6 h-0.5 bg-white transition-all duration-300 ease-in-out ${menuOpen ? 'rotate-45 translate-y-1.5' : ''}`}></div>
-            <div className={`w-6 h-0.5 bg-white transition-all duration-300 ease-in-out mt-1.5 ${menuOpen ? 'opacity-0 scale-0' : ''}`}></div>
-            <div className={`w-6 h-0.5 bg-white transition-all duration-300 ease-in-out mt-1.5 ${menuOpen ? '-rotate-45 -translate-y-1.5' : ''}`}></div>
+          <div className="w-6 h-6 flex flex-col justify-center items-center relative">
+            {/* Top line */}
+            <div className={`w-6 h-0.5 bg-white transition-all duration-300 ease-in-out absolute transform origin-center ${
+              menuOpen ? 'rotate-45' : 'rotate-0 -translate-y-2'
+            }`}></div>
+            
+            {/* Middle line */}
+            <div className={`w-6 h-0.5 bg-white transition-all duration-300 ease-in-out absolute transform origin-center ${
+              menuOpen ? 'opacity-0 scale-x-0' : 'opacity-100 scale-x-100'
+            }`}></div>
+            
+            {/* Bottom line */}
+            <div className={`w-6 h-0.5 bg-white transition-all duration-300 ease-in-out absolute transform origin-center ${
+              menuOpen ? '-rotate-45' : 'rotate-0 translate-y-2'
+            }`}></div>
           </div>
         </button>
         
         {/* Dropdown Menu */}
         {menuOpen && (
-          <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-50">
+          <div className="absolute right-0 mt-2 w-72 bg-purple-50/95 backdrop-blur-sm rounded-xl shadow-xl border border-purple-200 py-3 z-50">
             {/* User Header */}
             {userName && (
               <>
-                <div className="px-4 py-3 border-b border-gray-200">
+                <div className="px-5 py-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">👤</span>
-                    <span className="font-semibold text-gray-900 truncate">{userName}</span>
+                    <div className="w-8 h-8 bg-[#f97316] rounded-full flex items-center justify-center">
+                      <span className="text-white font-semibold text-sm">
+                        {userName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      </span>
+                    </div>
+                    <span className="font-semibold text-gray-900 truncate text-lg">{userName}</span>
                   </div>
                 </div>
-                {/* Separator */}
-                <div className="border-t border-gray-200 my-1"></div>
+                {/* Elegant separator */}
+                <div className="px-5">
+                  <div className="h-px bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div>
+                </div>
               </>
             )}
             
@@ -73,24 +90,24 @@ const MenuDropdown: React.FC<MenuDropdownProps> = ({ options, className = "", us
             {options.map((option, index) => (
               <React.Fragment key={option.id}>
                 {index > 0 && (option.isDanger || option.isAdmin) && (
-                  <div className="border-t border-gray-200 my-2"></div>
+                  <div className="border-t border-purple-200 my-2"></div>
                 )}
                 <button
                   onClick={() => handleMenuAction(option)}
-                  className={`w-full px-4 py-3 text-left flex items-center gap-3 ${
+                  className={`w-full px-5 py-4 text-left flex items-center gap-3 text-base transition-colors ${
                     option.isCurrent 
-                      ? 'bg-orange-50 border-l-4 border-orange-500' 
+                      ? 'bg-[#f97316]/20 border-l-4 border-[#f97316]' 
                       : option.isDanger 
-                        ? 'hover:bg-red-50' 
+                        ? 'hover:bg-red-100' 
                         : option.isAdmin
-                          ? 'hover:bg-yellow-50'
-                          : 'hover:bg-blue-50'
+                          ? 'hover:bg-[#f59e0b]/20'
+                          : 'hover:bg-purple-100'
                   }`}
                 >
-                  <span className="text-xl">{option.emoji}</span>
                   <span className={`font-medium ${
                     option.isDanger ? 'text-red-600' : 
-                    option.isAdmin ? 'text-yellow-700' : 'text-gray-900'
+                    option.isAdmin ? 'text-[#f59e0b]' : 
+                    option.isCurrent ? 'text-[#f97316]' : 'text-gray-700'
                   }`}>
                     {option.label}
                   </span>

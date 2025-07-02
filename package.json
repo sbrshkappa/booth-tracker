@@ -24,7 +24,11 @@
   "devDependencies": {
     "concurrently": "^8.2.2"
   },
-  "keywords": ["booth-tracker", "supabase", "full-stack"],
+  "keywords": [
+    "booth-tracker",
+    "supabase",
+    "full-stack"
+  ],
   "author": "",
   "license": "MIT"
-} 
+}
