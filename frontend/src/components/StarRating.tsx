@@ -52,9 +52,9 @@ const StarRating: React.FC<StarRatingProps> = ({
           {star <= rating ? '★' : '☆'}
         </button>
       ))}
-      {!readonly && (
+      {!readonly && rating > 0 && (
         <span className="text-xs text-gray-500 ml-2">
-          {rating > 0 ? `${rating}/5` : 'Rate this booth'}
+          {rating}/5
         </span>
       )}
     </div>
