@@ -71,7 +71,7 @@ export const formatConferenceDate = (day: number) => {
 };
 
 // Helper function to get session duration (default 1 hour)
-export const getSessionDuration = (session: Session) => {
+export const getSessionDuration = () => {
   // For now, assume all sessions are 1 hour
   // This could be extended to use actual duration data if available
   return 60 * 60 * 1000; // 1 hour in milliseconds
