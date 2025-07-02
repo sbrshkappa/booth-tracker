@@ -9,6 +9,7 @@ import { createMenuOptions } from "@/utils/menu";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
 import { sendVisitNotesEmail } from "@/utils/email";
 import { LoadingScreen, LoadingSpinner } from "@/utils/ui";
+import BackgroundImage from '@/components/BackgroundImage';
 
 const HistoryPage: React.FC = () => {
   const router = useRouter();
@@ -177,202 +178,205 @@ const HistoryPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-x-hidden">
-      {/* Menu */}
-      <MenuDropdown options={menuOptions} />
+    <div className="relative h-screen overflow-hidden">
+      <BackgroundImage />
+      <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-x-hidden">
+        {/* Menu */}
+        <MenuDropdown options={menuOptions} />
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col w-full max-w-2xl mx-auto mt-20">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-4xl font-bold text-[#fba758] mb-4" style={{ letterSpacing: 0.5 }}>
-            Visit History 📚
-          </h1>
-          <p className="text-lg text-gray-600">
-            Your journey through conference booths
-          </p>
-          {progress && (
-            <div className="mt-4 text-sm text-gray-500">
-              {progress.visited} of {progress.total} booths visited
-            </div>
-          )}
-          
-          {/* Email Button */}
-          {visitHistory.length > 0 && (
-            <div className="mt-6">
-              <button
-                onClick={async () => {
-                  if (!user?.email) return;
-                  setIsEmailLoading(true);
-                  setEmailError("");
-                  setEmailSuccess("");
-                  
-                  const result = await sendVisitNotesEmail(user);
-                  
-                  if (result.success) {
-                    setEmailSuccess(result.message);
-                  } else {
-                    setEmailError(result.message);
-                  }
-                  
-                  setIsEmailLoading(false);
-                }}
-                disabled={isEmailLoading}
-                className="bg-[#fe84a0] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#fba758] transition-colors disabled:bg-gray-300 flex items-center gap-2 mx-auto"
-              >
-                {isEmailLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" color="white" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    📧 Email My Visit Summary
-                  </>
+        {/* Main content */}
+        <div className="flex-1 flex flex-col w-full max-w-2xl mx-auto mt-20">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <h1 className="text-4xl font-bold text-[#fba758] mb-4" style={{ letterSpacing: 0.5 }}>
+              Visit History 📚
+            </h1>
+            <p className="text-lg text-gray-600">
+              Your journey through conference booths
+            </p>
+            {progress && (
+              <div className="mt-4 text-sm text-gray-500">
+                {progress.visited} of {progress.total} booths visited
+              </div>
+            )}
+            
+            {/* Email Button */}
+            {visitHistory.length > 0 && (
+              <div className="mt-6">
+                <button
+                  onClick={async () => {
+                    if (!user?.email) return;
+                    setIsEmailLoading(true);
+                    setEmailError("");
+                    setEmailSuccess("");
+                    
+                    const result = await sendVisitNotesEmail(user);
+                    
+                    if (result.success) {
+                      setEmailSuccess(result.message);
+                    } else {
+                      setEmailError(result.message);
+                    }
+                    
+                    setIsEmailLoading(false);
+                  }}
+                  disabled={isEmailLoading}
+                  className="bg-[#fe84a0] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#fba758] transition-colors disabled:bg-gray-300 flex items-center gap-2 mx-auto"
+                >
+                  {isEmailLoading ? (
+                    <>
+                      <LoadingSpinner size="sm" color="white" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      📧 Email My Visit Summary
+                    </>
+                  )}
+                </button>
+                {emailSuccess && (
+                  <div className="text-green-600 text-sm mt-2">{emailSuccess}</div>
                 )}
-              </button>
-              {emailSuccess && (
-                <div className="text-green-600 text-sm mt-2">{emailSuccess}</div>
-              )}
-              {emailError && (
-                <div className="text-red-600 text-sm mt-2">{emailError}</div>
-              )}
-            </div>
-          )}
-        </div>
+                {emailError && (
+                  <div className="text-red-600 text-sm mt-2">{emailError}</div>
+                )}
+              </div>
+            )}
+          </div>
 
-        {/* Visit History - Full height scrolling */}
-        <div className="flex-1 bg-white/80 rounded-xl p-6 shadow-lg">
-          {visitHistory.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🚀</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No booths visited yet</h3>
-              <p className="text-gray-500 mb-6">Start your journey by visiting your first booth!</p>
-              <button
-                onClick={() => router.push('/sessions')}
-                className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
-              >
-                Go to Sessions
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-4 h-full">
-              {error && (
-                <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg">
-                  {error}
-                </div>
-              )}
-              
-              <div className="h-full overflow-y-auto pr-2">
-                <ul className="space-y-6">
-                  {visitHistory.map((visit) => (
-                    <li key={visit.visitId} className="bg-green-50 border border-green-200 rounded-xl p-6 shadow-sm">
-                      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center mb-4">
-                        <div>
-                          <span className="font-semibold text-green-800 text-xl">{visit.boothName}</span>
-                          <span className="ml-2 text-sm text-green-600">Phrase: {visit.boothPhrase}</span>
-                        </div>
-                        <div className="text-sm text-green-600 mt-2 sm:mt-0">
-                          {new Date(visit.visitedAt).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </div>
-                      </div>
-                      
-                      {/* Notes Section */}
-                      <div className="mb-4">
-                        {editingNotes === visit.visitId ? (
-                          <div className="space-y-3">
-                            <textarea
-                              className="w-full rounded-lg border border-green-300 px-4 py-3 text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"
-                              value={editingNotesText}
-                              onChange={e => setEditingNotesText(e.target.value)}
-                              placeholder="Add notes about this booth..."
-                              rows={3}
-                            />
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleSaveNotes(visit.visitId)}
-                                className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={handleCancelEdit}
-                                className="px-4 py-2 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                              >
-                                Cancel
-                              </button>
-                            </div>
+          {/* Visit History - Full height scrolling */}
+          <div className="flex-1 bg-white/80 rounded-xl p-6 shadow-lg">
+            {visitHistory.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🚀</div>
+                <h3 className="text-xl font-semibold text-gray-700 mb-2">No booths visited yet</h3>
+                <p className="text-gray-500 mb-6">Start your journey by visiting your first booth!</p>
+                <button
+                  onClick={() => router.push('/sessions')}
+                  className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
+                >
+                  Go to Sessions
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4 h-full">
+                {error && (
+                  <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg">
+                    {error}
+                  </div>
+                )}
+                
+                <div className="h-full overflow-y-auto pr-2">
+                  <ul className="space-y-6">
+                    {visitHistory.map((visit) => (
+                      <li key={visit.visitId} className="bg-green-50 border border-green-200 rounded-xl p-6 shadow-sm">
+                        <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center mb-4">
+                          <div>
+                            <span className="font-semibold text-green-800 text-xl">{visit.boothName}</span>
+                            <span className="ml-2 text-sm text-green-600">Phrase: {visit.boothPhrase}</span>
                           </div>
-                        ) : (
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                                {visit.notes || 'No notes added yet.'}
-                              </p>
+                          <div className="text-sm text-green-600 mt-2 sm:mt-0">
+                            {new Date(visit.visitedAt).toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric'
+                            })}
+                          </div>
+                        </div>
+                        
+                        {/* Notes Section */}
+                        <div className="mb-4">
+                          {editingNotes === visit.visitId ? (
+                            <div className="space-y-3">
+                              <textarea
+                                className="w-full rounded-lg border border-green-300 px-4 py-3 text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"
+                                value={editingNotesText}
+                                onChange={e => setEditingNotesText(e.target.value)}
+                                placeholder="Add notes about this booth..."
+                                rows={3}
+                              />
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleSaveNotes(visit.visitId)}
+                                  className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={handleCancelEdit}
+                                  className="px-4 py-2 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
+                          ) : (
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                  {visit.notes || 'No notes added yet.'}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => handleEditNotes(visit.visitId, visit.notes || '')}
+                                className="ml-2 text-sm text-green-600 hover:text-green-800 transition-colors"
+                              >
+                                Edit
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Rating Section */}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600">Rating:</span>
+                            {editingRating === visit.visitId ? (
+                              <div className="flex items-center gap-2">
+                                <StarRating 
+                                  rating={editingRatingValue} 
+                                  onRatingChange={setEditingRatingValue}
+                                  size="sm"
+                                />
+                                <button
+                                  onClick={() => handleSaveRating(visit.visitId)}
+                                  className="text-sm text-green-600 hover:text-green-800 transition-colors"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={handleCancelRatingEdit}
+                                  className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            ) : (
+                              <StarRating 
+                                rating={visit.rating || 0} 
+                                onRatingChange={() => {}}
+                                size="sm"
+                                readonly
+                              />
+                            )}
+                          </div>
+                          {editingRating !== visit.visitId && (
                             <button
-                              onClick={() => handleEditNotes(visit.visitId, visit.notes || '')}
-                              className="ml-2 text-sm text-green-600 hover:text-green-800 transition-colors"
+                              onClick={() => handleEditRating(visit.visitId, visit.rating || 0)}
+                              className="text-sm text-green-600 hover:text-green-800 transition-colors"
                             >
                               Edit
                             </button>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Rating Section */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">Rating:</span>
-                          {editingRating === visit.visitId ? (
-                            <div className="flex items-center gap-2">
-                              <StarRating 
-                                rating={editingRatingValue} 
-                                onRatingChange={setEditingRatingValue}
-                                size="sm"
-                              />
-                              <button
-                                onClick={() => handleSaveRating(visit.visitId)}
-                                className="text-sm text-green-600 hover:text-green-800 transition-colors"
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={handleCancelRatingEdit}
-                                className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <StarRating 
-                              rating={visit.rating || 0} 
-                              onRatingChange={() => {}}
-                              size="sm"
-                              readonly
-                            />
                           )}
                         </div>
-                        {editingRating !== visit.visitId && (
-                          <button
-                            onClick={() => handleEditRating(visit.visitId, visit.rating || 0)}
-                            className="text-sm text-green-600 hover:text-green-800 transition-colors"
-                          >
-                            Edit
-                          </button>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
