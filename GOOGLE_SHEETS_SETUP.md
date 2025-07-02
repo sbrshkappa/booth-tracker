@@ -173,4 +173,170 @@ Once set up, you can use the Google Sheet data for:
 
 ## 🎉 Success!
 
-Once everything is set up, every time a user completes all booths, their data will automatically appear in your Google Sheet, ready for raffle management and analytics! 
+Once everything is set up, every time a user completes all booths, their data will automatically appear in your Google Sheet, ready for raffle management and analytics!
+
+## 🎯 Overview
+
+The app integrates with Google Sheets in two ways:
+1. **Export user completion data** to Google Sheets when users complete all booths
+2. **Import conference sessions** from Google Sheets to update the schedule
+
+## 1. User Completion Data Export
+
+### Setup
+1. Create a Google Sheet for user completions
+2. Deploy the Google Apps Script (`google-apps-script/Code.gs`)
+3. Configure the webhook in Supabase
+
+### Sheet Structure
+The user completions sheet should have these columns:
+- Timestamp
+- Email
+- First Name
+- Last Name
+- Badge Number
+- Registration Date
+- Completion Date
+- Booths Visited
+- Total Booths
+- Completion Percentage
+- Visit History
+
+## 2. Conference Sessions Import
+
+### Setup
+1. Create a Google Sheet for conference sessions
+2. Use the provided Google Apps Script functions to import data
+3. Run the import function to update your sessions table
+
+### Sheet Structure
+Create a Google Sheet with the following columns:
+
+| Column | Type | Required | Description |
+|--------|------|----------|-------------|
+| day | Number | Yes | Conference day (1, 2, 3) |
+| start_time | Text | Yes | Start time in HH:MM:SS format |
+| topic | Text | Yes | Session title/topic |
+| speaker | Text | No | Speaker name |
+| description | Text | No | Session description |
+| type | Text | No | Session type (keynote, workshop, panel, etc.) |
+| location | Text | No | General location |
+| room | Text | No | Specific room |
+| capacity | Number | No | Maximum capacity |
+| is_children_friendly | Boolean | No | true/false for children's sessions |
+| requires_registration | Boolean | No | true/false if registration needed |
+| tags | Text | No | Comma-separated tags |
+
+### Sample Data
+Here's an example of how your sheet should look:
+
+```
+day | start_time | topic | speaker | description | type | location | room | capacity | is_children_friendly | requires_registration | tags
+1 | 09:00:00 | Opening Ceremony | Conference Chair | Welcome address and overview | opening_ceremony | Main Hall | Grand Ballroom | 300 | false | false | opening,ceremony
+1 | 10:30:00 | Coffee Break | | Networking and refreshments | break | Main Hall | Lobby | 200 | false | false | break,networking
+1 | 11:00:00 | Keynote: Digital Transformation | Dr. Sarah Johnson | Latest trends in digital transformation | keynote | Main Hall | Grand Ballroom | 300 | false | false | keynote,digital-transformation
+2 | 14:00:00 | Children's Festival: Storytelling | Children's Entertainer | Interactive storytelling for kids | performance | Children's Area | Kids Zone | 30 | true | false | children,storytelling,entertainment
+```
+
+### Import Process
+
+#### Step 1: Prepare Your Google Sheet
+1. Create a new Google Sheet
+2. Add the column headers as shown above
+3. Fill in your conference session data
+4. Note the Sheet ID from the URL (the long string between /d/ and /edit)
+
+#### Step 2: Update the Google Apps Script
+1. Open the Google Apps Script editor
+2. Update the `testImportSessions()` function with your sheet details:
+
+```javascript
+function testImportSessions() {
+  const SHEET_ID = 'YOUR_ACTUAL_SHEET_ID'; // Replace with your sheet ID
+  const SHEET_NAME = 'Sheet1'; // Replace with your sheet name (usually Sheet1)
+  
+  try {
+    const result = importSessionsFromSheet(SHEET_ID, SHEET_NAME);
+    console.log('Import completed successfully:', result);
+  } catch (error) {
+    console.error('Import failed:', error);
+  }
+}
+```
+
+#### Step 3: Run the Import
+1. In the Google Apps Script editor, select the `testImportSessions` function
+2. Click the "Run" button
+3. Grant necessary permissions when prompted
+4. Check the execution log for results
+
+### Import Functions
+
+The Google Apps Script provides these functions:
+
+- `importSessionsFromSheet(sheetId, sheetName)` - Main import function
+- `clearSessionsTable()` - Clears all existing sessions before import
+- `insertSession(sessionData)` - Inserts a single session
+- `parseSessionRow(headers, row)` - Parses sheet data into session format
+
+### Data Validation
+
+The import process validates:
+- Required fields (day, start_time, topic)
+- Data types (numbers for day/capacity, booleans for flags)
+- Tag formatting (comma-separated strings)
+
+### Error Handling
+
+The import provides detailed error reporting:
+- Total sessions processed
+- Success count
+- Error count
+- Specific error messages for failed rows
+
+### Tips for Success
+
+1. **Test with a small dataset first** - Import a few sessions to verify the format
+2. **Check data types** - Ensure numbers are numbers, booleans are true/false
+3. **Validate times** - Use HH:MM:SS format for start times
+4. **Handle empty cells** - Leave cells empty rather than filling with placeholder text
+5. **Backup existing data** - The import clears existing sessions, so backup if needed
+
+### Troubleshooting
+
+#### Common Issues:
+- **"Sheet not found"** - Check the sheet name and ID
+- **"Missing required fields"** - Ensure day, start_time, and topic are filled
+- **"Invalid data type"** - Check that numbers are numbers and booleans are true/false
+- **"Permission denied"** - Ensure the Apps Script has access to your sheet
+
+#### Debug Steps:
+1. Check the execution log in Google Apps Script
+2. Verify sheet permissions
+3. Test with a single row first
+4. Validate data format manually
+
+## 3. Manual SQL Import (Alternative)
+
+If you prefer to import data directly via SQL, you can:
+
+1. Export your Google Sheet as CSV
+2. Convert the data to SQL INSERT statements
+3. Run the SQL in your Supabase dashboard
+
+Example SQL format:
+```sql
+INSERT INTO sessions (day, start_time, topic, speaker, description, type, location, room, capacity, is_children_friendly, requires_registration, tags) 
+VALUES 
+(1, '09:00:00', 'Opening Ceremony', 'Conference Chair', 'Welcome address and overview', 'opening_ceremony', 'Main Hall', 'Grand Ballroom', 300, false, false, ARRAY['opening', 'ceremony']),
+(1, '10:30:00', 'Coffee Break', NULL, 'Networking and refreshments', 'break', 'Main Hall', 'Lobby', 200, false, false, ARRAY['break', 'networking']);
+```
+
+## 4. Automation
+
+For regular updates, you can:
+1. Set up a Google Apps Script trigger to run imports automatically
+2. Create a webhook endpoint for real-time updates
+3. Schedule regular imports using Google Apps Script time-based triggers
+
+This setup provides a flexible way to manage your conference schedule data while maintaining the existing user completion tracking functionality.

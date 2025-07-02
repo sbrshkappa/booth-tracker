@@ -29,7 +29,7 @@ serve(async (req) => {
 
   const { email, first_name, last_name, badge_number } = await req.json()
 
-  if(!email || !first_name || !last_name || !badge_number) {
+  if(!email || !first_name || !last_name) {
     return new Response("Missing required fields", { 
       status: 400,
       headers: corsHeaders
@@ -41,9 +41,14 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_ANON_KEY")!
   )
 
+  const userData: any = { email, first_name, last_name };
+  if (badge_number) {
+    userData.badge_number = badge_number;
+  }
+
   const { data, error } = await supabase
-  .from("users")
-  .insert([{ email, first_name, last_name, badge_number }])
+    .from("users")
+    .insert([userData])
 
   if(error) {
     let errorMessage = error.message;
