@@ -64,12 +64,12 @@ export default function Home() {
         throw new Error('Invalid response from server');
       }
 
-      // Login successful - store user data and redirect to sessions
+      // Login successful - store user data and redirect to home
       localStorage.setItem('user', JSON.stringify(data.data.user));
       localStorage.setItem('userProgress', JSON.stringify(data.data.progress));
       
-      // Redirect to sessions
-      window.location.href = '/sessions';
+      // Redirect to home
+      window.location.href = '/home';
       
     } catch (err) {
       if (err instanceof Error) {
