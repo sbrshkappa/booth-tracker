@@ -25,6 +25,7 @@ export default function Dashboard() {
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState("");
   const [emailError, setEmailError] = useState("");
+  const [activeTab, setActiveTab] = useState<'sessions' | 'booths'>('sessions');
 
   // Check if user has completed all booths
   const isCompleted = progress && progress.visited > 0 && progress.visited === progress.total;
@@ -228,120 +229,158 @@ export default function Dashboard() {
       />
 
       {/* Main content fills available space */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto">
-        {/* Header */}
-        <h2 className="text-2xl font-semibold text-orange-500 text-center mt-10 mb-4" style={{ letterSpacing: 0.5 }}>
-          {headerText}
-        </h2>
-        {/* Progress Circle */}
-        {renderProgressCircle()}
-        
-        {isCompleted ? (
-          /* Completion Message */
-          <div className="mt-8 mb-4 text-center">
-            <div className="text-6xl mb-4">🎉🎊✨</div>
-            <div className="text-xl font-bold text-green-600 mb-3">Congratulations!</div>
-            <div className="text-base text-gray-700 leading-relaxed">
-              You've visited all booths and hopefully have learned about the various wonderful activities happening in the different regions of the organization. You are now entered into a raffle! Good luck! 🍀
-            </div>
-            
-            {/* Email Button */}
-            <div className="mt-6">
-              <button
-                onClick={async () => {
-                  if (!user?.email) return;
-                  setIsEmailLoading(true);
-                  setEmailError("");
-                  setEmailSuccess("");
-                  
-                  const result = await sendVisitNotesEmail(user);
-                  
-                  if (result.success) {
-                    setEmailSuccess(result.message);
-                  } else {
-                    setEmailError(result.message);
-                  }
-                  
-                  setIsEmailLoading(false);
-                }}
-                disabled={isEmailLoading}
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-300 flex items-center gap-2 mx-auto"
-              >
-                {isEmailLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" color="white" />
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    📧 Email My Visit Summary
-                  </>
-                )}
-              </button>
-              {emailSuccess && (
-                <div className="text-green-600 text-sm mt-2">{emailSuccess}</div>
-              )}
-              {emailError && (
-                <div className="text-red-600 text-sm mt-2">{emailError}</div>
-              )}
+      <div className="flex-1 flex flex-col w-full max-w-md mx-auto">
+        {/* Tab Navigation */}
+        <div className="flex bg-gray-100 rounded-lg p-1 mt-6 mb-6">
+          <button
+            onClick={() => setActiveTab('sessions')}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+              activeTab === 'sessions'
+                ? 'bg-white text-orange-500 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Sessions
+          </button>
+          <button
+            onClick={() => setActiveTab('booths')}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
+              activeTab === 'booths'
+                ? 'bg-white text-orange-500 shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Booths
+          </button>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'sessions' ? (
+          /* Sessions Tab Content */
+          <div className="flex flex-col items-center justify-center">
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📅</div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">Conference Sessions</h3>
+              <p className="text-gray-500">Session schedule coming soon...</p>
             </div>
           </div>
         ) : (
-          /* Input Form */
-          <>
-            {/* Instruction */}
-            <div className="mt-8 mb-2 text-lg text-center text-gray-900 font-medium">Visit a booth, get a phrase</div>
-            {/* Phrase Input */}
-            <form onSubmit={handleSubmitPhrase} className="w-full flex flex-col items-center gap-4 mb-4">
-              <input
-                className="w-full rounded-xl border-2 border-orange-400 px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                type="text"
-                value={phrase}
-                onChange={e => setPhrase(e.target.value)}
-                placeholder="Enter the phrase"
-              />
-              <textarea
-                className="w-full rounded-xl border-2 border-orange-400 px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                placeholder="Enter any notes about the booth"
-              />
-              <div className="w-full">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rate this booth (optional)
-                </label>
-                <div className="flex justify-center">
-                  <StarRating rating={rating} onRatingChange={setRating} />
+          <div className="flex flex-col items-center justify-center">
+            {/* Header */}
+            <h2 className="text-2xl font-semibold text-orange-500 text-center mb-4" style={{ letterSpacing: 0.5 }}>
+              {headerText}
+            </h2>
+            {/* Progress Circle */}
+            {renderProgressCircle()}
+            
+            {isCompleted ? (
+              /* Completion Message */
+              <div className="mt-8 mb-4 text-center">
+                <div className="text-6xl mb-4">🎉🎊✨</div>
+                <div className="text-xl font-bold text-green-600 mb-3">Congratulations!</div>
+                <div className="text-base text-gray-700 leading-relaxed">
+                  You've visited all booths and hopefully have learned about the various wonderful activities happening in the different regions of the organization. You are now entered into a raffle! Good luck! 🍀
+                </div>
+                
+                {/* Email Button */}
+                <div className="mt-6">
+                  <button
+                    onClick={async () => {
+                      if (!user?.email) return;
+                      setIsEmailLoading(true);
+                      setEmailError("");
+                      setEmailSuccess("");
+                      
+                      const result = await sendVisitNotesEmail(user);
+                      
+                      if (result.success) {
+                        setEmailSuccess(result.message);
+                      } else {
+                        setEmailError(result.message);
+                      }
+                      
+                      setIsEmailLoading(false);
+                    }}
+                    disabled={isEmailLoading}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:bg-blue-300 flex items-center gap-2 mx-auto"
+                  >
+                    {isEmailLoading ? (
+                      <>
+                        <LoadingSpinner size="sm" color="white" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        📧 Email My Visit Summary
+                      </>
+                    )}
+                  </button>
+                  {emailSuccess && (
+                    <div className="text-green-600 text-sm mt-2">{emailSuccess}</div>
+                  )}
+                  {emailError && (
+                    <div className="text-red-600 text-sm mt-2">{emailError}</div>
+                  )}
                 </div>
               </div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-orange-500 text-white py-3 px-6 rounded-xl font-semibold hover:bg-orange-600 transition-colors disabled:bg-orange-300 flex items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner size="sm" color="white" />
-                    Visiting...
-                  </>
-                ) : (
-                  'Visit Booth'
+            ) : (
+              /* Input Form */
+              <>
+                {/* Instruction */}
+                <div className="mt-8 mb-2 text-lg text-center text-gray-900 font-medium">Visit a booth, get a phrase</div>
+                {/* Phrase Input */}
+                <form onSubmit={handleSubmitPhrase} className="w-full flex flex-col items-center gap-4 mb-4">
+                  <input
+                    className="w-full rounded-xl border-2 border-orange-400 px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    type="text"
+                    value={phrase}
+                    onChange={e => setPhrase(e.target.value)}
+                    placeholder="Enter the phrase"
+                  />
+                  <textarea
+                    className="w-full rounded-xl border-2 border-orange-400 px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    placeholder="Enter any notes about the booth"
+                  />
+                  <div className="w-full">
+                    <label className="block text-lg font-medium text-gray-700 mb-3 text-center">
+                      Rate this booth (optional)
+                    </label>
+                    <div className="flex justify-center">
+                      <StarRating rating={rating} onRatingChange={setRating} size="lg" />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-orange-500 text-white py-3 px-6 rounded-xl font-semibold hover:bg-orange-600 transition-colors disabled:bg-orange-300 flex items-center justify-center gap-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <LoadingSpinner size="sm" color="white" />
+                        Visiting...
+                      </>
+                    ) : (
+                      'Visit Booth'
+                    )}
+                  </button>
+                </form>
+                
+                {/* Success/Error Messages */}
+                {success && (
+                  <div className="text-green-600 text-sm text-center bg-green-50 p-3 rounded-lg">
+                    {success}
+                  </div>
                 )}
-              </button>
-            </form>
-            
-            {/* Success/Error Messages */}
-            {success && (
-              <div className="text-green-600 text-sm text-center bg-green-50 p-3 rounded-lg">
-                {success}
-              </div>
+                {error && (
+                  <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg">
+                    {error}
+                  </div>
+                )}
+              </>
             )}
-            {error && (
-              <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg">
-                {error}
-              </div>
-            )}
-          </>
+          </div>
         )}
       </div>
     </div>

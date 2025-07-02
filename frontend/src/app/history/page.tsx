@@ -350,22 +350,22 @@ const HistoryPage: React.FC = () => {
                               </button>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-2">
-                              <StarRating 
-                                rating={visit.rating || 0} 
-                                onRatingChange={() => {}}
-                                size="sm"
-                                readonly
-                              />
-                              <button
-                                onClick={() => handleEditRating(visit.visitId, visit.rating || 0)}
-                                className="text-sm text-green-600 hover:text-green-800 transition-colors"
-                              >
-                                Edit
-                              </button>
-                            </div>
+                            <StarRating 
+                              rating={visit.rating || 0} 
+                              onRatingChange={() => {}}
+                              size="sm"
+                              readonly
+                            />
                           )}
                         </div>
+                        {editingRating !== visit.visitId && (
+                          <button
+                            onClick={() => handleEditRating(visit.visitId, visit.rating || 0)}
+                            className="text-sm text-green-600 hover:text-green-800 transition-colors"
+                          >
+                            Edit
+                          </button>
+                        )}
                       </div>
                     </li>
                   ))}
