@@ -1,170 +1,114 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
-import StarRating from "@/components/StarRating";
-import { AdminStatus } from "@/utils/admin";
-import { User, Progress, VisitHistory } from "@/utils/types";
-import { createMenuOptions } from "@/utils/menu";
+import { User, Session, VisitHistory } from "@/utils/types";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
-import { sendVisitNotesEmail } from "@/utils/email";
-import { LoadingScreen, LoadingSpinner } from "@/utils/ui";
+import { createMenuOptions } from "@/utils/menu";
+import { AdminStatus } from "@/utils/admin";
+import NoteCard, { NoteData } from "@/components/NoteCard";
 import BackgroundImage from '@/components/BackgroundImage';
 
-const HistoryPage: React.FC = () => {
+export default function MyJourneyPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [progress, setProgress] = useState<Progress | null>(null);
-  const [visitHistory, setVisitHistory] = useState<VisitHistory[]>([]);
-  const [editingNotes, setEditingNotes] = useState<number | null>(null);
-  const [editingNotesText, setEditingNotesText] = useState("");
-  const [editingRating, setEditingRating] = useState<number | null>(null);
-  const [editingRatingValue, setEditingRatingValue] = useState(0);
-  const [error, setError] = useState("");
-  const [isEmailLoading, setIsEmailLoading] = useState(false);
-  const [emailSuccess, setEmailSuccess] = useState("");
-  const [emailError, setEmailError] = useState("");
   const [adminStatus, setAdminStatus] = useState<AdminStatus | null>(null);
+  const [journeyItems, setJourneyItems] = useState<NoteData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeFilter, setActiveFilter] = useState<'all' | 'booths' | 'sessions'>('all');
 
   useEffect(() => {
-    // Check if user is logged in
-    const userObj = getUserFromStorage();
-    if (!userObj) {
-      router.push('/');
-      return;
-    }
-    setUser(userObj);
-    
-    // Check admin status
-    checkAdminStatus(userObj.email).then(setAdminStatus);
-  }, [router]);
-
-  const fetchUserProgress = useCallback(async () => {
-    if (!user?.email) return;
-
-    try {
-      const response = await fetch('/api/loginUser', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: user.email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        const newProgress = data.data.progress;
-        setProgress(newProgress);
-        setVisitHistory(data.data.visitHistory);
-        
-        // Update localStorage with fresh data
-        localStorage.setItem('userProgress', JSON.stringify(newProgress));
+    const checkAuth = async () => {
+      const userData = getUserFromStorage();
+      setUser(userData);
+      
+      if (userData) {
+        const adminData = await checkAdminStatus(userData.email);
+        setAdminStatus(adminData);
       }
-    } catch (err) {
-      console.error('Error fetching progress:', err);
-    }
+    };
+
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    const fetchJourneyData = async () => {
+      if (!user?.email) return;
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Fetch booth visits with notes and ratings
+        const boothResponse = await fetch('/api/getUserProgress', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userEmail: user.email }),
+        });
+
+        // Fetch session notes and ratings
+        const sessionResponse = await fetch('/api/getSessionNotes', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userEmail: user.email }),
+        });
+
+        const boothData = boothResponse.ok ? await boothResponse.json() : { visits: [] };
+        const sessionData = sessionResponse.ok ? await sessionResponse.json() : { notes: [] };
+
+        // Transform booth visits into NoteData format
+        const boothNotes: NoteData[] = boothData.visits
+          ?.filter((visit: any) => visit.notes || visit.rating)
+          ?.map((visit: any) => ({
+            id: visit.visitId,
+            type: 'booth' as const,
+            title: visit.boothName,
+            notes: visit.notes,
+            rating: visit.rating,
+            visitedAt: visit.visitedAt,
+            boothPhrase: visit.boothPhrase,
+            boothLocation: visit.location || 'Exhibition Hall',
+          })) || [];
+
+        // Transform session notes into NoteData format
+        const sessionNotes: NoteData[] = sessionData.notes
+          ?.filter((note: any) => note.notes || note.rating)
+          ?.map((note: any) => ({
+            id: note.id,
+            type: 'session' as const,
+            title: note.session?.topic || 'Session',
+            subtitle: note.session?.speaker,
+            notes: note.notes,
+            rating: note.rating,
+            visitedAt: note.updated_at,
+            sessionTime: note.session?.start_time,
+            sessionSpeaker: note.session?.speaker,
+            sessionLocation: note.session?.location,
+            sessionDay: note.session?.day,
+          })) || [];
+
+        // Combine and sort by date (newest first)
+        const allNotes = [...boothNotes, ...sessionNotes].sort((a, b) => 
+          new Date(b.visitedAt).getTime() - new Date(a.visitedAt).getTime()
+        );
+
+        setJourneyItems(allNotes);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch journey data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchJourneyData();
   }, [user?.email]);
 
-  useEffect(() => {
-    if (user?.email) {
-      fetchUserProgress();
-    }
-  }, [user, fetchUserProgress]);
-
   const handleLogoutClick = () => handleLogout(router);
-
-  const handleEditNotes = (visitId: number, currentNotes: string) => {
-    setEditingNotes(visitId);
-    setEditingNotesText(currentNotes || "");
-  };
-
-  const handleSaveNotes = async (visitId: number) => {
-    if (!user?.email) return;
-
-    try {
-      const response = await fetch('/api/updateVisitNotes', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          visitId,
-          notes: editingNotesText.trim(),
-          userEmail: user.email,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update notes');
-      }
-
-      // Update local state
-      setVisitHistory(prev => prev.map(visit => 
-        visit.visitId === visitId 
-          ? { ...visit, notes: editingNotesText.trim() }
-          : visit
-      ));
-
-      setEditingNotes(null);
-      setEditingNotesText("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update notes. Please try again.');
-    }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingNotes(null);
-    setEditingNotesText("");
-  };
-
-  const handleEditRating = (visitId: number, currentRating: number) => {
-    setEditingRating(visitId);
-    setEditingRatingValue(currentRating || 0);
-  };
-
-  const handleSaveRating = async (visitId: number) => {
-    if (!user?.email) return;
-
-    try {
-      const response = await fetch('/api/updateBoothRating', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          visitId,
-          rating: editingRatingValue,
-          userEmail: user.email,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update rating');
-      }
-
-      // Update local state
-      setVisitHistory(prev => prev.map(visit => 
-        visit.visitId === visitId 
-          ? { ...visit, rating: editingRatingValue }
-          : visit
-      ));
-
-      setEditingRating(null);
-      setEditingRatingValue(0);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update rating. Please try again.');
-    }
-  };
-
-  const handleCancelRatingEdit = () => {
-    setEditingRating(null);
-    setEditingRatingValue(0);
-  };
 
   const menuOptions = createMenuOptions({
     currentPage: 'history',
@@ -173,215 +117,195 @@ const HistoryPage: React.FC = () => {
     adminStatus,
   });
 
-  if (!user || !progress) {
-    return <LoadingScreen />;
+  const filteredItems = journeyItems.filter(item => {
+    if (activeFilter === 'all') return true;
+    return item.type === (activeFilter === 'booths' ? 'booth' : 'session');
+  });
+
+  const getFilterStats = () => {
+    const total = journeyItems.length;
+    const booths = journeyItems.filter(item => item.type === 'booth').length;
+    const sessions = journeyItems.filter(item => item.type === 'session').length;
+    return { total, booths, sessions };
+  };
+
+  const stats = getFilterStats();
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#fba758] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-x-hidden">
+        <MenuDropdown 
+          options={menuOptions} 
+          userName={`${user.firstName} ${user.lastName}`}
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#fba758] mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading your journey...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-x-hidden">
+        <MenuDropdown 
+          options={menuOptions} 
+          userName={`${user.firstName} ${user.lastName}`}
+        />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error: {error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-4 py-2 bg-[#fba758] text-white rounded-lg hover:bg-[#fba758]/90"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="h-screen bg-white flex flex-col px-4 py-6 relative overflow-hidden">
+    <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-x-hidden">
       <BackgroundImage />
+      
       {/* Header with title and menu */}
       <div className="mb-6">
-        {/* Top row: Logo and Menu */}
         <div className="flex justify-between items-center mb-4">
           <img 
             src="/assets/conference-companion.png" 
             alt="Conference Companion" 
             className="h-12 w-auto"
           />
-          <MenuDropdown options={menuOptions} />
+          <MenuDropdown 
+            options={menuOptions} 
+            userName={`${user.firstName} ${user.lastName}`}
+          />
         </div>
         
-        {/* Bottom row: Title and subtitle */}
+        {/* Title and subtitle */}
         <div className="max-w-2xl">
-          <h1 className="text-3xl font-bold text-orange-500 mb-2" style={{ letterSpacing: 0.5 }}>
-            Visit History
+          <h1 className="text-3xl font-bold text-[#fba758] mb-2" style={{ letterSpacing: 0.5 }}>
+            My Journey
           </h1>
-          <p className="text-lg text-gray-600 mb-2">
-            Your journey through conference booths
+          <p className="text-xs text-gray-500 mb-2">
+            Your personal collection of notes, ratings, and memories from the conference
           </p>
-          {progress && (
-            <div className="text-sm text-gray-500">
-              {progress.visited} of {progress.total} booths visited
-            </div>
-          )}
         </div>
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 flex-1 flex flex-col w-full max-w-2xl mx-auto">
-        {/* Email Button */}
-        {visitHistory.length > 0 && (
-          <div className="mb-6 text-center">
-            <button
-              onClick={async () => {
-                if (!user?.email) return;
-                setIsEmailLoading(true);
-                setEmailError("");
-                setEmailSuccess("");
-                
-                const result = await sendVisitNotesEmail(user);
-                
-                if (result.success) {
-                  setEmailSuccess(result.message);
-                } else {
-                  setEmailError(result.message);
-                }
-                
-                setIsEmailLoading(false);
-              }}
-              disabled={isEmailLoading}
-              className="bg-[#fe84a0] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#fba758] transition-colors disabled:bg-gray-300 flex items-center gap-2 mx-auto"
-            >
-              {isEmailLoading ? (
-                <>
-                  <LoadingSpinner size="sm" color="white" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  📧 Email My Visit Summary
-                </>
-              )}
-            </button>
-            {emailSuccess && (
-              <div className="text-green-600 text-sm mt-2">{emailSuccess}</div>
-            )}
-            {emailError && (
-              <div className="text-red-600 text-sm mt-2">{emailError}</div>
-            )}
-          </div>
-        )}
+      <div className="relative z-10 flex flex-col w-full max-w-6xl mx-auto flex-1 min-h-0">
+        {/* Filter tabs */}
+        <div className="flex bg-gray-100 rounded-lg p-1 mb-6 flex-shrink-0">
+          <button
+            onClick={() => setActiveFilter('all')}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${
+              activeFilter === 'all'
+                ? 'bg-white text-[#fba758] shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            All ({stats.total})
+          </button>
+          <button
+            onClick={() => setActiveFilter('booths')}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${
+              activeFilter === 'booths'
+                ? 'bg-white text-[#fba758] shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Booths ({stats.booths})
+          </button>
+          <button
+            onClick={() => setActiveFilter('sessions')}
+            className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${
+              activeFilter === 'sessions'
+                ? 'bg-white text-[#fba758] shadow-sm'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Sessions ({stats.sessions})
+          </button>
+        </div>
 
-        {/* Visit History - Full height scrolling */}
-        <div className="flex-1 bg-white/80 rounded-xl p-6 shadow-lg">
-          {visitHistory.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">🚀</div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-2">No booths visited yet</h3>
-              <p className="text-gray-500 mb-6">Start your journey by visiting your first booth!</p>
-              <button
-                onClick={() => router.push('/sessions')}
-                className="px-6 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition-colors"
-              >
-                Go to Sessions
-              </button>
+        {/* Journey items */}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          {filteredItems.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredItems.map((item) => (
+                <NoteCard 
+                  key={`${item.type}-${item.id}`} 
+                  note={item}
+                />
+              ))}
             </div>
           ) : (
-            <div className="space-y-4 h-full">
-              {error && (
-                <div className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg">
-                  {error}
+            <div className="text-center py-12">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-100 max-w-md mx-auto">
+                <div className="text-4xl mb-4">🌟</div>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                  Start Your Journey
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  {activeFilter === 'all' 
+                    ? "Visit booths and attend sessions to start building your conference journey. Your notes and ratings will appear here."
+                    : activeFilter === 'booths'
+                    ? "Visit booths and leave notes or ratings to see them here."
+                    : "Attend sessions and take notes or give ratings to see them here."
+                  }
+                </p>
+                <div className="space-y-2">
+                  {activeFilter === 'all' && (
+                    <>
+                      <button
+                        onClick={() => router.push('/dashboard')}
+                        className="w-full bg-[#fba758] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#fba758]/90 transition-colors"
+                      >
+                        Visit Booths
+                      </button>
+                      <button
+                        onClick={() => router.push('/sessions')}
+                        className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                      >
+                        View Sessions
+                      </button>
+                    </>
+                  )}
+                  {activeFilter === 'booths' && (
+                    <button
+                      onClick={() => router.push('/dashboard')}
+                      className="w-full bg-[#fba758] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#fba758]/90 transition-colors"
+                    >
+                      Start Booth Hunting
+                    </button>
+                  )}
+                  {activeFilter === 'sessions' && (
+                    <button
+                      onClick={() => router.push('/sessions')}
+                      className="w-full bg-[#fba758] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#fba758]/90 transition-colors"
+                    >
+                      Explore Sessions
+                    </button>
+                  )}
                 </div>
-              )}
-              
-              <div className="h-full overflow-y-auto pr-2">
-                <ul className="space-y-6">
-                  {visitHistory.map((visit) => (
-                    <li key={visit.visitId} className="bg-green-50 border border-green-200 rounded-xl p-6 shadow-sm">
-                      <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center mb-4">
-                        <div>
-                          <span className="font-semibold text-green-800 text-xl">{visit.boothName}</span>
-                          <span className="ml-2 text-sm text-green-600">Phrase: {visit.boothPhrase}</span>
-                        </div>
-                        <div className="text-sm text-green-600 mt-2 sm:mt-0">
-                          {new Date(visit.visitedAt).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric'
-                          })}
-                        </div>
-                      </div>
-                      
-                      {/* Notes Section */}
-                      <div className="mb-4">
-                        {editingNotes === visit.visitId ? (
-                          <div className="space-y-3">
-                            <textarea
-                              className="w-full rounded-lg border border-green-300 px-4 py-3 text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"
-                              value={editingNotesText}
-                              onChange={e => setEditingNotesText(e.target.value)}
-                              placeholder="Add notes about this booth..."
-                              rows={3}
-                            />
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => handleSaveNotes(visit.visitId)}
-                                className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={handleCancelEdit}
-                                className="px-4 py-2 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                                {visit.notes || 'No notes added yet.'}
-                              </p>
-                            </div>
-                            <button
-                              onClick={() => handleEditNotes(visit.visitId, visit.notes || '')}
-                              className="ml-2 text-sm text-green-600 hover:text-green-800 transition-colors"
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                      
-                      {/* Rating Section */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-600">Rating:</span>
-                          {editingRating === visit.visitId ? (
-                            <div className="flex items-center gap-2">
-                              <StarRating 
-                                rating={editingRatingValue} 
-                                onRatingChange={setEditingRatingValue}
-                                size="sm"
-                              />
-                              <button
-                                onClick={() => handleSaveRating(visit.visitId)}
-                                className="text-sm text-green-600 hover:text-green-800 transition-colors"
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={handleCancelRatingEdit}
-                                className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          ) : (
-                            <StarRating 
-                              rating={visit.rating || 0} 
-                              onRatingChange={() => {}}
-                              size="sm"
-                              readonly
-                            />
-                          )}
-                        </div>
-                        {editingRating !== visit.visitId && (
-                          <button
-                            onClick={() => handleEditRating(visit.visitId, visit.rating || 0)}
-                            className="text-sm text-green-600 hover:text-green-800 transition-colors"
-                          >
-                            Edit
-                          </button>
-                        )}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
               </div>
             </div>
           )}
@@ -389,6 +313,4 @@ const HistoryPage: React.FC = () => {
       </div>
     </div>
   );
-};
-
-export default HistoryPage; 
+} 

@@ -293,7 +293,7 @@ export default function SessionsPage() {
               <button
                 key={day}
                 onClick={() => handleDayClick(day)}
-                className={`flex-1 py-3 px-4 rounded-md font-medium transition-all duration-300 ease-in-out relative z-10 ${
+                className={`w-1/4 py-3 px-2 rounded-md font-medium transition-all duration-300 ease-in-out relative z-10 text-center ${
                   activeDay === day && activeTab === 'sessions'
                     ? 'text-[#fba758] font-semibold'
                     : isCurrentDay
@@ -314,7 +314,7 @@ export default function SessionsPage() {
           })}
           <button
             onClick={() => setActiveTab('booths')}
-            className={`flex-1 py-3 px-4 rounded-md font-medium transition-all duration-300 ease-in-out relative z-10 ${
+            className={`w-1/4 py-3 px-2 rounded-md font-medium transition-all duration-300 ease-in-out relative z-10 text-center ${
               activeTab === 'booths'
                 ? 'text-[#fba758] font-semibold'
                 : 'text-gray-600 hover:text-gray-800 hover:scale-105'
