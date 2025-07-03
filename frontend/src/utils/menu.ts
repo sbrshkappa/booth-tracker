@@ -46,7 +46,7 @@ export const createMenuOptions = (config: MenuConfig): MenuOption[] => {
     },
     {
       id: 'history',
-      label: 'History',
+      label: 'My Journey',
       emoji: '',
       action: currentPage === 'history' ? () => {} : () => router.push('/history'),
       isCurrent: currentPage === 'history',
