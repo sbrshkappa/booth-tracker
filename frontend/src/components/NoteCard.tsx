@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import StarRating from './StarRating';
 
 export interface NoteData {
@@ -22,9 +22,16 @@ export interface NoteData {
 interface NoteCardProps {
   note: NoteData;
   onClick?: () => void;
+  onUpdate?: (updatedNote: NoteData) => void;
 }
 
-export default function NoteCard({ note, onClick }: NoteCardProps) {
+export default function NoteCard({ note, onClick, onUpdate }: NoteCardProps) {
+  const [isEditingNotes, setIsEditingNotes] = useState(false);
+  const [isEditingRating, setIsEditingRating] = useState(false);
+  const [editedNotes, setEditedNotes] = useState(note.notes || '');
+  const [editedRating, setEditedRating] = useState(note.rating || 0);
+  const [isSaving, setIsSaving] = useState(false);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -45,6 +52,150 @@ export default function NoteCard({ note, onClick }: NoteCardProps) {
 
   const getTypeTextColor = () => {
     return note.type === 'booth' ? 'text-blue-700' : 'text-purple-700';
+  };
+
+  const getUserEmail = () => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        return user.email;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  const handleNotesClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditingNotes(true);
+  };
+
+  const handleRatingClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsEditingRating(true);
+  };
+
+  const handleSaveNotes = async () => {
+    if (editedNotes === note.notes) {
+      setIsEditingNotes(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      if (note.type === 'booth') {
+        // Update booth visit notes
+        const response = await fetch('/api/updateVisitNotes', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            visitId: note.id,
+            notes: editedNotes,
+            userEmail: getUserEmail()
+          }),
+        });
+
+        if (response.ok) {
+          const updatedNote = { ...note, notes: editedNotes };
+          onUpdate?.(updatedNote);
+        }
+      } else {
+        // Update session notes
+        const requestBody = {
+          session_id: note.id,
+          notes: editedNotes,
+          rating: note.rating,
+          userEmail: getUserEmail()
+        };
+        
+        const response = await fetch('/api/saveSessionNotes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(requestBody),
+        });
+
+        if (response.ok) {
+          const updatedNote = { ...note, notes: editedNotes };
+          onUpdate?.(updatedNote);
+        }
+      }
+      setIsEditingNotes(false);
+    } catch (error) {
+      console.error('Error saving notes:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleSaveRating = async () => {
+    if (editedRating === note.rating) {
+      setIsEditingRating(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      if (note.type === 'booth') {
+        // Update booth visit rating
+        const response = await fetch('/api/updateBoothRating', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            visitId: note.id,
+            rating: editedRating,
+            userEmail: getUserEmail()
+          }),
+        });
+
+        if (response.ok) {
+          const updatedNote = { ...note, rating: editedRating };
+          onUpdate?.(updatedNote);
+        }
+      } else {
+        // Update session rating
+        const response = await fetch('/api/saveSessionNotes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: note.id,
+            notes: note.notes,
+            rating: editedRating,
+            userEmail: getUserEmail()
+          }),
+        });
+
+        if (response.ok) {
+          const updatedNote = { ...note, rating: editedRating };
+          onUpdate?.(updatedNote);
+        }
+      }
+      setIsEditingRating(false);
+    } catch (error) {
+      console.error('Error saving rating:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelNotes = () => {
+    setEditedNotes(note.notes || '');
+    setIsEditingNotes(false);
+  };
+
+  const handleCancelRating = () => {
+    setEditedRating(note.rating || 0);
+    setIsEditingRating(false);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent, saveFunction: () => void, cancelFunction: () => void) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      saveFunction();
+    } else if (e.key === 'Escape') {
+      cancelFunction();
+    }
   };
 
   return (
@@ -121,25 +272,101 @@ export default function NoteCard({ note, onClick }: NoteCardProps) {
         </div>
 
         {/* Notes */}
-        {note.notes && (
-          <div className="mb-4">
-            <div className="bg-white/60 rounded-lg p-3 border border-gray-200">
-              <p className="text-sm text-gray-700 leading-relaxed">
-                {note.notes}
-              </p>
-            </div>
+        <div className="mb-4">
+          <div className="bg-white/60 rounded-lg p-3 border border-gray-200">
+            {isEditingNotes ? (
+              <div className="space-y-2">
+                <textarea
+                  value={editedNotes}
+                  onChange={(e) => setEditedNotes(e.target.value)}
+                  onKeyDown={(e) => handleKeyPress(e, handleSaveNotes, handleCancelNotes)}
+                  className="w-full text-sm text-gray-700 leading-relaxed bg-transparent border-none outline-none resize-none"
+                  placeholder="Add your notes..."
+                  autoFocus
+                  rows={3}
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSaveNotes}
+                    disabled={isSaving}
+                    className="px-3 py-1 bg-[#fba758] text-white text-xs rounded hover:bg-[#fba758]/90 disabled:opacity-50"
+                  >
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    onClick={handleCancelNotes}
+                    disabled={isSaving}
+                    className="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div 
+                onClick={handleNotesClick}
+                className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1 transition-colors"
+              >
+                {note.notes ? (
+                  <p className="text-sm text-gray-700 leading-relaxed">
+                    {note.notes}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-500 italic">
+                    Click to add notes...
+                  </p>
+                )}
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Rating */}
-        {note.rating && (
-          <div className="mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-600">Your Rating:</span>
-              <StarRating rating={note.rating} readonly />
+        <div className="mb-4">
+          {isEditingRating ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-600">Your Rating:</span>
+                <StarRating 
+                  rating={editedRating} 
+                  onRatingChange={setEditedRating}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveRating}
+                  disabled={isSaving}
+                  className="px-3 py-1 bg-[#fba758] text-white text-xs rounded hover:bg-[#fba758]/90 disabled:opacity-50"
+                >
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+                <button
+                  onClick={handleCancelRating}
+                  disabled={isSaving}
+                  className="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          ) : (
+            <div 
+              onClick={handleRatingClick}
+              className="cursor-pointer hover:bg-gray-50 rounded p-1 -m-1 transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-600">Your Rating:</span>
+                {note.rating ? (
+                  <StarRating rating={note.rating} />
+                ) : (
+                  <span className="text-sm text-gray-500 italic">
+                    Click to add rating...
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-3 border-t border-gray-200">

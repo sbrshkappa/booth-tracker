@@ -38,6 +38,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const edgeFunctionBody = {
+      session_id,
+      notes,
+      rating
+    };
+
     const response = await fetch(`${supabaseUrl}/functions/v1/saveSessionNotes`, {
       method: 'POST',
       headers: {
@@ -45,11 +51,7 @@ export async function POST(request: NextRequest) {
         'Authorization': `Bearer ${supabaseServiceKey}`,
         'x-user-email': userEmail,
       },
-      body: JSON.stringify({
-        session_id,
-        notes,
-        rating
-      }),
+      body: JSON.stringify(edgeFunctionBody),
     });
 
     const data = await response.json();

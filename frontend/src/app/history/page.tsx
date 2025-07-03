@@ -8,6 +8,7 @@ import { createMenuOptions } from "@/utils/menu";
 import { AdminStatus } from "@/utils/admin";
 import NoteCard, { NoteData } from "@/components/NoteCard";
 import BackgroundImage from '@/components/BackgroundImage';
+import ShareModal from '@/components/ShareModal';
 
 export default function MyJourneyPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function MyJourneyPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'booths' | 'sessions'>('all');
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -41,12 +43,12 @@ export default function MyJourneyPage() {
         setError(null);
 
         // Fetch booth visits with notes and ratings
-        const boothResponse = await fetch('/api/getUserProgress', {
+        const boothResponse = await fetch('/api/loginUser', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ userEmail: user.email }),
+          body: JSON.stringify({ email: user.email }),
         });
 
         // Fetch session notes and ratings
@@ -58,11 +60,11 @@ export default function MyJourneyPage() {
           body: JSON.stringify({ userEmail: user.email }),
         });
 
-        const boothData = boothResponse.ok ? await boothResponse.json() : { visits: [] };
-        const sessionData = sessionResponse.ok ? await sessionResponse.json() : { notes: [] };
+        const boothData = boothResponse.ok ? await boothResponse.json() : { data: { visitHistory: [] } };
+        const sessionData = sessionResponse.ok ? await sessionResponse.json() : { data: [] };
 
         // Transform booth visits into NoteData format
-        const boothNotes: NoteData[] = boothData.visits
+        const boothNotes: NoteData[] = boothData.data?.visitHistory
           ?.filter((visit: any) => visit.notes || visit.rating)
           ?.map((visit: any) => ({
             id: visit.visitId,
@@ -76,20 +78,20 @@ export default function MyJourneyPage() {
           })) || [];
 
         // Transform session notes into NoteData format
-        const sessionNotes: NoteData[] = sessionData.notes
+        const sessionNotes: NoteData[] = sessionData.data
           ?.filter((note: any) => note.notes || note.rating)
           ?.map((note: any) => ({
             id: note.id,
             type: 'session' as const,
-            title: note.session?.topic || 'Session',
-            subtitle: note.session?.speaker,
+            title: note.sessions?.topic || 'Session',
+            subtitle: note.sessions?.speaker,
             notes: note.notes,
             rating: note.rating,
             visitedAt: note.updated_at,
-            sessionTime: note.session?.start_time,
-            sessionSpeaker: note.session?.speaker,
-            sessionLocation: note.session?.location,
-            sessionDay: note.session?.day,
+            sessionTime: note.sessions?.start_time,
+            sessionSpeaker: note.sessions?.speaker,
+            sessionLocation: note.sessions?.room,
+            sessionDay: note.sessions?.day,
           })) || [];
 
         // Combine and sort by date (newest first)
@@ -109,6 +111,16 @@ export default function MyJourneyPage() {
   }, [user?.email]);
 
   const handleLogoutClick = () => handleLogout(router);
+
+  const handleNoteUpdate = (updatedNote: NoteData) => {
+    setJourneyItems(prevItems => 
+      prevItems.map(item => 
+        item.id === updatedNote.id && item.type === updatedNote.type 
+          ? updatedNote 
+          : item
+      )
+    );
+  };
 
   const menuOptions = createMenuOptions({
     currentPage: 'history',
@@ -182,11 +194,11 @@ export default function MyJourneyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-x-hidden">
+    <div className="h-screen bg-white flex flex-col px-4 py-6 relative overflow-hidden">
       <BackgroundImage />
       
       {/* Header with title and menu */}
-      <div className="mb-6">
+      <div className="mb-6 flex-shrink-0">
         <div className="flex justify-between items-center mb-4">
           <img 
             src="/assets/conference-companion.png" 
@@ -212,7 +224,7 @@ export default function MyJourneyPage() {
 
       {/* Main content */}
       <div className="relative z-10 flex flex-col w-full max-w-6xl mx-auto flex-1 min-h-0">
-        {/* Filter tabs */}
+        {/* Filter tabs - fixed at top */}
         <div className="flex bg-gray-100 rounded-lg p-1 mb-6 flex-shrink-0">
           <button
             onClick={() => setActiveFilter('all')}
@@ -246,14 +258,15 @@ export default function MyJourneyPage() {
           </button>
         </div>
 
-        {/* Journey items */}
+        {/* Journey items - scrollable */}
         <div className="flex-1 min-h-0 overflow-y-auto">
           {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6">
               {filteredItems.map((item) => (
                 <NoteCard 
                   key={`${item.type}-${item.id}`} 
                   note={item}
+                  onUpdate={handleNoteUpdate}
                 />
               ))}
             </div>
@@ -311,6 +324,37 @@ export default function MyJourneyPage() {
           )}
         </div>
       </div>
+
+      {/* Share Modal */}
+      {isShareModalOpen && (
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          journeyItems={journeyItems}
+          user={user}
+        />
+      )}
+
+      {/* Floating Share Button */}
+      <button
+        onClick={() => setIsShareModalOpen(true)}
+        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-[#fba758] to-[#ff8c42] hover:from-[#ff8c42] hover:to-[#fba758] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 z-40 flex items-center justify-center group"
+        title="Share your journey"
+      >
+        <svg 
+          className="w-6 h-6 transition-transform group-hover:rotate-12" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            strokeWidth={2.5} 
+            d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" 
+          />
+        </svg>
+      </button>
     </div>
   );
 } 
