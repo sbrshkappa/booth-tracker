@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
-import { User, Session, VisitHistory } from "@/utils/types";
+import { User } from "@/utils/types";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
 import { createMenuOptions } from "@/utils/menu";
 import { AdminStatus } from "@/utils/admin";
@@ -65,8 +65,16 @@ export default function MyJourneyPage() {
 
         // Transform booth visits into NoteData format
         const boothNotes: NoteData[] = boothData.data?.visitHistory
-          ?.filter((visit: any) => visit.notes || visit.rating)
-          ?.map((visit: any) => ({
+          ?.filter((visit: { notes?: string; rating?: number }) => visit.notes || visit.rating)
+          ?.map((visit: { 
+            visitId: number; 
+            boothName: string; 
+            notes?: string; 
+            rating?: number; 
+            visitedAt: string; 
+            boothPhrase?: string; 
+            location?: string; 
+          }) => ({
             id: visit.visitId,
             type: 'booth' as const,
             title: visit.boothName,
@@ -79,8 +87,20 @@ export default function MyJourneyPage() {
 
         // Transform session notes into NoteData format
         const sessionNotes: NoteData[] = sessionData.data
-          ?.filter((note: any) => note.notes || note.rating)
-          ?.map((note: any) => ({
+          ?.filter((note: { notes?: string; rating?: number }) => note.notes || note.rating)
+          ?.map((note: { 
+            id: number; 
+            notes?: string; 
+            rating?: number; 
+            updated_at: string; 
+            sessions?: { 
+              topic?: string; 
+              speaker?: string; 
+              start_time?: string; 
+              room?: string; 
+              day?: number; 
+            }; 
+          }) => ({
             id: note.id,
             type: 'session' as const,
             title: note.sessions?.topic || 'Session',
