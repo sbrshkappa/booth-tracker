@@ -79,11 +79,11 @@ serve(async (req) => {
       })
     }
 
-    // 2. Find the booth by phrase
+    // 2. Find the booth by phrase (case-insensitive)
     const { data: booth, error: boothError } = await supabase
       .from("booths")
       .select("id, phrase, name, total_visits")
-      .eq("phrase", phrase)
+      .ilike("phrase", phrase)
       .single()
 
     if (boothError) {
