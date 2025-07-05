@@ -59,4 +59,15 @@ export interface UserSessionNotes {
   rating: number;
   created_at: string;
   updated_at: string;
-} 
+}
+
+export interface SessionGroup {
+  id: string;
+  title: string;
+  sessions: Session[];
+  startTime: string;
+  endTime: string;
+  isCollapsed: boolean;
+}
+
+export type TimelineItem = SessionGroup | { type: 'break'; data: Session } | { type: 'lunch'; data: Session }; 
