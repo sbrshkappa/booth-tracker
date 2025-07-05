@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 
 export default function BackgroundImage() {
   return (
@@ -6,10 +7,12 @@ export default function BackgroundImage() {
       aria-hidden="true"
       className="pointer-events-none select-none absolute inset-0 w-full h-full z-0 overflow-hidden"
     >
-      <img
+      <Image
         src="/assets/background.png"
         alt="background"
-        className="object-cover object-center absolute top-0 left-1/2 -translate-x-1/2 w-[200vw] h-full max-w-none opacity-10"
+        fill
+        className="object-cover object-center opacity-10"
+        priority={false}
       />
     </div>
   );

@@ -1,12 +1,13 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import MenuDropdown from "@/components/MenuDropdown";
 import SessionCard from "@/components/SessionCard";
 import SessionModal from "@/components/SessionModal";
 import BoothCard from "@/components/BoothCard";
 import { AdminStatus } from "@/utils/admin";
-import { User, Booth, Session, SessionGroup, TimelineItem } from "@/utils/types";
+import { User, Booth, Session, TimelineItem } from "@/utils/types";
 import { createMenuOptions } from "@/utils/menu";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
 import { LoadingScreen } from "@/utils/ui";
@@ -204,7 +205,6 @@ export default function SessionsPage() {
 
   const getGroupTitle = (startTime: string, endTime: string): string => {
     const startHour = parseInt(startTime.split(':')[0]);
-    const endHour = endTime === 'end-of-day' ? 18 : parseInt(endTime.split(':')[0]);
     
     if (startHour < 12) {
       return 'Morning Sessions';
@@ -328,10 +328,12 @@ export default function SessionsPage() {
       <div className="mb-6">
         {/* Top row: Logo and Menu */}
         <div className="flex justify-between items-center mb-4">
-          <img 
+          <Image 
             src="/assets/conference-companion.png" 
             alt="Conference Companion" 
             className="h-12 w-auto"
+            width={48}
+            height={48}
           />
           <MenuDropdown 
             options={menuOptions} 
