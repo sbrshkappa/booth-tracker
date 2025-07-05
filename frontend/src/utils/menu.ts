@@ -11,7 +11,7 @@ export interface MenuOption {
 }
 
 export interface MenuConfig {
-  currentPage: 'home' | 'dashboard' | 'sessions' | 'history' | 'how-it-works' | 'admin';
+  currentPage: 'home' | 'dashboard' | 'sessions' | 'history' | 'how-it-works' | 'admin' | 'contact';
   router: {
     push: (path: string) => void;
   };
@@ -77,5 +77,13 @@ export const createMenuOptions = (config: MenuConfig): MenuOption[] => {
     isDanger: true,
   };
 
-  return [...baseOptions, ...adminOption, logoutOption];
+  const contactOption: MenuOption = {
+    id: 'contact',
+    label: 'Contact Us',
+    emoji: '',
+    action: currentPage === 'contact' ? () => {} : () => router.push('/contact'),
+    isCurrent: currentPage === 'contact',
+  };
+
+  return [...baseOptions, contactOption, ...adminOption, logoutOption];
 }; 
