@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import MenuDropdown from "@/components/MenuDropdown";
 import StarRating from "@/components/StarRating";
 import { AdminStatus } from "@/utils/admin";
@@ -241,10 +242,11 @@ export default function Dashboard() {
       <div className="mb-6">
         {/* Top row: Logo and Menu */}
         <div className="flex justify-between items-center mb-4">
-          <img 
+          <Image 
             src="/assets/conference-companion.png" 
             alt="Conference Companion" 
-            className="h-12 w-auto"
+            width={48}
+            height={48}
           />
           <MenuDropdown 
             options={menuOptions} 

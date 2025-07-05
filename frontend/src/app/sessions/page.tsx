@@ -158,7 +158,7 @@ export default function SessionsPage() {
         // Add the current group if it has sessions
         if (currentGroupSessions.length > 0) {
           const groupId = `day-${day}-group-${result.length}`;
-          const groupTitle = getGroupTitle(groupStartTime, session.start_time);
+          const groupTitle = getGroupTitle(groupStartTime);
           
           result.push({
             id: groupId,
@@ -188,7 +188,7 @@ export default function SessionsPage() {
     // Add any remaining sessions as the final group
     if (currentGroupSessions.length > 0) {
       const groupId = `day-${day}-group-${result.length}`;
-      const groupTitle = getGroupTitle(groupStartTime, 'end-of-day');
+      const groupTitle = getGroupTitle(groupStartTime);
       
       result.push({
         id: groupId,
@@ -203,7 +203,7 @@ export default function SessionsPage() {
     return result;
   };
 
-  const getGroupTitle = (startTime: string, endTime: string): string => {
+  const getGroupTitle = (startTime: string): string => {
     const startHour = parseInt(startTime.split(':')[0]);
     
     if (startHour < 12) {

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { User, Session } from '@/utils/types';
 import { getUserFromStorage, checkAdminStatus, handleLogout } from '@/utils/auth';
 import { createMenuOptions } from '@/utils/menu';
@@ -190,10 +191,12 @@ export default function HomePage() {
       {/* Header with logo and menu */}
       <div className="mb-12">
         <div className="flex justify-between items-center mb-12">
-          <img 
+          <Image 
             src="/assets/conference-companion.png" 
             alt="Conference Companion" 
             className="h-12 w-auto"
+            width={48}
+            height={48}
           />
           <MenuDropdown 
             options={menuOptions} 
@@ -213,10 +216,12 @@ export default function HomePage() {
         
         {/* SSSIO Logo */}
         <div className="text-center mb-8">
-          <img 
+          <Image 
             src="/assets/ssio-logo-english.png" 
             alt="SSSIO Logo" 
             className="h-32 w-auto mx-auto"
+            width={128}
+            height={128}
           />
         </div>
       </div>
