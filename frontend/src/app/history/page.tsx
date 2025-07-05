@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import MenuDropdown from "@/components/MenuDropdown";
 import { User } from "@/utils/types";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
@@ -220,10 +221,12 @@ export default function MyJourneyPage() {
       {/* Header with title and menu */}
       <div className="mb-6 flex-shrink-0">
         <div className="flex justify-between items-center mb-4">
-          <img 
+          <Image 
             src="/assets/conference-companion.png" 
             alt="Conference Companion" 
             className="h-12 w-auto"
+            width={48}
+            height={48}
           />
           <MenuDropdown 
             options={menuOptions} 
