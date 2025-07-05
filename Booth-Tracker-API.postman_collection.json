@@ -1,0 +1,516 @@
+{
+	"info": {
+		"_postman_id": "booth-tracker-api-collection",
+		"name": "Booth Tracker API",
+		"description": "Complete API collection for the Booth Tracker application. This collection includes all endpoints for user management, booth operations, session management, and admin functions.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "booth-tracker-api"
+	},
+	"item": [
+		{
+			"name": "User Management",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\",\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"badge_number\": \"12345\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/registerUser",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"registerUser"
+							]
+						},
+						"description": "Register a new user with email, first name, last name, and optional badge number."
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/loginUser",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"loginUser"
+							]
+						},
+						"description": "Login user by email. Returns user progress and visited booths."
+					},
+					"response": []
+				},
+				{
+					"name": "Check Admin Status",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/checkAdminStatus",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"checkAdminStatus"
+							]
+						},
+						"description": "Check if a user has admin privileges."
+					},
+					"response": []
+				}
+			],
+			"description": "User registration, login, and admin status checking endpoints."
+		},
+		{
+			"name": "Booth Operations",
+			"item": [
+				{
+					"name": "Get All Booths",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/getBooths",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"getBooths"
+							]
+						},
+						"description": "Retrieve all available booths with their details."
+					},
+					"response": []
+				},
+				{
+					"name": "Visit Booth",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"phrase\": \"booth-phrase-here\",\n  \"userEmail\": \"user@example.com\",\n  \"notes\": \"Great booth experience!\",\n  \"rating\": 5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/visitBooth",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"visitBooth"
+							]
+						},
+						"description": "Visit a booth using the booth phrase. Optional notes and rating can be included."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Booth Rating",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"visitId\": 1,\n  \"rating\": 4,\n  \"userEmail\": \"user@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/updateBoothRating",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"updateBoothRating"
+							]
+						},
+						"description": "Update the rating for a specific booth visit."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Visit Notes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"visitId\": 1,\n  \"notes\": \"Updated notes about the booth visit\",\n  \"userEmail\": \"user@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/updateVisitNotes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"updateVisitNotes"
+							]
+						},
+						"description": "Update notes for a specific booth visit."
+					},
+					"response": []
+				}
+			],
+			"description": "Booth-related operations including viewing, visiting, and updating booth data."
+		},
+		{
+			"name": "Admin Operations",
+			"item": [
+				{
+					"name": "Create Booth",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"New Booth Name\",\n  \"phrase\": \"unique-phrase-here\",\n  \"description\": \"Description of the booth\",\n  \"location\": \"Booth location details\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/createBooth",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"createBooth"
+							]
+						},
+						"description": "Create a new booth (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Booth",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 1,\n  \"name\": \"Updated Booth Name\",\n  \"phrase\": \"updated-phrase\",\n  \"description\": \"Updated description\",\n  \"location\": \"Updated location\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/updateBooth",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"updateBooth"
+							]
+						},
+						"description": "Update booth details (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Booth",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/deleteBooth",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"deleteBooth"
+							]
+						},
+						"description": "Delete a booth (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"user@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/deleteUser",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"deleteUser"
+							]
+						},
+						"description": "Delete a user account (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Write to Google Sheet",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"data\": [\n    {\n      \"user_email\": \"user@example.com\",\n      \"booth_name\": \"Booth Name\",\n      \"visited_at\": \"2024-01-01T10:00:00Z\",\n      \"rating\": 5,\n      \"notes\": \"Visit notes\"\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/writeToGoogleSheet",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"writeToGoogleSheet"
+							]
+						},
+						"description": "Export booth visit data to Google Sheets (Admin only)."
+					},
+					"response": []
+				}
+			],
+			"description": "Administrative operations for managing booths, users, and data export."
+		},
+		{
+			"name": "Session Management",
+			"item": [
+				{
+					"name": "Get Sessions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/getSessions?day=monday&type=workshop&children_friendly=true",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"getSessions"
+							],
+							"query": [
+								{
+									"key": "day",
+									"value": "monday",
+									"description": "Filter by day of the week"
+								},
+								{
+									"key": "type",
+									"value": "workshop",
+									"description": "Filter by session type"
+								},
+								{
+									"key": "children_friendly",
+									"value": "true",
+									"description": "Filter by children-friendly sessions"
+								}
+							]
+						},
+						"description": "Get sessions with optional filtering by day, type, and children-friendly status."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Session Notes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userEmail\": \"user@example.com\",\n  \"sessionId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/getSessionNotes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"getSessionNotes"
+							]
+						},
+						"description": "Get notes for a specific session and user."
+					},
+					"response": []
+				},
+				{
+					"name": "Save Session Notes",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userEmail\": \"user@example.com\",\n  \"sessionId\": 1,\n  \"notes\": \"Session notes content here\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/saveSessionNotes",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"saveSessionNotes"
+							]
+						},
+						"description": "Save or update notes for a specific session."
+					},
+					"response": []
+				}
+			],
+			"description": "Session-related operations including retrieving sessions and managing session notes."
+		},
+		{
+			"name": "Email & Communication",
+			"item": [
+				{
+					"name": "Send Visit Notes Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userEmail\": \"user@example.com\",\n  \"recipientEmail\": \"recipient@example.com\",\n  \"subject\": \"My Journey Summary\",\n  \"message\": \"Optional custom message\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/sendVisitNotesEmail",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sendVisitNotesEmail"
+							]
+						},
+						"description": "Send an email with the user's booth visit notes and journey summary."
+					},
+					"response": []
+				}
+			],
+			"description": "Email communication endpoints for sharing visit notes and journey summaries."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string",
+			"description": "Base URL for the API. Change this to your deployment URL when testing production."
+		}
+	]
+} 
