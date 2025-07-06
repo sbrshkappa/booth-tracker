@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import SessionCard from "@/components/SessionCard";
 import SessionModal from "@/components/SessionModal";
@@ -18,11 +18,14 @@ import {
   isSessionPast, 
   isSessionCurrent,
   isDayCurrent,
-  isDayPast
+  isDayPast,
+  getTestTime,
+  updateTestTime,
 } from "@/utils/conference";
 
-export default function SessionsPage() {
+function SessionsPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
   const [adminStatus, setAdminStatus] = useState<AdminStatus | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -39,6 +42,7 @@ export default function SessionsPage() {
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [hasManuallyNavigated, setHasManuallyNavigated] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const sessionsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Check if user is logged in
@@ -56,7 +60,7 @@ export default function SessionsPage() {
   // Update current time every minute and auto-detect current day/session
   useEffect(() => {
     const updateTime = () => {
-      const now = new Date();
+      const now = getTestTime() || new Date();
       setCurrentTime(now);
       
       // Auto-detect current day
@@ -251,32 +255,120 @@ export default function SessionsPage() {
     setSelectedSession(null);
   };
 
-  // Auto-scroll to current session when it changes
-  useEffect(() => {
-    if (currentSession && activeTab === 'sessions' && activeDay === currentSession.day) {
-      // Find the session element and scroll to it
-      const sessionElement = document.querySelector(`[data-session-id="${currentSession.id}"]`);
-      if (sessionElement) {
+  const handleDayClick = (day: number) => {
+    setActiveDay(day);
+    setActiveTab('sessions');
+    setHasManuallyNavigated(true);
+  };
+
+  // Function to scroll to current session
+  const scrollToCurrentSession = () => {
+    if (!sessionsContainerRef.current || !currentSession) return;
+    
+    // Find the session card element
+    const sessionElement = sessionsContainerRef.current.querySelector(`[data-session-id="${currentSession.id}"]`);
+    if (sessionElement) {
+      // Ensure the session group is expanded
+      const sessionGroup = sessionElement.closest('.bg-white.rounded-lg');
+      if (sessionGroup) {
+        const collapseButton = sessionGroup.querySelector('[onclick*="toggleGroupCollapse"]') as HTMLElement;
+        if (collapseButton && sessionGroup.querySelector('.space-y-3')?.classList.contains('hidden')) {
+          collapseButton.click();
+        }
+      }
+      
+      // Scroll to the session with smooth animation and offset
+      setTimeout(() => {
         sessionElement.scrollIntoView({ 
           behavior: 'smooth', 
           block: 'center' 
         });
+      }, 100);
+    }
+  };
+
+  // Function to scroll to a specific session by ID
+  const scrollToSession = (sessionId: string) => {
+    if (!sessionsContainerRef.current) return;
+    
+    // Find the session card element
+    const sessionElement = sessionsContainerRef.current.querySelector(`[data-session-id="${sessionId}"]`);
+    if (sessionElement) {
+      // Switch to the correct day and tab
+      const session = sessions.find(s => s.id === parseInt(sessionId));
+      if (session) {
+        setActiveDay(session.day);
+        setActiveTab('sessions');
+        setHasManuallyNavigated(true);
+        
+        // Ensure the session group is expanded
+        const sessionGroup = sessionElement.closest('.bg-white.rounded-lg');
+        if (sessionGroup) {
+          const collapseButton = sessionGroup.querySelector('[onclick*="toggleGroupCollapse"]') as HTMLElement;
+          if (collapseButton && sessionGroup.querySelector('.space-y-3')?.classList.contains('hidden')) {
+            collapseButton.click();
+          }
+        }
+        
+        // Scroll to the session with smooth animation
+        setTimeout(() => {
+          sessionElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }, 200);
       }
+    }
+  };
+
+  // Handle scrollTo URL parameter
+  useEffect(() => {
+    const scrollToId = searchParams.get('scrollTo');
+    if (scrollToId && !loading && sessions.length > 0) {
+      scrollToSession(scrollToId);
+    }
+  }, [searchParams, loading, sessions]);
+
+  // Scroll to current session when it changes
+  useEffect(() => {
+    if (currentSession && activeTab === 'sessions' && activeDay === currentSession.day) {
+      scrollToCurrentSession();
     }
   }, [currentSession, activeTab, activeDay]);
 
-  const handleDayClick = (day: number) => {
-    setActiveDay(day);
-    setActiveTab('sessions');
-    
-    // If user clicks on the current day, reset manual navigation flag
-    const currentDay = getCurrentDay(currentTime);
-    if (day === currentDay) {
-      setHasManuallyNavigated(false);
-    } else {
-      setHasManuallyNavigated(true);
+  // Auto-scroll to current session when page loads (if on current day)
+  useEffect(() => {
+    if (!loading && sessions.length > 0 && activeTab === 'sessions') {
+      const currentDay = getCurrentDay(currentTime);
+      if (activeDay === currentDay && currentSession) {
+        setTimeout(scrollToCurrentSession, 500); // Small delay to ensure DOM is ready
+      }
     }
-  };
+  }, [loading, sessions, activeTab, activeDay, currentTime, currentSession]);
+
+  // Auto-expand groups containing current session
+  useEffect(() => {
+    if (currentSession && activeTab === 'sessions') {
+      const timelineItems = getSessionGroups(activeDay);
+      const groupsToExpand = new Set<string>();
+      
+      timelineItems.forEach(item => {
+        if (!('type' in item) && item.sessions.some(session => isSessionCurrent(session, currentTime, sessions))) {
+          if (item.isCollapsed) {
+            groupsToExpand.add(item.id);
+          }
+        }
+      });
+      
+      if (groupsToExpand.size > 0) {
+        setCollapsedGroups(prev => {
+          const newSet = new Set(prev);
+          groupsToExpand.forEach(groupId => newSet.delete(groupId));
+          return newSet;
+        });
+      }
+    }
+  }, [currentSession, activeTab, activeDay, currentTime, sessions]);
 
   if (!user) {
     return <LoadingScreen />;
@@ -337,9 +429,54 @@ export default function SessionsPage() {
         
         {/* Bottom row: Title and subtitle */}
         <div className="max-w-2xl">
-          <h1 className="text-3xl font-bold text-[#fba758] mb-2" style={{ letterSpacing: 0.5 }}>
-            Schedule
-          </h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-3xl font-bold text-[#fba758]" style={{ letterSpacing: 0.5 }}>
+              Schedule
+            </h1>
+            <div className="flex items-center gap-2">
+              {/* Test Controls - Only show when test mode is enabled */}
+              {getTestTime() && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-gray-500">Test:</span>
+                  <span className="text-blue-600 font-mono">
+                    {getTestTime()?.toLocaleString() || 'Real time'}
+                  </span>
+                  <button
+                    onClick={() => {
+                      // Simulate different times for testing
+                      const testTimes = [
+                        new Date('2025-07-11T09:00:00'), // Before conference
+                        new Date('2025-07-11T10:00:00'), // During Day 1
+                        new Date('2025-07-11T14:00:00'), // Later Day 1
+                        new Date('2025-07-12T10:00:00'), // Day 2
+                        new Date('2025-07-13T10:00:00'), // Day 3
+                      ];
+                      const randomTime = testTimes[Math.floor(Math.random() * testTimes.length)];
+                      updateTestTime(randomTime);
+                      setCurrentTime(randomTime);
+                      
+                      // Auto-switch to the correct day tab
+                      const detectedDay = getCurrentDay(randomTime);
+                      if (detectedDay !== activeDay) {
+                        setActiveDay(detectedDay);
+                        setActiveTab('sessions');
+                        setHasManuallyNavigated(false); // Allow auto-navigation
+                      }
+                      
+                      // Force re-evaluation of current session
+                      setTimeout(() => {
+                        const newCurrentSession = getCurrentSession(sessions, randomTime);
+                        setCurrentSession(newCurrentSession);
+                      }, 100);
+                    }}
+                    className="px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                  >
+                    Random Time
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
           <p className="text-xs text-gray-500 mb-2">
             Discover inspiring sessions, workshops, and unforgettable moments
           </p>
@@ -409,7 +546,7 @@ export default function SessionsPage() {
               const timelineItems = getSessionGroups(activeDay);
               
               return (
-                <div className="h-full overflow-y-auto pr-2">
+                <div ref={sessionsContainerRef} className="h-full overflow-y-auto pr-2">
                   <div className="space-y-6">
                     {timelineItems.length > 0 ? (
                       timelineItems.map((item, index) => (
@@ -436,9 +573,17 @@ export default function SessionsPage() {
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex-1">
-                                    <h3 className="font-semibold text-gray-900 mb-1">
-                                      {item.title}
-                                    </h3>
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <h3 className="font-semibold text-gray-900">
+                                        {item.title}
+                                      </h3>
+                                      {/* Show NOW indicator if group contains current session and is collapsed */}
+                                      {item.isCollapsed && item.sessions.some(session => isSessionCurrent(session, currentTime, sessions)) && (
+                                        <span className="text-xs px-2 py-1 bg-[#f97316] text-white rounded-full font-medium animate-pulse">
+                                          NOW
+                                        </span>
+                                      )}
+                                    </div>
                                     <p className="text-sm text-gray-600">
                                       {formatTimeRange(item.startTime, item.endTime)}
                                     </p>
@@ -469,7 +614,7 @@ export default function SessionsPage() {
                                       key={session.id}
                                       session={session} 
                                       onClick={openSessionModal}
-                                      isCurrent={isSessionCurrent(session, currentTime)}
+                                      isCurrent={isSessionCurrent(session, currentTime, sessions)}
                                       isPast={isSessionPast(session, currentTime)}
                                     />
                                   ))}
@@ -540,5 +685,13 @@ export default function SessionsPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function SessionsPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <SessionsPageContent />
+    </Suspense>
   );
 } 
