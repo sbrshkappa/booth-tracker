@@ -295,7 +295,7 @@ export default function SessionsPage() {
     const sessionElement = sessionsContainerRef.current.querySelector(`[data-session-id="${sessionId}"]`);
     if (sessionElement) {
       // Switch to the correct day and tab
-      const session = sessions.find(s => s.id === sessionId);
+      const session = sessions.find(s => s.id === parseInt(sessionId));
       if (session) {
         setActiveDay(session.day);
         setActiveTab('sessions');
