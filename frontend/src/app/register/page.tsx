@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import TextInput from "../../components/TextInput";
 import PrimaryButton from "../../components/PrimaryButton";
 import Link from "next/link";
-import Image from "next/image";
 import BackgroundImage from '@/components/BackgroundImage';
 import Logo from '@/components/Logo';
 

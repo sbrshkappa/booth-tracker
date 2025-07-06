@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import MenuDropdown from "@/components/MenuDropdown";
 import StarRating from "@/components/StarRating";
 import { AdminStatus } from "@/utils/admin";
