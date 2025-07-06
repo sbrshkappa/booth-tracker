@@ -49,6 +49,8 @@ serve(async (req) => {
   const { data, error } = await supabase
     .from("users")
     .insert([userData])
+    .select()
+    .single()
 
   if(error) {
     let errorMessage = error.message;
@@ -72,11 +74,24 @@ serve(async (req) => {
     })
   }
 
+  // Transform the response to match frontend expectations
+  const transformedUser = {
+    id: data.id,
+    email: data.email,
+    firstName: data.first_name,
+    lastName: data.last_name,
+    badgeNumber: data.badge_number,
+    is_admin: false,
+    admin_level: null,
+    admin_level_name: null,
+    created_at: data.created_at
+  }
+
   return new Response(
-    JSON.stringify({success: true, data}),
+    JSON.stringify({success: true, user: transformedUser}),
     { 
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }, 
-      status: 200 
+      status: 201 
     },
   )
 })
