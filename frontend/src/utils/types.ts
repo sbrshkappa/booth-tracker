@@ -71,3 +71,40 @@ export interface SessionGroup {
 }
 
 export type TimelineItem = SessionGroup | { type: 'break'; data: Session } | { type: 'lunch'; data: Session }; 
+
+export interface PopularBooth {
+  name: string;
+  visits: number;
+}
+
+export interface PopularSessionType {
+  type: string;
+  count: number;
+}
+
+export interface AdminMetrics {
+  totalUsers: number;
+  completedUsers: number;
+  activeUsers: number;
+  completionRate: number;
+  activeRate: number;
+  popularBooths: PopularBooth[];
+  popularSessionTypes: PopularSessionType[];
+  totalSessions: number;
+  totalBooths: number;
+}
+
+export interface SessionFormData {
+  day: number;
+  start_time: string;
+  topic: string;
+  speaker?: string;
+  description?: string;
+  type: string;
+  location?: string;
+  room?: string;
+  capacity?: number;
+  is_children_friendly: boolean;
+  requires_registration: boolean;
+  tags: string[];
+} 

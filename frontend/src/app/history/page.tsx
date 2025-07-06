@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import MenuDropdown from "@/components/MenuDropdown";
 import { User } from "@/utils/types";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
@@ -10,6 +9,7 @@ import { AdminStatus } from "@/utils/admin";
 import NoteCard, { NoteData } from "@/components/NoteCard";
 import BackgroundImage from '@/components/BackgroundImage';
 import ShareModal from '@/components/ShareModal';
+import Logo from '@/components/Logo';
 
 export default function MyJourneyPage() {
   const router = useRouter();
@@ -221,13 +221,7 @@ export default function MyJourneyPage() {
       {/* Header with title and menu */}
       <div className="mb-6 flex-shrink-0">
         <div className="flex justify-between items-center mb-4">
-          <Image 
-            src="/assets/conference-companion.png" 
-            alt="Conference Companion" 
-            className="h-12 w-auto"
-            width={48}
-            height={48}
-          />
+          <Logo />
           <MenuDropdown 
             options={menuOptions} 
             userName={`${user.firstName} ${user.lastName}`}

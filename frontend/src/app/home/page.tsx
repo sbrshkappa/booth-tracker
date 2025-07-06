@@ -10,6 +10,7 @@ import { AdminStatus } from '@/utils/admin';
 import MenuDropdown from '@/components/MenuDropdown';
 import SessionCard from '@/components/SessionCard';
 import BackgroundImage from '@/components/BackgroundImage';
+import Logo from '@/components/Logo';
 
 // Conference start date - July 11, 2025 at 9:00 AM
 const CONFERENCE_START = new Date('2025-07-11T09:00:00');
@@ -191,13 +192,7 @@ export default function HomePage() {
       {/* Header with logo and menu */}
       <div className="mb-12">
         <div className="flex justify-between items-center mb-12">
-          <Image 
-            src="/assets/conference-companion.png" 
-            alt="Conference Companion" 
-            className="h-12 w-auto"
-            width={48}
-            height={48}
-          />
+          <Logo />
           <MenuDropdown 
             options={menuOptions} 
             userName={`${user.firstName} ${user.lastName}`}

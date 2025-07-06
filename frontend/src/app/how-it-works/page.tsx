@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import MenuDropdown from "@/components/MenuDropdown";
 import { AdminStatus } from "@/utils/admin";
 import { User } from "@/utils/types";
@@ -9,6 +8,7 @@ import { createMenuOptions } from "@/utils/menu";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
 import { LoadingScreen } from "@/utils/ui";
 import BackgroundImage from '@/components/BackgroundImage';
+import Logo from '@/components/Logo';
 
 const BOOTH_TRACKING_STEPS = [
   "Visit each booth at the conference to discover amazing activities and services.",
@@ -62,13 +62,7 @@ const HowItWorksPage: React.FC = () => {
       <div className="mb-6">
         {/* Top row: Logo and Menu */}
         <div className="flex justify-between items-center mb-4">
-          <Image 
-            src="/assets/conference-companion.png" 
-            alt="Conference Companion" 
-            width={48}
-            height={48}
-            className="h-12 w-auto"
-          />
+          <Logo />
           <MenuDropdown options={menuOptions} />
         </div>
         
