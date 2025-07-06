@@ -7,8 +7,10 @@ import BoothCard from "@/components/BoothCard";
 import BoothModal from "@/components/BoothModal";
 import SessionForm from "@/components/SessionForm";
 import AdminSessionModal from "@/components/AdminSessionModal";
+import UserModal from "@/components/UserModal";
+import UserForm from "@/components/UserForm";
 import { AdminStatus, getAdminIcon } from "@/utils/admin";
-import { User, Booth, Session, AdminMetrics, SessionFormData, PopularBooth, PopularSessionType } from "@/utils/types";
+import { User, Booth, Session, AdminMetrics, SessionFormData, PopularBooth, PopularSessionType, UserWithAdmin } from "@/utils/types";
 import { createMenuOptions } from "@/utils/menu";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
 import { LoadingScreen, LoadingSpinner } from "@/utils/ui";
@@ -42,6 +44,16 @@ export default function AdminPage() {
   const [isEditingSession, setIsEditingSession] = useState(false);
   const [isSessionLoading, setIsSessionLoading] = useState(false);
   
+  // Users state
+  const [users, setUsers] = useState<UserWithAdmin[]>([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserWithAdmin | null>(null);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [showUserForm, setShowUserForm] = useState(false);
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [userMessage, setUserMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showAdminUsersOnly, setShowAdminUsersOnly] = useState(false);
+  
   // Admin metrics state
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
@@ -69,6 +81,8 @@ export default function AdminPage() {
       fetchBooths();
     } else if (activeTab === 'sessions') {
       fetchSessions();
+    } else if (activeTab === 'users') {
+      fetchUsers();
     } else if (activeTab === 'overview') {
       fetchAdminMetrics();
     }
@@ -109,6 +123,24 @@ export default function AdminPage() {
       console.error('Error fetching booths:', err);
     } finally {
       setIsLoadingBooths(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    setIsLoadingUsers(true);
+    try {
+      const response = await fetch('/api/getAllUsers');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setUsers(data.users || []);
+      } else {
+        console.error('Failed to fetch users:', data.error);
+      }
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    } finally {
+      setIsLoadingUsers(false);
     }
   };
 
@@ -321,6 +353,49 @@ export default function AdminPage() {
     setIsSessionModalOpen(true);
   };
 
+  const handleUserCardClick = (user: UserWithAdmin) => {
+    setSelectedUser(user);
+    setIsUserModalOpen(true);
+  };
+
+  const handleCreateUser = async (userData: { email: string; firstName: string; lastName: string; badgeNumber: string }) => {
+    if (!user?.email) return;
+    
+    setIsCreatingUser(true);
+    setUserMessage(null);
+    
+    try {
+      const response = await fetch('/api/createUser', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ...userData,
+          userEmail: user.email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create user');
+      }
+
+      setUserMessage({ type: 'success', text: 'User created successfully!' });
+      setShowUserForm(false);
+      
+      // Refresh users list
+      setTimeout(() => {
+        fetchUsers();
+      }, 1000);
+    } catch (err) {
+      setUserMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to create user' });
+    } finally {
+      setIsCreatingUser(false);
+    }
+  };
+
   const menuOptions = createMenuOptions({
     currentPage: 'admin',
     router,
@@ -409,6 +484,16 @@ export default function AdminPage() {
               }`}
             >
               Sessions
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                activeTab === 'users'
+                  ? 'bg-white text-orange-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Users
             </button>
           </div>
         </div>
@@ -702,6 +787,138 @@ export default function AdminPage() {
             </div>
           </div>
         )}
+
+        {activeTab === 'users' && (
+          <div className="flex-1 flex flex-col min-h-0">
+            {/* Users List */}
+            <div className="bg-white/80 rounded-xl p-6 shadow-lg flex-1 flex flex-col min-h-0">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-semibold text-gray-800">All Users</h3>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mr-4">
+                    <input
+                      type="checkbox"
+                      id="adminFilter"
+                      checked={showAdminUsersOnly}
+                      onChange={(e) => setShowAdminUsersOnly(e.target.checked)}
+                      className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="adminFilter" className="text-sm text-gray-700">
+                      Show admins only
+                    </label>
+                  </div>
+                  <button
+                    onClick={() => setShowUserForm(!showUserForm)}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                  >
+                    {showUserForm ? 'Cancel' : 'Create User'}
+                  </button>
+                  <button
+                    onClick={fetchUsers}
+                    disabled={isLoadingUsers}
+                    className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Refresh users"
+                  >
+                    <ArrowPathIcon className={`w-5 h-5 ${isLoadingUsers ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* User Creation Form */}
+              {showUserForm && (
+                <div className="mb-6">
+                  <UserForm
+                    onSubmit={handleCreateUser}
+                    isLoading={isCreatingUser}
+                    onCancel={() => setShowUserForm(false)}
+                  />
+                  {userMessage && (
+                    <div className={`mt-4 p-3 rounded-md ${
+                      userMessage.type === 'success' 
+                        ? 'bg-green-50 text-green-800 border border-green-200' 
+                        : 'bg-red-50 text-red-800 border border-red-200'
+                    }`}>
+                      {userMessage.text}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {isLoadingUsers ? (
+                <div className="flex justify-center py-8">
+                  <LoadingSpinner size="lg" />
+                </div>
+              ) : users.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">👥</div>
+                  <p className="text-gray-600">No users found.</p>
+                </div>
+              ) : users.filter(user => !showAdminUsersOnly || user.is_admin).length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">👑</div>
+                  <p className="text-gray-600">No admin users found.</p>
+                  <p className="text-sm text-gray-500 mt-2">Try unchecking the "Show admins only" filter.</p>
+                </div>
+              ) : (
+                <div className="h-full overflow-y-auto pr-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {users
+                      .filter(user => !showAdminUsersOnly || user.is_admin)
+                      .map((user) => (
+                      <div
+                        key={user.id}
+                        onClick={() => handleUserCardClick(user)}
+                        className="bg-white rounded-lg border border-gray-200 p-4 cursor-pointer hover:shadow-md transition-shadow relative"
+                      >
+                        {/* User ID in top right */}
+                        <div className="absolute top-3 right-3">
+                          <span className="text-xs text-gray-500 font-mono">#{user.id}</span>
+                        </div>
+                        
+                        {/* User Info */}
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="flex items-center">
+                            <span className="font-semibold text-gray-900">
+                              {user.firstName.charAt(0).toUpperCase() + user.firstName.slice(1).toLowerCase()}{' '}
+                              {user.lastName.charAt(0).toUpperCase() + user.lastName.slice(1).toLowerCase()}
+                            </span>
+                            {user.is_admin && (
+                              <span className="ml-2 text-yellow-500" title={user.admin_level_name || 'Admin'}>
+                                ⭐
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Email */}
+                        <p className="text-sm text-gray-600 mb-2">{user.email}</p>
+                        
+                        {/* Admin Level */}
+                        {user.is_admin && user.admin_level_name && (
+                          <p className="text-xs text-orange-600 font-medium mb-2">{user.admin_level_name}</p>
+                        )}
+                        
+                        {/* Badge Number */}
+                        {user.badgeNumber && (
+                          <div className="mb-2">
+                            <p className="text-xs text-gray-500">
+                              Badge: <span className="font-mono">{user.badgeNumber}</span>
+                            </p>
+                          </div>
+                        )}
+                        
+                        {/* Join Date */}
+                        <p className="text-xs text-gray-500">
+                          Joined {new Date(user.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Booth Modal */}
@@ -755,6 +972,16 @@ export default function AdminPage() {
         isEditing={isEditingSession}
         isLoading={isSessionLoading}
         onSetEditing={setIsEditingSession}
+      />
+
+      {/* User Modal */}
+      <UserModal
+        user={selectedUser}
+        isOpen={isUserModalOpen}
+        onClose={() => {
+          setIsUserModalOpen(false);
+          setSelectedUser(null);
+        }}
       />
     </div>
   );

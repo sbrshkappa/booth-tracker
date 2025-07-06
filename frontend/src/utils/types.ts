@@ -6,6 +6,13 @@ export interface User {
   badgeNumber: string;
 }
 
+export interface UserWithAdmin extends User {
+  is_admin: boolean;
+  admin_level?: number;
+  admin_level_name?: string;
+  created_at: string;
+}
+
 export interface Progress {
   visited: number;
   total: number;
