@@ -8,7 +8,7 @@ import BoothModal from "@/components/BoothModal";
 import SessionForm from "@/components/SessionForm";
 import AdminSessionModal from "@/components/AdminSessionModal";
 import { AdminStatus, getAdminIcon } from "@/utils/admin";
-import { User, Booth, Session } from "@/utils/types";
+import { User, Booth, Session, AdminMetrics, SessionFormData, PopularBooth, PopularSessionType } from "@/utils/types";
 import { createMenuOptions } from "@/utils/menu";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
 import { LoadingScreen, LoadingSpinner } from "@/utils/ui";
@@ -40,7 +40,7 @@ export default function AdminPage() {
   const [isSessionLoading, setIsSessionLoading] = useState(false);
   
   // Admin metrics state
-  const [metrics, setMetrics] = useState<any>(null);
+  const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
   const [metricsError, setMetricsError] = useState<string | null>(null);
 
@@ -204,7 +204,7 @@ export default function AdminPage() {
     setIsModalOpen(true);
   };
 
-  const handleCreateSession = async (sessionData: any) => {
+  const handleCreateSession = async (sessionData: SessionFormData) => {
     if (!user?.email) return;
     
     setIsCreatingSession(true);
@@ -242,7 +242,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleUpdateSession = async (sessionId: number, sessionData: any) => {
+  const handleUpdateSession = async (sessionId: number, sessionData: SessionFormData) => {
     if (!user?.email) return;
     
     try {
@@ -457,7 +457,7 @@ export default function AdminPage() {
                   <h3 className="text-xl font-semibold text-gray-800 mb-4">Most Popular Booths</h3>
                   {metrics.popularBooths && metrics.popularBooths.length > 0 ? (
                     <div className="space-y-3">
-                      {metrics.popularBooths.map((booth: any, index: number) => (
+                      {metrics.popularBooths.map((booth: PopularBooth, index: number) => (
                         <div key={booth.name} className="flex items-center justify-between bg-white p-3 rounded-lg">
                           <div className="flex items-center">
                             <span className="text-lg font-bold text-orange-600 mr-3">#{index + 1}</span>
@@ -477,7 +477,7 @@ export default function AdminPage() {
                   <h3 className="text-xl font-semibold text-gray-800 mb-4">Session Types Distribution</h3>
                   {metrics.popularSessionTypes && metrics.popularSessionTypes.length > 0 ? (
                     <div className="space-y-3">
-                      {metrics.popularSessionTypes.map((sessionType: any, index: number) => (
+                      {metrics.popularSessionTypes.map((sessionType: PopularSessionType, index: number) => (
                         <div key={sessionType.type} className="flex items-center justify-between bg-white p-3 rounded-lg">
                           <div className="flex items-center">
                             <span className="text-lg font-bold text-purple-600 mr-3">#{index + 1}</span>
