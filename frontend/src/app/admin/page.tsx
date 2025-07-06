@@ -16,6 +16,7 @@ import BackgroundImage from '@/components/BackgroundImage';
 import Logo from '@/components/Logo';
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import { getSessionTypeColor } from '@/utils/theme';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -670,7 +671,7 @@ export default function AdminPage() {
                       >
                         <div className="flex items-start justify-between mb-2">
                           <h4 className="font-semibold text-gray-900 line-clamp-2">{session.topic}</h4>
-                          <span className="text-xs px-2 py-1 bg-orange-100 text-orange-800 rounded-full ml-2 flex-shrink-0">
+                          <span className={`text-xs px-2 py-1 rounded-full border ${getSessionTypeColor(session.type)} ml-2 flex-shrink-0`}>
                             {session.type.replace('_', ' ')}
                           </span>
                         </div>

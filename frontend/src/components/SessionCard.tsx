@@ -1,5 +1,6 @@
 import React from 'react';
 import { Session } from '@/utils/types';
+import { getSessionTypeColor } from '@/utils/theme';
 
 interface SessionCardProps {
   session: Session;
@@ -15,24 +16,6 @@ export default function SessionCard({ session, onClick, isCurrent = false, isPas
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
     return `${displayHour}:${minutes} ${ampm}`;
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'keynote':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'workshop':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'panel':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'break':
-      case 'lunch':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'performance':
-        return 'bg-pink-100 text-pink-800 border-pink-200';
-      default:
-        return 'bg-[#fba758]/20 text-[#fba758] border-[#fba758]/30';
-    }
   };
 
   return (
@@ -83,7 +66,7 @@ export default function SessionCard({ session, onClick, isCurrent = false, isPas
             </p>
           )}
         </div>
-        <span className={`text-xs px-2 py-1 rounded-full border ${getTypeColor(session.type)} ${
+        <span className={`text-xs px-2 py-1 rounded-full border ${getSessionTypeColor(session.type)} ${
           isPast ? 'opacity-50' : ''
         }`}>
           {session.type.replace('_', ' ')}
