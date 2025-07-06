@@ -133,7 +133,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleCreateBooth = async (boothData: { name: string; phrase: string }) => {
+  const handleCreateBooth = async (boothData: { name: string; phrase: string; description?: string }) => {
     if (!user?.email) return;
     
     setIsCreatingBooth(true);
@@ -171,7 +171,7 @@ export default function AdminPage() {
     }
   };
 
-  const handleUpdateBooth = async (boothId: number, boothData: { name: string; phrase: string }) => {
+  const handleUpdateBooth = async (boothId: number, boothData: { name: string; phrase: string; description?: string }) => {
     if (!user?.email) return;
     
     try {
@@ -196,7 +196,7 @@ export default function AdminPage() {
       // Update local state
       setBooths(prev => prev.map(booth => 
         booth.id === boothId 
-          ? { ...booth, name: boothData.name, phrase: boothData.phrase }
+          ? { ...booth, name: boothData.name, phrase: boothData.phrase, description: boothData.description }
           : booth
       ));
 
