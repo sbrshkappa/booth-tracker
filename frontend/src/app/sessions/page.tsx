@@ -12,6 +12,7 @@ import { createMenuOptions } from "@/utils/menu";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
 import { LoadingScreen } from "@/utils/ui";
 import BackgroundImage from '@/components/BackgroundImage';
+import Logo from '@/components/Logo';
 import { 
   getCurrentSession, 
   getCurrentDay, 
@@ -328,13 +329,7 @@ export default function SessionsPage() {
       <div className="mb-6">
         {/* Top row: Logo and Menu */}
         <div className="flex justify-between items-center mb-4">
-          <Image 
-            src="/assets/conference-companion.png" 
-            alt="Conference Companion" 
-            className="h-12 w-auto"
-            width={48}
-            height={48}
-          />
+          <Logo />
           <MenuDropdown 
             options={menuOptions} 
             userName={`${user.firstName} ${user.lastName}`}

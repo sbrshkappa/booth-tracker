@@ -5,6 +5,7 @@ import PrimaryButton from "../components/PrimaryButton";
 import Link from "next/link";
 import Image from "next/image";
 import BackgroundImage from '@/components/BackgroundImage';
+import Logo from '@/components/Logo';
 
 export default function Home() {
   const [email, setEmail] = useState("");
@@ -104,13 +105,11 @@ export default function Home() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-white px-2 py-4 sm:px-4 w-full overflow-x-hidden">
         <div className="flex flex-col items-center mb-8 w-full">
           <div className="mb-4">
-            <Image
-              src="/assets/conference-companion.png"
-              alt="Conference Companion Logo"
+            <Logo 
+              className="w-auto h-16 sm:h-20 object-contain"
               width={200}
               height={100}
-              className="w-auto h-16 sm:h-20 object-contain"
-              priority
+              showNavigation={false}
             />
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-black mb-1 sm:mb-2 text-center">Conference Companion</h1>

@@ -5,6 +5,7 @@ import PrimaryButton from "../../components/PrimaryButton";
 import Link from "next/link";
 import Image from "next/image";
 import BackgroundImage from '@/components/BackgroundImage';
+import Logo from '@/components/Logo';
 
 export default function Register() {
   const [email, setEmail] = useState("");
@@ -75,13 +76,11 @@ export default function Register() {
         {/* Logo and event title */}
         <div className="flex flex-col items-center mb-8 sm:mb-10 w-full">
           <div className="mb-4">
-            <Image
-              src="/assets/conference-companion.png"
-              alt="Conference Companion Logo"
+            <Logo
+              className="w-auto h-16 sm:h-20 object-contain"
               width={200}
               height={100}
-              className="w-auto h-16 sm:h-20 object-contain"
-              priority
+              showNavigation={false}
             />
           </div>
           <h2 className="text-lg sm:text-xl font-bold text-black text-center leading-tight">SSIO National Conference & Children's festival 2025</h2>

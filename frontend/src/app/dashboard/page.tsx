@@ -11,6 +11,7 @@ import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth
 import { sendVisitNotesEmail } from "@/utils/email";
 import { LoadingScreen, LoadingSpinner } from "@/utils/ui";
 import BackgroundImage from '@/components/BackgroundImage';
+import Logo from '@/components/Logo';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -242,12 +243,7 @@ export default function Dashboard() {
       <div className="mb-6">
         {/* Top row: Logo and Menu */}
         <div className="flex justify-between items-center mb-4">
-          <Image 
-            src="/assets/conference-companion.png" 
-            alt="Conference Companion" 
-            width={48}
-            height={48}
-          />
+          <Logo />
           <MenuDropdown 
             options={menuOptions} 
             userName={`${user.firstName} ${user.lastName}`}
