@@ -5,10 +5,10 @@ import MenuDropdown from "@/components/MenuDropdown";
 import BoothForm from "@/components/BoothForm";
 import BoothCard from "@/components/BoothCard";
 import BoothModal from "@/components/BoothModal";
-import SessionForm from "@/components/SessionForm";
 import AdminSessionModal from "@/components/AdminSessionModal";
 import UserModal from "@/components/UserModal";
 import UserForm from "@/components/UserForm";
+import SessionFormModal from "@/components/SessionFormModal";
 import { AdminStatus, getAdminIcon } from "@/utils/admin";
 import { User, Booth, Session, AdminMetrics, SessionFormData, PopularBooth, PopularSessionType, UserWithAdmin } from "@/utils/types";
 import { createMenuOptions } from "@/utils/menu";
@@ -36,7 +36,6 @@ export default function AdminPage() {
   // Sessions state
   const [showSessionForm, setShowSessionForm] = useState(false);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
-  const [sessionMessage, setSessionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -247,27 +246,30 @@ export default function AdminPage() {
     if (!user?.email) return;
     
     setIsCreatingSession(true);
-    setSessionMessage(null);
     
     try {
+      const requestBody = {
+        ...sessionData,
+        userEmail: user.email,
+      };
+      
+      console.log('Sending session data:', requestBody);
+      
       const response = await fetch('/api/createSession', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...sessionData,
-          userEmail: user.email,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
+      console.log('Response from createSession API:', { status: response.status, data });
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create session');
       }
 
-      setSessionMessage({ type: 'success', text: 'Session created successfully!' });
       setShowSessionForm(false);
       
       // Refresh sessions list
@@ -275,7 +277,8 @@ export default function AdminPage() {
         fetchSessions();
       }, 1000);
     } catch (err) {
-      setSessionMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to create session' });
+      console.error('Error creating session:', err);
+      throw err;
     } finally {
       setIsCreatingSession(false);
     }
@@ -707,34 +710,24 @@ export default function AdminPage() {
             {/* Sessions List */}
             <div className="bg-white/80 rounded-xl p-6 shadow-lg flex-1 flex flex-col min-h-0">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-gray-800">Manage Sessions</h3>
-                <button
-                  onClick={() => setShowSessionForm(!showSessionForm)}
-                  className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors"
-                >
-                  {showSessionForm ? 'Cancel' : '+ Add Session'}
-                </button>
+                <h3 className="text-xl font-semibold text-gray-800">All Sessions</h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowSessionForm(true)}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                  >
+                    Create Session
+                  </button>
+                  <button
+                    onClick={fetchSessions}
+                    disabled={isLoadingSessions}
+                    className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="Refresh sessions"
+                  >
+                    <ArrowPathIcon className={`w-5 h-5 ${isLoadingSessions ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
               </div>
-              
-              {sessionMessage && (
-                <div className={`p-4 rounded-md mb-4 ${
-                  sessionMessage.type === 'success' 
-                    ? 'bg-green-50 border border-green-200 text-green-800' 
-                    : 'bg-red-50 border border-red-200 text-red-800'
-                }`}>
-                  {sessionMessage.text}
-                </div>
-              )}
-
-              {showSessionForm && (
-                <div className="border-t border-gray-200 pt-6 mb-6">
-                  <SessionForm
-                    onSubmit={handleCreateSession}
-                    isLoading={isCreatingSession}
-                    onCancel={() => setShowSessionForm(false)}
-                  />
-                </div>
-              )}
               
               {isLoadingSessions ? (
                 <div className="flex justify-center py-8">
@@ -982,6 +975,14 @@ export default function AdminPage() {
           setIsUserModalOpen(false);
           setSelectedUser(null);
         }}
+      />
+
+      {/* Session Form Modal */}
+      <SessionFormModal
+        isOpen={showSessionForm}
+        onClose={() => setShowSessionForm(false)}
+        onSubmit={handleCreateSession}
+        isLoading={isCreatingSession}
       />
     </div>
   );

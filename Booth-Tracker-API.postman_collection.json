@@ -39,6 +39,53 @@
 					"response": []
 				},
 				{
+					"name": "Create User (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"newuser@example.com\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"badgeNumber\": \"67890\",\n  \"userEmail\": \"admin@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/createUser",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"createUser"
+							]
+						},
+						"description": "Create a new user from admin panel (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Users (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/getAllUsers",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"getAllUsers"
+							]
+						},
+						"description": "Get all users with admin status (Admin only)."
+					},
+					"response": []
+				},
+				{
 					"name": "Login User",
 					"request": {
 						"method": "POST",
@@ -95,7 +142,7 @@
 					"response": []
 				}
 			],
-			"description": "User registration, login, and admin status checking endpoints."
+			"description": "User registration, login, admin status checking, and user management endpoints."
 		},
 		{
 			"name": "Booth Operations",
@@ -348,9 +395,28 @@
 						"description": "Export booth visit data to Google Sheets (Admin only)."
 					},
 					"response": []
+				},
+				{
+					"name": "Get Admin Metrics",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/getAdminMetrics",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"getAdminMetrics"
+							]
+						},
+						"description": "Get admin dashboard metrics including user statistics, popular booths, and session types (Admin only)."
+					},
+					"response": []
 				}
 			],
-			"description": "Administrative operations for managing booths, users, and data export."
+			"description": "Administrative operations for managing booths, users, data export, and analytics."
 		},
 		{
 			"name": "Session Management",
@@ -388,6 +454,90 @@
 							]
 						},
 						"description": "Get sessions with optional filtering by day, type, and children-friendly status."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Session (Admin)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"day\": 1,\n  \"start_time\": \"09:30\",\n  \"topic\": \"Introduction to AI\",\n  \"speaker\": \"Dr. Jane Smith\",\n  \"description\": \"Learn the basics of artificial intelligence\",\n  \"type\": \"workshop\",\n  \"location\": \"Main Hall\",\n  \"room\": \"A101\",\n  \"capacity\": 50,\n  \"is_children_friendly\": false,\n  \"requires_registration\": true,\n  \"tags\": [\"AI\", \"Beginner\"],\n  \"userEmail\": \"admin@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/createSession",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"createSession"
+							]
+						},
+						"description": "Create a new session (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Session (Admin)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sessionId\": 1,\n  \"day\": 1,\n  \"start_time\": \"10:00\",\n  \"topic\": \"Updated AI Session\",\n  \"speaker\": \"Dr. Jane Smith\",\n  \"description\": \"Updated description\",\n  \"type\": \"workshop\",\n  \"location\": \"Main Hall\",\n  \"room\": \"A101\",\n  \"capacity\": 60,\n  \"is_children_friendly\": false,\n  \"requires_registration\": true,\n  \"tags\": [\"AI\", \"Intermediate\"],\n  \"userEmail\": \"admin@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/updateSession",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"updateSession"
+							]
+						},
+						"description": "Update an existing session (Admin only)."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Session (Admin)",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sessionId\": 1,\n  \"userEmail\": \"admin@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/deleteSession",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"deleteSession"
+							]
+						},
+						"description": "Delete a session (Admin only)."
 					},
 					"response": []
 				},
@@ -448,7 +598,7 @@
 					"response": []
 				}
 			],
-			"description": "Session-related operations including retrieving sessions and managing session notes."
+			"description": "Session-related operations including creating, updating, deleting sessions and managing session notes."
 		},
 		{
 			"name": "Email & Communication",
@@ -480,9 +630,37 @@
 						"description": "Send an email with the user's booth visit notes and journey summary."
 					},
 					"response": []
+				},
+				{
+					"name": "Send Contact Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"subject\": \"General Inquiry\",\n  \"message\": \"I have a question about the conference.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/sendContactEmail",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sendContactEmail"
+							]
+						},
+						"description": "Send a contact form email to the support team."
+					},
+					"response": []
 				}
 			],
-			"description": "Email communication endpoints for sharing visit notes and journey summaries."
+			"description": "Email communication endpoints for sharing visit notes, journey summaries, and contact form submissions."
 		}
 	],
 	"event": [
