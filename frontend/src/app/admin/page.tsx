@@ -5,7 +5,6 @@ import MenuDropdown from "@/components/MenuDropdown";
 import BoothForm from "@/components/BoothForm";
 import BoothCard from "@/components/BoothCard";
 import BoothModal from "@/components/BoothModal";
-import SessionForm from "@/components/SessionForm";
 import AdminSessionModal from "@/components/AdminSessionModal";
 import UserModal from "@/components/UserModal";
 import UserForm from "@/components/UserForm";

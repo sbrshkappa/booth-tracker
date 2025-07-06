@@ -71,7 +71,7 @@ export default function SessionFormModal({
     onSubmit(formData)
   }
 
-  const handleInputChange = (field: keyof SessionFormData, value: any) => {
+  const handleInputChange = (field: keyof SessionFormData, value: string | number | boolean | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
     if (errors[field]) {
