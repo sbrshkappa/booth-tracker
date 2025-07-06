@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { getUserFromStorage } from '@/utils/auth';
 import { User, UserSessionNotes } from '@/utils/types';
 import StarRating from '@/components/StarRating';
+import { getSessionTypeColor } from '@/utils/theme';
 
 interface Session {
   id: number;
@@ -123,23 +124,7 @@ export default function SessionModal({ session, isOpen, onClose }: SessionModalP
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'keynote':
-        return 'bg-purple-100 text-purple-800 border-purple-200';
-      case 'workshop':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'panel':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'break':
-      case 'lunch':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'performance':
-        return 'bg-pink-100 text-pink-800 border-pink-200';
-      default:
-        return 'bg-[#fba758]/20 text-[#fba758] border-[#fba758]/30';
-    }
-  };
+
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-[150] p-4">
@@ -166,7 +151,7 @@ export default function SessionModal({ session, isOpen, onClose }: SessionModalP
           </div>
 
           <div className="mb-4">
-            <span className={`text-sm px-3 py-1 rounded-full border ${getTypeColor(session.type)}`}>
+            <span className={`text-sm px-3 py-1 rounded-full border ${getSessionTypeColor(session.type)}`}>
               {session.type.replace('_', ' ')}
             </span>
             {session.is_children_friendly && (

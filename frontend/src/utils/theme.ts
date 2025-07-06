@@ -248,4 +248,65 @@ export const shadows = {
   xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
 };
 
+export const getSessionTypeColor = (type: string): string => {
+  switch (type) {
+    // Ceremonies and Special Events
+    case 'opening_ceremony':
+      return 'bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 border-amber-300';
+    case 'closing_ceremony':
+      return 'bg-gradient-to-r from-indigo-100 to-indigo-200 text-indigo-800 border-indigo-300';
+    case 'award_ceremony':
+      return 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300';
+    
+    // Key Sessions
+    case 'keynote':
+      return 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300';
+    case 'talk':
+      return 'bg-gradient-to-r from-sky-100 to-sky-200 text-sky-800 border-sky-300';
+    case 'workshop':
+      return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300';
+    case 'panel':
+      return 'bg-gradient-to-r from-teal-100 to-teal-200 text-teal-800 border-teal-300';
+    
+    // Interactive Sessions
+    case 'q&a':
+      return 'bg-gradient-to-r from-cyan-100 to-cyan-200 text-cyan-800 border-cyan-300';
+    case 'roundtable':
+      return 'bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800 border-emerald-300';
+    case 'fireside_chat':
+      return 'bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 border-amber-300';
+    case 'interview':
+      return 'bg-gradient-to-r from-rose-100 to-rose-200 text-rose-800 border-rose-300';
+    
+    // Creative and Performance
+    case 'performance':
+      return 'bg-gradient-to-r from-pink-100 to-pink-200 text-pink-800 border-pink-300';
+    case 'video':
+      return 'bg-gradient-to-r from-violet-100 to-violet-200 text-violet-800 border-violet-300';
+    case 'demo':
+      return 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border-orange-300';
+    
+    // Exhibitions and Displays
+    case 'exhibition':
+      return 'bg-gradient-to-r from-sky-100 to-sky-200 text-sky-800 border-sky-300';
+    case 'poster_session':
+      return 'bg-gradient-to-r from-lime-100 to-lime-200 text-lime-800 border-lime-300';
+    
+    // Networking and Registration
+    case 'networking':
+      return 'bg-gradient-to-r from-fuchsia-100 to-fuchsia-200 text-fuchsia-800 border-fuchsia-300';
+    case 'registration':
+      return 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-800 border-slate-300';
+    
+    // Breaks
+    case 'break':
+    case 'lunch':
+      return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300';
+    
+    // Default fallback
+    default:
+      return 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border-orange-300';
+  }
+};
+
 export default theme; 
