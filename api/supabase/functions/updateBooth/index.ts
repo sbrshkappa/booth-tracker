@@ -27,7 +27,7 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     // Get request body
-    const { boothId, name, phrase } = await req.json()
+    const { boothId, name, phrase, description } = await req.json()
 
     // Validate required fields
     if (!boothId || !name || !phrase) {
@@ -88,7 +88,7 @@ serve(async (req) => {
     // Update booth
     const { data: updatedBooth, error: updateError } = await supabase
       .from('booths')
-      .update({ name, phrase })
+      .update({ name, phrase, description })
       .eq('id', boothId)
       .select()
       .single()

@@ -27,7 +27,7 @@ serve(async (req) => {
     })
   }
 
-  const { phrase, name } = await req.json()
+  const { phrase, name, description } = await req.json()
 
   // Validate required fields
   if(!phrase || !name) {
@@ -68,7 +68,8 @@ serve(async (req) => {
     .from("booths")
     .insert([{
       phrase,
-      name
+      name,
+      description
     }])
     .select()
 

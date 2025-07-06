@@ -3,15 +3,17 @@
 import { useState, useEffect } from 'react'
 
 interface BoothFormProps {
-  onSubmit: (data: { name: string; phrase: string }) => void
+  onSubmit: (data: { name: string; phrase: string; description?: string }) => void
   isLoading?: boolean
   onCancel?: () => void
-  initialData?: { name: string; phrase: string }
+  initialData?: { name: string; phrase: string; description?: string }
+  isEditMode?: boolean
 }
 
-export default function BoothForm({ onSubmit, isLoading = false, onCancel, initialData }: BoothFormProps) {
+export default function BoothForm({ onSubmit, isLoading = false, onCancel, initialData, isEditMode = false }: BoothFormProps) {
   const [name, setName] = useState(initialData?.name || '')
   const [phrase, setPhrase] = useState(initialData?.phrase || '')
+  const [description, setDescription] = useState(initialData?.description || '')
   const [errors, setErrors] = useState<{ name?: string; phrase?: string }>({})
 
   // Update form when initialData changes
@@ -19,6 +21,7 @@ export default function BoothForm({ onSubmit, isLoading = false, onCancel, initi
     if (initialData) {
       setName(initialData.name)
       setPhrase(initialData.phrase)
+      setDescription(initialData.description || '')
     }
   }, [initialData])
 
@@ -45,11 +48,16 @@ export default function BoothForm({ onSubmit, isLoading = false, onCancel, initi
     }
     
     // Submit form
-    onSubmit({ name: name.trim(), phrase: phrase.trim() })
+    onSubmit({ 
+      name: name.trim(), 
+      phrase: phrase.trim(), 
+      description: description.trim() || undefined 
+    })
     
     // Clear form
     setName('')
     setPhrase('')
+    setDescription('')
   }
 
   return (
@@ -94,13 +102,31 @@ export default function BoothForm({ onSubmit, isLoading = false, onCancel, initi
         )}
       </div>
 
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+          Description
+        </label>
+        <textarea
+          id="description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter booth description (optional)"
+          rows={3}
+          disabled={isLoading}
+        />
+        <p className="mt-1 text-sm text-gray-500">
+          Optional description about the booth
+        </p>
+      </div>
+
       <div className="flex gap-3 pt-2">
         <button
           type="submit"
           disabled={isLoading}
           className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {isLoading ? 'Creating...' : 'Create Booth'}
+          {isLoading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Booth' : 'Create Booth')}
         </button>
         {onCancel && (
           <button

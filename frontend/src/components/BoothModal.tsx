@@ -8,7 +8,7 @@ interface BoothModalProps {
   booth: Booth | null
   isOpen: boolean
   onClose: () => void
-  onUpdate: (boothId: number, data: { name: string; phrase: string }) => Promise<void>
+  onUpdate: (boothId: number, data: { name: string; phrase: string; description?: string }) => Promise<void>
 }
 
 export default function BoothModal({ booth, isOpen, onClose, onUpdate }: BoothModalProps) {
@@ -23,7 +23,7 @@ export default function BoothModal({ booth, isOpen, onClose, onUpdate }: BoothMo
     }
   }, [isOpen])
 
-  const handleUpdate = async (data: { name: string; phrase: string }) => {
+  const handleUpdate = async (data: { name: string; phrase: string; description?: string }) => {
     if (!booth) return
     
     setIsUpdating(true)
@@ -78,7 +78,8 @@ export default function BoothModal({ booth, isOpen, onClose, onUpdate }: BoothMo
               onSubmit={handleUpdate}
               isLoading={isUpdating}
               onCancel={() => setIsEditing(false)}
-              initialData={{ name: booth.name, phrase: booth.phrase }}
+              initialData={{ name: booth.name, phrase: booth.phrase, description: booth.description }}
+              isEditMode={true}
             />
           ) : (
             <div className="space-y-6">
