@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import SessionCard from "@/components/SessionCard";
 import SessionModal from "@/components/SessionModal";
@@ -20,11 +20,13 @@ import {
   isDayCurrent,
   isDayPast,
   getTestTime,
-  updateTestTime
+  updateTestTime,
+  TEST_MODE
 } from "@/utils/conference";
 
 export default function SessionsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
   const [adminStatus, setAdminStatus] = useState<AdminStatus | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -59,7 +61,7 @@ export default function SessionsPage() {
   // Update current time every minute and auto-detect current day/session
   useEffect(() => {
     const updateTime = () => {
-      const now = new Date();
+      const now = getTestTime() || new Date();
       setCurrentTime(now);
       
       // Auto-detect current day
@@ -286,6 +288,48 @@ export default function SessionsPage() {
     }
   };
 
+  // Function to scroll to a specific session by ID
+  const scrollToSession = (sessionId: string) => {
+    if (!sessionsContainerRef.current) return;
+    
+    // Find the session card element
+    const sessionElement = sessionsContainerRef.current.querySelector(`[data-session-id="${sessionId}"]`);
+    if (sessionElement) {
+      // Switch to the correct day and tab
+      const session = sessions.find(s => s.id === sessionId);
+      if (session) {
+        setActiveDay(session.day);
+        setActiveTab('sessions');
+        setHasManuallyNavigated(true);
+        
+        // Ensure the session group is expanded
+        const sessionGroup = sessionElement.closest('.bg-white.rounded-lg');
+        if (sessionGroup) {
+          const collapseButton = sessionGroup.querySelector('[onclick*="toggleGroupCollapse"]') as HTMLElement;
+          if (collapseButton && sessionGroup.querySelector('.space-y-3')?.classList.contains('hidden')) {
+            collapseButton.click();
+          }
+        }
+        
+        // Scroll to the session with smooth animation
+        setTimeout(() => {
+          sessionElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }, 200);
+      }
+    }
+  };
+
+  // Handle scrollTo URL parameter
+  useEffect(() => {
+    const scrollToId = searchParams.get('scrollTo');
+    if (scrollToId && !loading && sessions.length > 0) {
+      scrollToSession(scrollToId);
+    }
+  }, [searchParams, loading, sessions]);
+
   // Scroll to current session when it changes
   useEffect(() => {
     if (currentSession && activeTab === 'sessions' && activeDay === currentSession.day) {
@@ -310,7 +354,7 @@ export default function SessionsPage() {
       const groupsToExpand = new Set<string>();
       
       timelineItems.forEach(item => {
-        if (!('type' in item) && item.sessions.some(session => isSessionCurrent(session, currentTime))) {
+        if (!('type' in item) && item.sessions.some(session => isSessionCurrent(session, currentTime, sessions))) {
           if (item.isCollapsed) {
             groupsToExpand.add(item.id);
           }
@@ -391,8 +435,8 @@ export default function SessionsPage() {
               Schedule
             </h1>
             <div className="flex items-center gap-2">
-              {/* Test Controls - Only show in development */}
-              {process.env.NODE_ENV === 'development' && (
+              {/* Test Controls - Only show when test mode is enabled */}
+              {getTestTime() && (
                 <div className="flex items-center gap-2 text-xs">
                   <span className="text-gray-500">Test:</span>
                   <span className="text-blue-600 font-mono">
@@ -431,16 +475,6 @@ export default function SessionsPage() {
                     Random Time
                   </button>
                 </div>
-              )}
-              {currentSession && activeTab === 'sessions' && (
-                <button
-                  onClick={scrollToCurrentSession}
-                  className="px-3 py-1 text-xs bg-[#f97316] text-white rounded-full hover:bg-[#f97316]/90 transition-colors flex items-center gap-1"
-                  title="Scroll to current session"
-                >
-                  <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-                  NOW
-                </button>
               )}
             </div>
           </div>
@@ -545,7 +579,7 @@ export default function SessionsPage() {
                                         {item.title}
                                       </h3>
                                       {/* Show NOW indicator if group contains current session and is collapsed */}
-                                      {item.isCollapsed && item.sessions.some(session => isSessionCurrent(session, currentTime)) && (
+                                      {item.isCollapsed && item.sessions.some(session => isSessionCurrent(session, currentTime, sessions)) && (
                                         <span className="text-xs px-2 py-1 bg-[#f97316] text-white rounded-full font-medium animate-pulse">
                                           NOW
                                         </span>
@@ -581,7 +615,7 @@ export default function SessionsPage() {
                                       key={session.id}
                                       session={session} 
                                       onClick={openSessionModal}
-                                      isCurrent={isSessionCurrent(session, currentTime)}
+                                      isCurrent={isSessionCurrent(session, currentTime, sessions)}
                                       isPast={isSessionPast(session, currentTime)}
                                     />
                                   ))}

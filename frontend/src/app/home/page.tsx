@@ -11,6 +11,14 @@ import MenuDropdown from '@/components/MenuDropdown';
 import SessionCard from '@/components/SessionCard';
 import BackgroundImage from '@/components/BackgroundImage';
 import Logo from '@/components/Logo';
+import { 
+  getCurrentSession, 
+  getCurrentDay, 
+  isSessionCurrent,
+  isSessionPast,
+  CONFERENCE_DATES,
+  getTestTime
+} from '@/utils/conference';
 
 // Conference start date - July 11, 2025 at 9:00 AM
 const CONFERENCE_START = new Date('2025-07-11T09:00:00');
@@ -43,29 +51,7 @@ export default function HomePage() {
 
   const countdown = getCountdown();
 
-  // Get current session
-  const getCurrentSession = (sessions: Session[], now: Date): Session | null => {
-    // Only show current sessions if we're actually during the conference dates
-    const conferenceStart = new Date('2025-07-11T00:00:00');
-    const conferenceEnd = new Date('2025-07-13T23:59:59');
-    
-    // If we're not during the conference dates, don't show any current session
-    if (now < conferenceStart || now > conferenceEnd) {
-      return null;
-    }
-    
-    const currentTimeStr = now.toTimeString().slice(0, 5);
-    
-    return sessions.find(session => {
-      const startTime = session.start_time;
-      // For sessions, we'll use a default end time of 1 hour after start if not specified
-      const endTime = session.start_time ? 
-        new Date(`2000-01-01T${startTime}`).getTime() + (60 * 60 * 1000) : 
-        new Date(`2000-01-01T${startTime}`).getTime() + (60 * 60 * 1000);
-      const currentTime = new Date(`2000-01-01T${currentTimeStr}`).getTime();
-      return currentTime >= new Date(`2000-01-01T${startTime}`).getTime() && currentTime <= endTime;
-    }) || null;
-  };
+
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -84,10 +70,10 @@ export default function HomePage() {
   // Update current time every second and auto-detect current session
   useEffect(() => {
     const updateTime = () => {
-      const now = new Date();
+      const now = getTestTime() || new Date();
       setCurrentTime(now);
       
-      // Auto-detect current session
+      // Auto-detect current session using imported function
       const current = getCurrentSession(sessions, now);
       setCurrentSession(current || null);
     };
@@ -130,9 +116,9 @@ export default function HomePage() {
     adminStatus,
   });
 
-  const openSessionModal = () => {
-    // Navigate to sessions page
-    router.push('/sessions');
+  const handleSessionCardClick = (session: Session) => {
+    // Navigate to sessions page with session ID for auto-scrolling
+    router.push(`/sessions?scrollTo=${session.id}`);
   };
 
   if (!user) {
@@ -267,7 +253,7 @@ export default function HomePage() {
             
             <SessionCard 
               session={currentSession} 
-              onClick={openSessionModal}
+              onClick={handleSessionCardClick}
               isCurrent={true}
               isPast={false}
             />

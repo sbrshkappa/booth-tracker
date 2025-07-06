@@ -8,7 +8,7 @@ export const CONFERENCE_DATES: Record<number, string> = {
 };
 
 // Test mode - set to true to enable testing with simulated times
-const TEST_MODE = true;
+export const TEST_MODE = false;
 let TEST_TIME = new Date('2025-07-11T10:00:00'); // Default test time
 
 // Function to update test time (for testing purposes)
@@ -29,11 +29,29 @@ export const getTestTime = (): Date | null => {
   return TEST_MODE ? getCurrentTimeForTesting() : null;
 };
 
-// Helper function to get session duration (default 1 hour)
-export const getSessionDuration = (session?: Session) => {
-  // For now, assume all sessions are 1 hour
-  // This could be extended to use actual duration data if available
-  return 60 * 60 * 1000; // 1 hour in milliseconds
+// Helper function to get session duration by calculating time until next session
+export const getSessionDuration = (session: Session, allSessions: Session[]): number => {
+  if (!session) return 60 * 60 * 1000; // Default 1 hour if no session provided
+  
+  // Find the next session on the same day
+  const daySessions = allSessions
+    .filter(s => s.day === session.day)
+    .sort((a, b) => a.start_time.localeCompare(b.start_time));
+  
+  const currentIndex = daySessions.findIndex(s => s.id === session.id);
+  if (currentIndex === -1) return 60 * 60 * 1000; // Default 1 hour if session not found
+  
+  // If this is the last session of the day, use default duration
+  if (currentIndex === daySessions.length - 1) {
+    return 60 * 60 * 1000; // Default 1 hour for last session
+  }
+  
+  // Calculate duration until next session starts
+  const currentStart = new Date(`${CONFERENCE_DATES[session.day]}T${session.start_time}`);
+  const nextSession = daySessions[currentIndex + 1];
+  const nextStart = new Date(`${CONFERENCE_DATES[nextSession.day]}T${nextSession.start_time}`);
+  
+  return nextStart.getTime() - currentStart.getTime();
 };
 
 // Helper function to get current session (only one at a time)
@@ -43,7 +61,7 @@ export const getCurrentSession = (sessions: Session[], currentTime: Date) => {
   // Find the session that is currently happening
   const currentSessions = sessions.filter(session => {
     const startTime = new Date(`${CONFERENCE_DATES[session.day]}T${session.start_time}`);
-    const endTime = new Date(startTime.getTime() + getSessionDuration());
+    const endTime = new Date(startTime.getTime() + getSessionDuration(session, sessions));
     return timeToUse >= startTime && timeToUse < endTime;
   });
   
@@ -75,11 +93,11 @@ export const isSessionPast = (session: Session, currentTime: Date) => {
 };
 
 // Helper function to check if session is current
-export const isSessionCurrent = (session: Session, now: Date): boolean => {
+export const isSessionCurrent = (session: Session, now: Date, allSessions: Session[]): boolean => {
   const timeToUse = TEST_MODE ? getCurrentTimeForTesting() : now;
   const sessionDate = CONFERENCE_DATES[session.day];
   const sessionStartTime = new Date(`${sessionDate}T${session.start_time}`);
-  const sessionEndTime = new Date(sessionStartTime.getTime() + getSessionDuration());
+  const sessionEndTime = new Date(sessionStartTime.getTime() + getSessionDuration(session, allSessions));
   
   return timeToUse >= sessionStartTime && timeToUse < sessionEndTime;
 };
@@ -93,6 +111,16 @@ export const isDayPast = (day: number, currentTime: Date) => {
 // Helper function to check if a day is current
 export const isDayCurrent = (day: number, currentTime: Date) => {
   const timeToUse = TEST_MODE ? getCurrentTimeForTesting() : currentTime;
+  
+  // Only show current day if we're actually during the conference dates
+  const conferenceStart = new Date('2025-07-11T00:00:00');
+  const conferenceEnd = new Date('2025-07-13T23:59:59');
+  
+  // If we're not during the conference dates, no day should be considered current
+  if (timeToUse < conferenceStart || timeToUse > conferenceEnd) {
+    return false;
+  }
+  
   return getCurrentDay(timeToUse) === day;
 };
 
