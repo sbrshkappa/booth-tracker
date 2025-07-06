@@ -21,7 +21,6 @@ import {
   isDayPast,
   getTestTime,
   updateTestTime,
-  TEST_MODE
 } from "@/utils/conference";
 
 export default function SessionsPage() {

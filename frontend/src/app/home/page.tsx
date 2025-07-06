@@ -12,11 +12,7 @@ import SessionCard from '@/components/SessionCard';
 import BackgroundImage from '@/components/BackgroundImage';
 import Logo from '@/components/Logo';
 import { 
-  getCurrentSession, 
-  getCurrentDay, 
-  isSessionCurrent,
-  isSessionPast,
-  CONFERENCE_DATES,
+  getCurrentSession,
   getTestTime
 } from '@/utils/conference';
 
