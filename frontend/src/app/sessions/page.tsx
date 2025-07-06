@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import SessionCard from "@/components/SessionCard";
@@ -23,7 +23,7 @@ import {
   updateTestTime,
 } from "@/utils/conference";
 
-export default function SessionsPage() {
+function SessionsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
@@ -685,5 +685,13 @@ export default function SessionsPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function SessionsPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <SessionsPageContent />
+    </Suspense>
   );
 } 
