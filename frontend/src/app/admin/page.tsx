@@ -14,6 +14,8 @@ import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth
 import { LoadingScreen, LoadingSpinner } from "@/utils/ui";
 import BackgroundImage from '@/components/BackgroundImage';
 import Logo from '@/components/Logo';
+import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
+import { ArrowPathIcon } from '@heroicons/react/24/outline';
 
 export default function AdminPage() {
   const router = useRouter();
@@ -43,6 +45,10 @@ export default function AdminPage() {
   const [metrics, setMetrics] = useState<AdminMetrics | null>(null);
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
   const [metricsError, setMetricsError] = useState<string | null>(null);
+
+  // Collapsible state for overview sections
+  const [isBoothsCollapsed, setIsBoothsCollapsed] = useState(false);
+  const [isSessionTypesCollapsed, setIsSessionTypesCollapsed] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -409,7 +415,17 @@ export default function AdminPage() {
         {/* Tab Content */}
         {activeTab === 'overview' && (
           <div className="bg-white/80 rounded-xl p-8 shadow-lg overflow-y-auto max-h-[calc(100vh-200px)]">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Admin Overview</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold text-gray-800">Admin Overview</h2>
+              <button
+                onClick={fetchAdminMetrics}
+                disabled={isLoadingMetrics}
+                className="p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Refresh metrics"
+              >
+                <ArrowPathIcon className={`w-5 h-5 ${isLoadingMetrics ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
             
             {isLoadingMetrics ? (
               <div className="flex justify-center py-8">
@@ -454,41 +470,67 @@ export default function AdminPage() {
 
                 {/* Popular Booths */}
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-4">Most Popular Booths</h3>
-                  {metrics.popularBooths && metrics.popularBooths.length > 0 ? (
-                    <div className="space-y-3">
-                      {metrics.popularBooths.map((booth: PopularBooth, index: number) => (
-                        <div key={booth.name} className="flex items-center justify-between bg-white p-3 rounded-lg">
-                          <div className="flex items-center">
-                            <span className="text-lg font-bold text-orange-600 mr-3">#{index + 1}</span>
-                            <span className="font-medium text-gray-800">{booth.name}</span>
+                  <button
+                    className="flex items-center w-full text-left focus:outline-none"
+                    onClick={() => setIsBoothsCollapsed((prev) => !prev)}
+                    aria-expanded={!isBoothsCollapsed}
+                  >
+                    {isBoothsCollapsed ? (
+                      <ChevronRightIcon className="w-5 h-5 mr-2 text-orange-600" />
+                    ) : (
+                      <ChevronDownIcon className="w-5 h-5 mr-2 text-orange-600" />
+                    )}
+                    <h3 className="text-xl font-semibold text-gray-800 mb-0">Most Popular Booths</h3>
+                  </button>
+                  {!isBoothsCollapsed && (
+                    metrics.popularBooths && metrics.popularBooths.length > 0 ? (
+                      <div className="space-y-3 mt-4">
+                        {metrics.popularBooths.map((booth: PopularBooth, index: number) => (
+                          <div key={booth.name} className="flex items-center justify-between bg-white p-3 rounded-lg">
+                            <div className="flex items-center">
+                              <span className="text-lg font-bold text-orange-600 mr-3">#{index + 1}</span>
+                              <span className="font-medium text-gray-800">{booth.name}</span>
+                            </div>
+                            <span className="text-sm text-gray-600">{booth.visits} visits</span>
                           </div>
-                          <span className="text-sm text-gray-600">{booth.visits} visits</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-600 text-center py-4">No booth visit data available</p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-600 text-center py-4 mt-4">No booth visit data available</p>
+                    )
                   )}
                 </div>
 
                 {/* Popular Session Types */}
                 <div className="bg-gray-50 p-6 rounded-lg">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-4">Session Types Distribution</h3>
-                  {metrics.popularSessionTypes && metrics.popularSessionTypes.length > 0 ? (
-                    <div className="space-y-3">
-                      {metrics.popularSessionTypes.map((sessionType: PopularSessionType, index: number) => (
-                        <div key={sessionType.type} className="flex items-center justify-between bg-white p-3 rounded-lg">
-                          <div className="flex items-center">
-                            <span className="text-lg font-bold text-purple-600 mr-3">#{index + 1}</span>
-                            <span className="font-medium text-gray-800 capitalize">{sessionType.type.replace('_', ' ')}</span>
+                  <button
+                    className="flex items-center w-full text-left focus:outline-none"
+                    onClick={() => setIsSessionTypesCollapsed((prev) => !prev)}
+                    aria-expanded={!isSessionTypesCollapsed}
+                  >
+                    {isSessionTypesCollapsed ? (
+                      <ChevronRightIcon className="w-5 h-5 mr-2 text-purple-600" />
+                    ) : (
+                      <ChevronDownIcon className="w-5 h-5 mr-2 text-purple-600" />
+                    )}
+                    <h3 className="text-xl font-semibold text-gray-800 mb-0">Session Types Distribution</h3>
+                  </button>
+                  {!isSessionTypesCollapsed && (
+                    metrics.popularSessionTypes && metrics.popularSessionTypes.length > 0 ? (
+                      <div className="space-y-3 mt-4">
+                        {metrics.popularSessionTypes.map((sessionType: PopularSessionType, index: number) => (
+                          <div key={sessionType.type} className="flex items-center justify-between bg-white p-3 rounded-lg">
+                            <div className="flex items-center">
+                              <span className="text-lg font-bold text-purple-600 mr-3">#{index + 1}</span>
+                              <span className="font-medium text-gray-800 capitalize">{sessionType.type.replace('_', ' ')}</span>
+                            </div>
+                            <span className="text-sm text-gray-600">{sessionType.count} sessions</span>
                           </div>
-                          <span className="text-sm text-gray-600">{sessionType.count} sessions</span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-600 text-center py-4">No session data available</p>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-600 text-center py-4 mt-4">No session data available</p>
+                    )
                   )}
                 </div>
 
