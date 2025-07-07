@@ -573,7 +573,7 @@ function SessionsPageContent() {
                   <div className="space-y-6">
                     {timelineItems.length > 0 ? (
                       timelineItems.map((item, index) => (
-                        <div key={item.id || index}>
+                        <div key={'id' in item ? item.id : `${item.type}-${item.data.id}-${index}`}>
                           {'type' in item && (item.type === 'break' || item.type === 'lunch' || item.type === 'dinner') ? (
                             // Render break, lunch, or dinner
                             <div className="text-center py-6">
