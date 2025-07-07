@@ -22,6 +22,7 @@ import {
   getTestTime,
   updateTestTime,
 } from "@/utils/conference";
+import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
 
 function SessionsPageContent() {
   const router = useRouter();
@@ -42,6 +43,7 @@ function SessionsPageContent() {
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
   const [hasManuallyNavigated, setHasManuallyNavigated] = useState(false);
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+  const [expandedParents, setExpandedParents] = useState<Set<number>>(new Set());
   const sessionsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -142,28 +144,58 @@ function SessionsPageContent() {
     return sessions.filter(session => session.day === day);
   };
 
+  // Helper to group sessions by parent/child for a given list
+  const groupParentChild = (sessions: Session[]) => {
+    const parents = sessions.filter(s => !s.parent_session_id);
+    const children = sessions.filter(s => s.parent_session_id);
+    const childrenByParent: Record<number, Session[]> = {};
+    children.forEach(child => {
+      if (!childrenByParent[child.parent_session_id!]) {
+        childrenByParent[child.parent_session_id!] = [];
+      }
+      childrenByParent[child.parent_session_id!].push(child);
+    });
+    return { parents, childrenByParent };
+  };
+
+  // Updated getSessionGroups to support pre-9am group and break/lunch/dinner separation
   const getSessionGroups = (day: number): TimelineItem[] => {
     const daySessions = getSessionsForDay(day);
-    
     // Sort sessions by start time
-    const sortedSessions = daySessions.sort((a, b) => {
-      return a.start_time.localeCompare(b.start_time);
-    });
-
+    const sortedSessions = daySessions.sort((a, b) => a.start_time.localeCompare(b.start_time));
     const result: TimelineItem[] = [];
     let currentGroupSessions: Session[] = [];
     let groupStartTime = '';
+    let inPre9am = true;
 
     for (let i = 0; i < sortedSessions.length; i++) {
       const session = sortedSessions[i];
-      
-      // If this is a break or lunch, finalize the current group and add the break
-      if (session.type === 'break' || session.type === 'lunch') {
-        // Add the current group if it has sessions
+      const hour = parseInt(session.start_time.split(':')[0]);
+      // Pre-9am group
+      if (inPre9am && hour < 9) {
+        currentGroupSessions.push(session);
+        continue;
+      } else if (inPre9am && hour >= 9) {
+        // End pre-9am group
+        if (currentGroupSessions.length > 0) {
+          result.push({
+            id: `day-${day}-pre9am`,
+            title: '',
+            sessions: currentGroupSessions,
+            startTime: currentGroupSessions[0].start_time,
+            endTime: session.start_time,
+            isCollapsed: collapsedGroups.has(`day-${day}-pre9am`)
+          });
+        }
+        currentGroupSessions = [];
+        groupStartTime = session.start_time;
+        inPre9am = false;
+      }
+      // If this is a break, lunch, or dinner, finalize the current group and add the break
+      if (session.type === 'break' || session.type === 'lunch' || session.type === 'dinner') {
         if (currentGroupSessions.length > 0) {
           const groupId = `day-${day}-group-${result.length}`;
           const groupTitle = getGroupTitle(groupStartTime);
-          
           result.push({
             id: groupId,
             title: groupTitle,
@@ -173,27 +205,20 @@ function SessionsPageContent() {
             isCollapsed: collapsedGroups.has(groupId)
           });
         }
-        
-        // Add the break
-        result.push({ type: 'break', data: session });
-        
-        // Start a new group after the break
+        result.push({ type: session.type, data: session });
         currentGroupSessions = [];
         groupStartTime = '';
       } else {
-        // This is a regular session
         if (currentGroupSessions.length === 0) {
           groupStartTime = session.start_time;
         }
         currentGroupSessions.push(session);
       }
     }
-    
     // Add any remaining sessions as the final group
     if (currentGroupSessions.length > 0) {
       const groupId = `day-${day}-group-${result.length}`;
       const groupTitle = getGroupTitle(groupStartTime);
-      
       result.push({
         id: groupId,
         title: groupTitle,
@@ -203,7 +228,6 @@ function SessionsPageContent() {
         isCollapsed: collapsedGroups.has(groupId)
       });
     }
-    
     return result;
   };
 
@@ -544,19 +568,22 @@ function SessionsPageContent() {
           {activeTab === 'sessions' ? (
             (() => {
               const timelineItems = getSessionGroups(activeDay);
-              
               return (
                 <div ref={sessionsContainerRef} className="h-full overflow-y-auto pr-2">
                   <div className="space-y-6">
                     {timelineItems.length > 0 ? (
                       timelineItems.map((item, index) => (
-                        <div key={index}>
-                          {'type' in item && (item.type === 'break' || item.type === 'lunch') ? (
-                            // Render break or lunch
+                        <div key={'id' in item ? item.id : `${item.type}-${item.data.id}-${index}`}>
+                          {'type' in item && (item.type === 'break' || item.type === 'lunch' || item.type === 'dinner') ? (
+                            // Render break, lunch, or dinner
                             <div className="text-center py-6">
                               <div className="bg-gray-50 rounded-lg p-4">
                                 <h3 className="text-lg font-medium text-gray-700 mb-2">
-                                  {item.data.type === 'lunch' ? '🍽️ Lunch Break' : '☕ Break'}
+                                  {item.type === 'lunch'
+                                    ? '🍽️ Lunch Break'
+                                    : item.type === 'dinner'
+                                      ? '🍽️ Dinner'
+                                      : '☕ Break'}
                                 </h3>
                                 <p className="text-gray-600">
                                   {formatTime(item.data.start_time)}
@@ -567,57 +594,92 @@ function SessionsPageContent() {
                             // Render session group
                             <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
                               {/* Group Header */}
-                              <div 
-                                className="p-4 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100"
-                                onClick={() => toggleGroupCollapse(item.id)}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <h3 className="font-semibold text-gray-900">
-                                        {item.title}
-                                      </h3>
-                                      {/* Show NOW indicator if group contains current session and is collapsed */}
-                                      {item.isCollapsed && item.sessions.some(session => isSessionCurrent(session, currentTime, sessions)) && (
-                                        <span className="text-xs px-2 py-1 bg-[#f97316] text-white rounded-full font-medium animate-pulse">
-                                          NOW
-                                        </span>
-                                      )}
+                              {item.title && (
+                                <div 
+                                  className="p-4 cursor-pointer hover:bg-gray-50 transition-colors border-b border-gray-100"
+                                  onClick={() => toggleGroupCollapse(item.id)}
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <h3 className="font-semibold text-gray-900">
+                                          {item.title}
+                                        </h3>
+                                      </div>
+                                      <p className="text-sm text-gray-600">
+                                        {formatTimeRange(item.startTime, item.endTime)}
+                                      </p>
                                     </div>
-                                    <p className="text-sm text-gray-600">
-                                      {formatTimeRange(item.startTime, item.endTime)}
-                                    </p>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs px-2 py-1 bg-[#fba758]/20 text-[#fba758] rounded-full">
-                                      {item.sessions.length} session{item.sessions.length !== 1 ? 's' : ''}
-                                    </span>
-                                    <svg 
-                                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
-                                        item.isCollapsed ? 'rotate-0' : 'rotate-180'
-                                      }`}
-                                      fill="none" 
-                                      stroke="currentColor" 
-                                      viewBox="0 0 24 24"
-                                    >
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs px-2 py-1 bg-[#fba758]/20 text-[#fba758] rounded-full">
+                                        {item.sessions.length} session{item.sessions.length !== 1 ? 's' : ''}
+                                      </span>
+                                      <svg 
+                                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                                          item.isCollapsed ? 'rotate-0' : 'rotate-180'
+                                        }`}
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                      </svg>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                              
+                              )}
                               {/* Group Content */}
                               {!item.isCollapsed && (
                                 <div className="p-4 space-y-3">
-                                  {item.sessions.map((session) => (
-                                    <SessionCard 
-                                      key={session.id}
-                                      session={session} 
-                                      onClick={openSessionModal}
-                                      isCurrent={isSessionCurrent(session, currentTime, sessions)}
-                                      isPast={isSessionPast(session, currentTime)}
-                                    />
-                                  ))}
+                                  {/* Render parent/child session cards within the group */}
+                                  {(() => {
+                                    const { parents, childrenByParent } = groupParentChild(item.sessions);
+                                    return parents.map((parent) => (
+                                      <div key={parent.id}>
+                                        <div className={`rounded-lg border border-gray-200 shadow-sm mb-2 ${childrenByParent[parent.id] && childrenByParent[parent.id].length > 0 ? 'bg-orange-50' : 'bg-white'}`}>
+                                          <div className="flex items-center p-4 cursor-pointer hover:bg-gray-100 transition-colors border-b border-gray-100" onClick={() => {
+                                            setExpandedParents(prev => {
+                                              const newSet = new Set(prev);
+                                              if (newSet.has(parent.id)) newSet.delete(parent.id);
+                                              else newSet.add(parent.id);
+                                              return newSet;
+                                            });
+                                          }}>
+                                            <div className="flex-1">
+                                              <SessionCard 
+                                                session={parent} 
+                                                onClick={openSessionModal}
+                                                isCurrent={isSessionCurrent(parent, currentTime, sessions)}
+                                                isPast={isSessionPast(parent, currentTime)}
+                                              />
+                                            </div>
+                                            {childrenByParent[parent.id] && childrenByParent[parent.id].length > 0 && (
+                                              <span className="ml-4 flex-shrink-0">
+                                                {expandedParents.has(parent.id) ? (
+                                                  <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+                                                ) : (
+                                                  <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                                                )}
+                                              </span>
+                                            )}
+                                          </div>
+                                          {childrenByParent[parent.id] && childrenByParent[parent.id].length > 0 && expandedParents.has(parent.id) && (
+                                            <div className="pl-8 pb-2 space-y-2">
+                                              {childrenByParent[parent.id].map(child => (
+                                                <SessionCard
+                                                  key={child.id}
+                                                  session={child}
+                                                  onClick={openSessionModal}
+                                                  isCurrent={isSessionCurrent(child, currentTime, sessions)}
+                                                  isPast={isSessionPast(child, currentTime)}
+                                                />
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ));
+                                  })()}
                                 </div>
                               )}
                             </div>
