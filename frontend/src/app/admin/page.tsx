@@ -457,10 +457,10 @@ export default function AdminPage() {
       <div className="relative z-10 flex-1 flex flex-col w-full max-w-6xl mx-auto min-h-0">
         {/* Tabs */}
         <div className="flex justify-center mb-8">
-          <div className="bg-gray-100 rounded-lg p-1">
+          <div className="bg-gray-100 rounded-lg p-1 flex flex-nowrap justify-center">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-6 py-2 rounded-md font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
                 activeTab === 'overview'
                   ? 'bg-white text-orange-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-800'
@@ -470,7 +470,7 @@ export default function AdminPage() {
             </button>
             <button
               onClick={() => setActiveTab('booths')}
-              className={`px-6 py-2 rounded-md font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
                 activeTab === 'booths'
                   ? 'bg-white text-orange-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-800'
@@ -480,7 +480,7 @@ export default function AdminPage() {
             </button>
             <button
               onClick={() => setActiveTab('sessions')}
-              className={`px-6 py-2 rounded-md font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
                 activeTab === 'sessions'
                   ? 'bg-white text-orange-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-800'
@@ -490,7 +490,7 @@ export default function AdminPage() {
             </button>
             <button
               onClick={() => setActiveTab('users')}
-              className={`px-6 py-2 rounded-md font-medium transition-colors ${
+              className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
                 activeTab === 'users'
                   ? 'bg-white text-orange-600 shadow-sm'
                   : 'text-gray-600 hover:text-gray-800'
