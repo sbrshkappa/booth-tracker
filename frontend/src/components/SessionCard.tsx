@@ -50,7 +50,12 @@ export default function SessionCard({ session, onClick, isCurrent = false, isPas
             <p className={`text-sm mb-1 ${
               isPast ? 'text-gray-400' : 'text-gray-600'
             }`}>
-              {session.speaker}
+              {session.speaker
+                .split(';')
+                .map(s => s.trim())
+                .filter(Boolean)
+                .join(' • ')
+              }
             </p>
           )}
           <p className={`text-xs mb-1 ${

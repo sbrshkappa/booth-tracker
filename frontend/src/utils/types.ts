@@ -56,6 +56,7 @@ export interface Session {
   tags: string[] | null;
   created_at: string;
   updated_at: string;
+  parent_session_id: number | null;
 }
 
 export interface UserSessionNotes {
@@ -77,7 +78,7 @@ export interface SessionGroup {
   isCollapsed: boolean;
 }
 
-export type TimelineItem = SessionGroup | { type: 'break'; data: Session } | { type: 'lunch'; data: Session }; 
+export type TimelineItem = SessionGroup | { type: 'break'; data: Session } | { type: 'lunch'; data: Session } | { type: 'dinner'; data: Session };
 
 export interface PopularBooth {
   name: string;
