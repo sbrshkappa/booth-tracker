@@ -10,6 +10,12 @@ import NoteCard, { NoteData } from "@/components/NoteCard";
 import BackgroundImage from '@/components/BackgroundImage';
 import ShareModal from '@/components/ShareModal';
 import Logo from '@/components/Logo';
+import AppTour from '@/components/AppTour';
+import { 
+  getCurrentSession,
+  getTestTime
+} from '@/utils/conference';
+import { shouldShowFirstTimeTour, markTourCompleted, markFirstTimeTourSeen } from '@/utils/tour';
 
 export default function MyJourneyPage() {
   const router = useRouter();
@@ -20,6 +26,10 @@ export default function MyJourneyPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'booths' | 'sessions'>('all');
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  
+  // Tour and help state
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -29,6 +39,19 @@ export default function MyJourneyPage() {
       if (userData) {
         const adminData = await checkAdminStatus(userData.email);
         setAdminStatus(adminData);
+        
+        // Check if tour should continue (if user navigated here during tour)
+        const shouldShowTour = shouldShowFirstTimeTour();
+        setIsFirstTimeUser(shouldShowTour);
+        
+        // If this is a first-time user and we're on history, continue the tour
+        if (shouldShowTour) {
+          // Check if we're in the middle of a tour (by checking session storage)
+          const isInTour = sessionStorage.getItem('tour-in-progress') === 'true';
+          if (isInTour) {
+            setIsTourOpen(true);
+          }
+        }
       }
     };
 
@@ -132,6 +155,23 @@ export default function MyJourneyPage() {
   }, [user?.email]);
 
   const handleLogoutClick = () => handleLogout(router);
+
+  const handleTourComplete = () => {
+    if (isFirstTimeUser) {
+      markTourCompleted();
+      setIsFirstTimeUser(false);
+    } else {
+      markFirstTimeTourSeen();
+    }
+  };
+
+  const handleTourClose = () => {
+    setIsTourOpen(false);
+    if (isFirstTimeUser) {
+      markFirstTimeTourSeen();
+      setIsFirstTimeUser(false);
+    }
+  };
 
   const handleNoteUpdate = (updatedNote: NoteData) => {
     setJourneyItems(prevItems => 
@@ -240,7 +280,7 @@ export default function MyJourneyPage() {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 flex flex-col w-full max-w-6xl mx-auto flex-1 min-h-0">
+      <div className="relative z-10 flex flex-col w-full max-w-6xl mx-auto flex-1 min-h-0 history-content">
         {/* Filter tabs - fixed at top */}
         <div className="flex bg-gray-100 rounded-lg p-1 mb-6 flex-shrink-0">
           <button
@@ -355,7 +395,7 @@ export default function MyJourneyPage() {
       {/* Floating Share Button */}
       <button
         onClick={() => setIsShareModalOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-[#fba758] to-[#ff8c42] hover:from-[#ff8c42] hover:to-[#fba758] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 z-40 flex items-center justify-center group"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-[#fba758] to-[#ff8c42] hover:from-[#ff8c42] hover:to-[#fba758] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-110 z-40 flex items-center justify-center group share-button"
         title="Share your journey"
       >
         <svg 
@@ -372,6 +412,14 @@ export default function MyJourneyPage() {
           />
         </svg>
       </button>
+
+      {/* Tour Component */}
+      <AppTour
+        isOpen={isTourOpen}
+        onClose={handleTourClose}
+        onComplete={handleTourComplete}
+        isFirstTime={isFirstTimeUser}
+      />
     </div>
   );
 } 

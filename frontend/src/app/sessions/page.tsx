@@ -12,6 +12,7 @@ import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth
 import { LoadingScreen } from "@/utils/ui";
 import BackgroundImage from '@/components/BackgroundImage';
 import Logo from '@/components/Logo';
+import AppTour from '@/components/AppTour';
 import { 
   getCurrentSession, 
   getCurrentDay, 
@@ -23,6 +24,7 @@ import {
   updateTestTime,
 } from "@/utils/conference";
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
+import { shouldShowFirstTimeTour, markTourCompleted, markFirstTimeTourSeen } from '@/utils/tour';
 
 function SessionsPageContent() {
   const router = useRouter();
@@ -45,6 +47,10 @@ function SessionsPageContent() {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [expandedParents, setExpandedParents] = useState<Set<number>>(new Set());
   const sessionsContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Tour and help state
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -57,6 +63,19 @@ function SessionsPageContent() {
     
     // Check admin status
     checkAdminStatus(userObj.email).then(setAdminStatus);
+    
+    // Check if tour should continue (if user navigated here during tour)
+    const shouldShowTour = shouldShowFirstTimeTour();
+    setIsFirstTimeUser(shouldShowTour);
+    
+    // If this is a first-time user and we're on sessions, continue the tour
+    if (shouldShowTour) {
+      // Check if we're in the middle of a tour (by checking session storage)
+      const isInTour = sessionStorage.getItem('tour-in-progress') === 'true';
+      if (isInTour) {
+        setIsTourOpen(true);
+      }
+    }
   }, [router]);
 
   // Update current time every minute and auto-detect current day/session
@@ -132,6 +151,23 @@ function SessionsPageContent() {
   }, [activeTab]);
 
   const handleLogoutClick = () => handleLogout(router);
+
+  const handleTourComplete = () => {
+    if (isFirstTimeUser) {
+      markTourCompleted();
+      setIsFirstTimeUser(false);
+    } else {
+      markFirstTimeTourSeen();
+    }
+  };
+
+  const handleTourClose = () => {
+    setIsTourOpen(false);
+    if (isFirstTimeUser) {
+      markFirstTimeTourSeen();
+      setIsFirstTimeUser(false);
+    }
+  };
 
   const menuOptions = createMenuOptions({
     currentPage: 'sessions',
@@ -508,7 +544,7 @@ function SessionsPageContent() {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 flex flex-col w-full max-w-4xl mx-auto flex-1 min-h-0">
+      <div className="relative z-10 flex flex-col w-full max-w-4xl mx-auto flex-1 min-h-0 sessions-content">
         {/* Day Tabs */}
         <div className="flex bg-gray-100 rounded-lg p-1 mb-6 flex-shrink-0 relative">
           {/* Animated sliding indicator */}
@@ -746,6 +782,14 @@ function SessionsPageContent() {
           onClose={closeSessionModal}
         />
       )}
+
+      {/* Tour Component */}
+      <AppTour
+        isOpen={isTourOpen}
+        onClose={handleTourClose}
+        onComplete={handleTourComplete}
+        isFirstTime={isFirstTimeUser}
+      />
     </div>
   );
 }
