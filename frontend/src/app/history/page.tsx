@@ -11,10 +11,6 @@ import BackgroundImage from '@/components/BackgroundImage';
 import ShareModal from '@/components/ShareModal';
 import Logo from '@/components/Logo';
 import AppTour from '@/components/AppTour';
-import { 
-  getCurrentSession,
-  getTestTime
-} from '@/utils/conference';
 import { shouldShowFirstTimeTour, markTourCompleted, markFirstTimeTourSeen } from '@/utils/tour';
 
 export default function MyJourneyPage() {

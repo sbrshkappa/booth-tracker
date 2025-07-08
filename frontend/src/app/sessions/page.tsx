@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import SessionCard from "@/components/SessionCard";
@@ -194,8 +194,21 @@ function SessionsPageContent() {
     return { parents, childrenByParent };
   };
 
-  // Updated getSessionGroups to support pre-9am group and break/lunch/dinner separation
-  const getSessionGroups = (day: number): TimelineItem[] => {
+  // Move getGroupTitle above getSessionGroups
+  const getGroupTitle = (startTime: string): string => {
+    const startHour = parseInt(startTime.split(':')[0]);
+    
+    if (startHour < 12) {
+      return 'Morning Sessions';
+    } else if (startHour < 17) {
+      return 'Afternoon Sessions';
+    } else {
+      return 'Evening Sessions';
+    }
+  };
+
+  // Wrap getSessionGroups in useCallback
+  const getSessionGroups = useCallback((day: number): TimelineItem[] => {
     const daySessions = getSessionsForDay(day);
     // Sort sessions by start time
     const sortedSessions = daySessions.sort((a, b) => a.start_time.localeCompare(b.start_time));
@@ -265,19 +278,7 @@ function SessionsPageContent() {
       });
     }
     return result;
-  };
-
-  const getGroupTitle = (startTime: string): string => {
-    const startHour = parseInt(startTime.split(':')[0]);
-    
-    if (startHour < 12) {
-      return 'Morning Sessions';
-    } else if (startHour < 17) {
-      return 'Afternoon Sessions';
-    } else {
-      return 'Evening Sessions';
-    }
-  };
+  }, [collapsedGroups, getSessionsForDay, getGroupTitle]);
 
   const toggleGroupCollapse = (groupId: string) => {
     setCollapsedGroups(prev => {
@@ -321,8 +322,8 @@ function SessionsPageContent() {
     setHasManuallyNavigated(true);
   };
 
-  // Function to scroll to current session
-  const scrollToCurrentSession = () => {
+  // Wrap scrollToCurrentSession in useCallback
+  const scrollToCurrentSession = useCallback(() => {
     if (!sessionsContainerRef.current || !currentSession) return;
     
     // Find the session card element
@@ -345,10 +346,10 @@ function SessionsPageContent() {
         });
       }, 100);
     }
-  };
+  }, [sessionsContainerRef, currentSession, sessions]);
 
-  // Function to scroll to a specific session by ID
-  const scrollToSession = (sessionId: string) => {
+  // Wrap scrollToSession in useCallback
+  const scrollToSession = useCallback((sessionId: string) => {
     if (!sessionsContainerRef.current) return;
     
     // Find the session card element
@@ -379,7 +380,7 @@ function SessionsPageContent() {
         }, 200);
       }
     }
-  };
+  }, [sessionsContainerRef, sessions, setActiveDay, setActiveTab, setHasManuallyNavigated]);
 
   // Handle scrollTo URL parameter
   useEffect(() => {
@@ -387,14 +388,14 @@ function SessionsPageContent() {
     if (scrollToId && !loading && sessions.length > 0) {
       scrollToSession(scrollToId);
     }
-  }, [searchParams, loading, sessions]);
+  }, [searchParams, loading, sessions, scrollToSession]);
 
   // Scroll to current session when it changes
   useEffect(() => {
     if (currentSession && activeTab === 'sessions' && activeDay === currentSession.day) {
       scrollToCurrentSession();
     }
-  }, [currentSession, activeTab, activeDay]);
+  }, [currentSession, activeTab, activeDay, scrollToCurrentSession]);
 
   // Auto-scroll to current session when page loads (if on current day)
   useEffect(() => {
@@ -404,7 +405,7 @@ function SessionsPageContent() {
         setTimeout(scrollToCurrentSession, 500); // Small delay to ensure DOM is ready
       }
     }
-  }, [loading, sessions, activeTab, activeDay, currentTime, currentSession]);
+  }, [loading, sessions, activeTab, activeDay, currentTime, currentSession, scrollToCurrentSession]);
 
   // Auto-expand groups containing current session
   useEffect(() => {
@@ -428,7 +429,7 @@ function SessionsPageContent() {
         });
       }
     }
-  }, [currentSession, activeTab, activeDay, currentTime, sessions]);
+  }, [currentSession, activeTab, activeDay, currentTime, sessions, getSessionGroups]);
 
   if (!user) {
     return <LoadingScreen />;

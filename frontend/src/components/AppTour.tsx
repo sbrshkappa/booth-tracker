@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { markTourCompleted } from '@/utils/tour';
 
@@ -148,64 +148,8 @@ export default function AppTour({ isOpen, onClose, onComplete, isFirstTime = fal
     }
   }, [isOpen, isFirstTime]);
 
-  useEffect(() => {
-    if (!isVisible) return;
-
-    const currentStepData = tourSteps[currentStep];
-    if (!currentStepData) return;
-
-    // Check if we need to navigate to a different page
-    const currentPath = window.location.pathname;
-    const targetPage = currentStepData.showOnPage;
-    
-    // If we're already navigating, wait for navigation to complete
-    if (isNavigating) return;
-    
-    // Check if we need to navigate to a different page
-    if (currentPath !== `/${targetPage}` && targetPage === 'home') {
-      setIsNavigating(true);
-      router.push('/home');
-      return;
-    } else if (currentPath !== `/${targetPage}` && targetPage !== 'home') {
-      setIsNavigating(true);
-      router.push(`/${targetPage}`);
-      return;
-    }
-
-    // We're on the correct page, position the tooltip
-    const timer = setTimeout(() => {
-      positionTooltip();
-    }, 200); // Increased delay to ensure page is fully loaded
-
-    return () => clearTimeout(timer);
-  }, [currentStep, isVisible, router, isNavigating]);
-
-  // Listen for route changes to reset navigation state
-  useEffect(() => {
-    const handleRouteChange = () => {
-      if (isNavigating) {
-        setIsNavigating(false);
-      }
-    };
-
-    // Listen for route changes
-    window.addEventListener('popstate', handleRouteChange);
-    
-    // Also check periodically if we're still navigating
-    const checkNavigation = setInterval(() => {
-      if (isNavigating) {
-        // If we've been navigating for more than 2 seconds, assume it's complete
-        setIsNavigating(false);
-      }
-    }, 2000);
-
-    return () => {
-      window.removeEventListener('popstate', handleRouteChange);
-      clearInterval(checkNavigation);
-    };
-  }, [isNavigating]);
-
-  const positionTooltip = () => {
+  // Wrap positionTooltip in useCallback
+  const positionTooltip = useCallback(() => {
     const currentStepData = tourSteps[currentStep];
     if (!currentStepData || !tooltipRef.current) return;
 
@@ -344,7 +288,64 @@ export default function AppTour({ isOpen, onClose, onComplete, isFirstTime = fal
 
     tooltip.style.left = `${left}px`;
     tooltip.style.top = `${top}px`;
-  };
+  }, [currentStep, tourSteps, isVisible]);
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    const currentStepData = tourSteps[currentStep];
+    if (!currentStepData) return;
+
+    // Check if we need to navigate to a different page
+    const currentPath = window.location.pathname;
+    const targetPage = currentStepData.showOnPage;
+    
+    // If we're already navigating, wait for navigation to complete
+    if (isNavigating) return;
+    
+    // Check if we need to navigate to a different page
+    if (currentPath !== `/${targetPage}` && targetPage === 'home') {
+      setIsNavigating(true);
+      router.push('/home');
+      return;
+    } else if (currentPath !== `/${targetPage}` && targetPage !== 'home') {
+      setIsNavigating(true);
+      router.push(`/${targetPage}`);
+      return;
+    }
+
+    // We're on the correct page, position the tooltip
+    const timer = setTimeout(() => {
+      positionTooltip();
+    }, 200); // Increased delay to ensure page is fully loaded
+
+    return () => clearTimeout(timer);
+  }, [currentStep, isVisible, router, isNavigating, positionTooltip]);
+
+  // Listen for route changes to reset navigation state
+  useEffect(() => {
+    const handleRouteChange = () => {
+      if (isNavigating) {
+        setIsNavigating(false);
+      }
+    };
+
+    // Listen for route changes
+    window.addEventListener('popstate', handleRouteChange);
+    
+    // Also check periodically if we're still navigating
+    const checkNavigation = setInterval(() => {
+      if (isNavigating) {
+        // If we've been navigating for more than 2 seconds, assume it's complete
+        setIsNavigating(false);
+      }
+    }, 2000);
+
+    return () => {
+      window.removeEventListener('popstate', handleRouteChange);
+      clearInterval(checkNavigation);
+    };
+  }, [isNavigating]);
 
   const handleNext = () => {
     if (currentStep < tourSteps.length - 1) {
