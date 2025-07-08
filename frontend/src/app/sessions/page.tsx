@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useRef, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
 import SessionCard from "@/components/SessionCard";
@@ -12,6 +12,7 @@ import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth
 import { LoadingScreen } from "@/utils/ui";
 import BackgroundImage from '@/components/BackgroundImage';
 import Logo from '@/components/Logo';
+import AppTour from '@/components/AppTour';
 import { 
   getCurrentSession, 
   getCurrentDay, 
@@ -23,6 +24,7 @@ import {
   updateTestTime,
 } from "@/utils/conference";
 import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/24/solid';
+import { shouldShowFirstTimeTour, markTourCompleted, markFirstTimeTourSeen } from '@/utils/tour';
 
 function SessionsPageContent() {
   const router = useRouter();
@@ -45,6 +47,10 @@ function SessionsPageContent() {
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [expandedParents, setExpandedParents] = useState<Set<number>>(new Set());
   const sessionsContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Tour and help state
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -57,6 +63,19 @@ function SessionsPageContent() {
     
     // Check admin status
     checkAdminStatus(userObj.email).then(setAdminStatus);
+    
+    // Check if tour should continue (if user navigated here during tour)
+    const shouldShowTour = shouldShowFirstTimeTour();
+    setIsFirstTimeUser(shouldShowTour);
+    
+    // If this is a first-time user and we're on sessions, continue the tour
+    if (shouldShowTour) {
+      // Check if we're in the middle of a tour (by checking session storage)
+      const isInTour = sessionStorage.getItem('tour-in-progress') === 'true';
+      if (isInTour) {
+        setIsTourOpen(true);
+      }
+    }
   }, [router]);
 
   // Update current time every minute and auto-detect current day/session
@@ -133,6 +152,23 @@ function SessionsPageContent() {
 
   const handleLogoutClick = () => handleLogout(router);
 
+  const handleTourComplete = () => {
+    if (isFirstTimeUser) {
+      markTourCompleted();
+      setIsFirstTimeUser(false);
+    } else {
+      markFirstTimeTourSeen();
+    }
+  };
+
+  const handleTourClose = () => {
+    setIsTourOpen(false);
+    if (isFirstTimeUser) {
+      markFirstTimeTourSeen();
+      setIsFirstTimeUser(false);
+    }
+  };
+
   const menuOptions = createMenuOptions({
     currentPage: 'sessions',
     router,
@@ -158,8 +194,21 @@ function SessionsPageContent() {
     return { parents, childrenByParent };
   };
 
-  // Updated getSessionGroups to support pre-9am group and break/lunch/dinner separation
-  const getSessionGroups = (day: number): TimelineItem[] => {
+  // Move getGroupTitle above getSessionGroups
+  const getGroupTitle = (startTime: string): string => {
+    const startHour = parseInt(startTime.split(':')[0]);
+    
+    if (startHour < 12) {
+      return 'Morning Sessions';
+    } else if (startHour < 17) {
+      return 'Afternoon Sessions';
+    } else {
+      return 'Evening Sessions';
+    }
+  };
+
+  // Wrap getSessionGroups in useCallback
+  const getSessionGroups = useCallback((day: number): TimelineItem[] => {
     const daySessions = getSessionsForDay(day);
     // Sort sessions by start time
     const sortedSessions = daySessions.sort((a, b) => a.start_time.localeCompare(b.start_time));
@@ -229,19 +278,7 @@ function SessionsPageContent() {
       });
     }
     return result;
-  };
-
-  const getGroupTitle = (startTime: string): string => {
-    const startHour = parseInt(startTime.split(':')[0]);
-    
-    if (startHour < 12) {
-      return 'Morning Sessions';
-    } else if (startHour < 17) {
-      return 'Afternoon Sessions';
-    } else {
-      return 'Evening Sessions';
-    }
-  };
+  }, [collapsedGroups, getSessionsForDay, getGroupTitle]);
 
   const toggleGroupCollapse = (groupId: string) => {
     setCollapsedGroups(prev => {
@@ -285,8 +322,8 @@ function SessionsPageContent() {
     setHasManuallyNavigated(true);
   };
 
-  // Function to scroll to current session
-  const scrollToCurrentSession = () => {
+  // Wrap scrollToCurrentSession in useCallback
+  const scrollToCurrentSession = useCallback(() => {
     if (!sessionsContainerRef.current || !currentSession) return;
     
     // Find the session card element
@@ -309,10 +346,10 @@ function SessionsPageContent() {
         });
       }, 100);
     }
-  };
+  }, [sessionsContainerRef, currentSession, sessions]);
 
-  // Function to scroll to a specific session by ID
-  const scrollToSession = (sessionId: string) => {
+  // Wrap scrollToSession in useCallback
+  const scrollToSession = useCallback((sessionId: string) => {
     if (!sessionsContainerRef.current) return;
     
     // Find the session card element
@@ -343,7 +380,7 @@ function SessionsPageContent() {
         }, 200);
       }
     }
-  };
+  }, [sessionsContainerRef, sessions, setActiveDay, setActiveTab, setHasManuallyNavigated]);
 
   // Handle scrollTo URL parameter
   useEffect(() => {
@@ -351,14 +388,14 @@ function SessionsPageContent() {
     if (scrollToId && !loading && sessions.length > 0) {
       scrollToSession(scrollToId);
     }
-  }, [searchParams, loading, sessions]);
+  }, [searchParams, loading, sessions, scrollToSession]);
 
   // Scroll to current session when it changes
   useEffect(() => {
     if (currentSession && activeTab === 'sessions' && activeDay === currentSession.day) {
       scrollToCurrentSession();
     }
-  }, [currentSession, activeTab, activeDay]);
+  }, [currentSession, activeTab, activeDay, scrollToCurrentSession]);
 
   // Auto-scroll to current session when page loads (if on current day)
   useEffect(() => {
@@ -368,7 +405,7 @@ function SessionsPageContent() {
         setTimeout(scrollToCurrentSession, 500); // Small delay to ensure DOM is ready
       }
     }
-  }, [loading, sessions, activeTab, activeDay, currentTime, currentSession]);
+  }, [loading, sessions, activeTab, activeDay, currentTime, currentSession, scrollToCurrentSession]);
 
   // Auto-expand groups containing current session
   useEffect(() => {
@@ -392,7 +429,7 @@ function SessionsPageContent() {
         });
       }
     }
-  }, [currentSession, activeTab, activeDay, currentTime, sessions]);
+  }, [currentSession, activeTab, activeDay, currentTime, sessions, getSessionGroups]);
 
   if (!user) {
     return <LoadingScreen />;
@@ -508,7 +545,7 @@ function SessionsPageContent() {
       </div>
 
       {/* Main content */}
-      <div className="relative z-10 flex flex-col w-full max-w-4xl mx-auto flex-1 min-h-0">
+      <div className="relative z-10 flex flex-col w-full max-w-4xl mx-auto flex-1 min-h-0 sessions-content">
         {/* Day Tabs */}
         <div className="flex bg-gray-100 rounded-lg p-1 mb-6 flex-shrink-0 relative">
           {/* Animated sliding indicator */}
@@ -746,6 +783,14 @@ function SessionsPageContent() {
           onClose={closeSessionModal}
         />
       )}
+
+      {/* Tour Component */}
+      <AppTour
+        isOpen={isTourOpen}
+        onClose={handleTourClose}
+        onComplete={handleTourComplete}
+        isFirstTime={isFirstTimeUser}
+      />
     </div>
   );
 }

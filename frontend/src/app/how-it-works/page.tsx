@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import MenuDropdown from "@/components/MenuDropdown";
+import AppTour from "@/components/AppTour";
 import { AdminStatus } from "@/utils/admin";
 import { User } from "@/utils/types";
 import { createMenuOptions } from "@/utils/menu";
@@ -9,6 +10,7 @@ import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth
 import { LoadingScreen } from "@/utils/ui";
 import BackgroundImage from '@/components/BackgroundImage';
 import Logo from '@/components/Logo';
+import { markTourCompleted, markFirstTimeTourSeen } from '@/utils/tour';
 
 const BOOTH_TRACKING_STEPS = [
   "Visit each booth at the conference to discover amazing activities and services.",
@@ -28,6 +30,9 @@ const HowItWorksPage: React.FC = () => {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [adminStatus, setAdminStatus] = useState<AdminStatus | null>(null);
+  
+  // Tour state
+  const [isTourOpen, setIsTourOpen] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -43,6 +48,20 @@ const HowItWorksPage: React.FC = () => {
   }, [router]);
 
   const handleLogoutClick = () => handleLogout(router);
+
+  const handleStartTour = () => {
+    setIsTourOpen(true);
+  };
+
+  const handleTourComplete = () => {
+    markTourCompleted();
+    setIsTourOpen(false);
+  };
+
+  const handleTourClose = () => {
+    markFirstTimeTourSeen();
+    setIsTourOpen(false);
+  };
 
   const menuOptions = createMenuOptions({
     currentPage: 'how-it-works',
@@ -63,7 +82,7 @@ const HowItWorksPage: React.FC = () => {
         {/* Top row: Logo and Menu */}
         <div className="flex justify-between items-center mb-4">
           <Logo />
-          <MenuDropdown options={menuOptions} />
+          <MenuDropdown options={menuOptions} userName={`${user.firstName} ${user.lastName}`} />
         </div>
         
         {/* Bottom row: Title and subtitle */}
@@ -79,6 +98,20 @@ const HowItWorksPage: React.FC = () => {
 
       {/* Main content */}
       <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-2xl mx-auto">
+        {/* Tour button */}
+        <div className="w-full mb-6">
+          <button
+            onClick={handleStartTour}
+            className="w-full bg-[#fba758] text-white px-6 py-4 rounded-xl font-semibold hover:bg-[#fba758]/90 transition-colors shadow-lg flex items-center justify-center gap-3"
+          >
+            <span className="text-xl">🎯</span>
+            <span>Take Interactive Tour</span>
+          </button>
+          <p className="text-sm text-gray-600 text-center mt-2">
+            Start from the home page and explore all features step-by-step
+          </p>
+        </div>
+
         {/* Help content */}
         <div className="space-y-8 w-full">
           {/* Booth Tracking Section */}
@@ -151,6 +184,14 @@ const HowItWorksPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Tour Component */}
+      <AppTour
+        isOpen={isTourOpen}
+        onClose={handleTourClose}
+        onComplete={handleTourComplete}
+        isFirstTime={false}
+      />
     </div>
   );
 };

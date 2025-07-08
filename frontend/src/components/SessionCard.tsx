@@ -21,7 +21,7 @@ export default function SessionCard({ session, onClick, isCurrent = false, isPas
   return (
     <div 
       data-session-id={session.id}
-      className={`p-4 rounded-lg border-l-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
+      className={`session-card p-4 rounded-lg border-l-4 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
         isCurrent
           ? 'bg-[#f97316]/10 border-[#f97316] shadow-lg ring-2 ring-[#f97316]/20'
           : isPast

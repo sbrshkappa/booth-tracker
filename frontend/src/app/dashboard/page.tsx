@@ -11,6 +11,8 @@ import { sendVisitNotesEmail } from "@/utils/email";
 import { LoadingScreen, LoadingSpinner } from "@/utils/ui";
 import BackgroundImage from '@/components/BackgroundImage';
 import Logo from '@/components/Logo';
+import AppTour from '@/components/AppTour';
+import { shouldShowFirstTimeTour, markTourCompleted, markFirstTimeTourSeen } from '@/utils/tour';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -27,7 +29,10 @@ export default function Dashboard() {
   const [isEmailLoading, setIsEmailLoading] = useState(false);
   const [emailSuccess, setEmailSuccess] = useState("");
   const [emailError, setEmailError] = useState("");
-
+  
+  // Tour state (only for first-time users)
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
 
   // Check if user has completed all booths
   const isCompleted = progress && progress.visited > 0 && progress.visited === progress.total;
@@ -40,6 +45,19 @@ export default function Dashboard() {
       setUser(userObj);
       // Check admin status
       checkAdminStatus(userObj.email).then(setAdminStatus);
+      
+      // Check if tour should continue (if user navigated here during tour)
+      const shouldShowTour = shouldShowFirstTimeTour();
+      setIsFirstTimeUser(shouldShowTour);
+      
+      // If this is a first-time user and we're on dashboard, continue the tour
+      if (shouldShowTour) {
+        // Check if we're in the middle of a tour (by checking URL params or session storage)
+        const isInTour = sessionStorage.getItem('tour-in-progress') === 'true';
+        if (isInTour) {
+          setIsTourOpen(true);
+        }
+      }
     }
     if (progressData) setProgress(JSON.parse(progressData));
   }, []);
@@ -159,6 +177,15 @@ export default function Dashboard() {
 
   const handleLogoutClick = () => handleLogout(router);
 
+  const handleTourComplete = () => {
+    if (isFirstTimeUser) {
+      markTourCompleted();
+      setIsFirstTimeUser(false);
+    } else {
+      markFirstTimeTourSeen();
+    }
+  };
+
   const menuOptions = createMenuOptions({
     currentPage: 'dashboard',
     router,
@@ -261,9 +288,11 @@ export default function Dashboard() {
       </div>
 
       {/* Main content fills available space */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-md mx-auto dashboard-content">
         {/* Progress Circle */}
-        {renderProgressCircle()}
+        <div className="progress-circle">
+          {renderProgressCircle()}
+        </div>
         
         {isCompleted ? (
           /* Completion Message */
@@ -321,7 +350,7 @@ export default function Dashboard() {
             {/* Instruction */}
             <div className="mt-8 mb-2 text-lg text-center text-gray-900 font-medium">Visit a booth, get a phrase</div>
             {/* Phrase Input */}
-            <form onSubmit={handleSubmitPhrase} className="w-full flex flex-col items-center gap-4 mb-4">
+            <form onSubmit={handleSubmitPhrase} className="w-full flex flex-col items-center gap-4 mb-4 phrase-input">
               <input
                 className="w-full rounded-xl border-2 border-[#fba758] px-4 py-3 text-base text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#fba758]"
                 type="text"
@@ -373,6 +402,20 @@ export default function Dashboard() {
           </>
         )}
       </div>
+
+      {/* Tour Component */}
+      <AppTour
+        isOpen={isTourOpen}
+        onClose={() => {
+          setIsTourOpen(false);
+          if (isFirstTimeUser) {
+            markFirstTimeTourSeen();
+            setIsFirstTimeUser(false);
+          }
+        }}
+        onComplete={handleTourComplete}
+        isFirstTime={isFirstTimeUser}
+      />
     </div>
   );
 }

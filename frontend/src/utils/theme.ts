@@ -126,6 +126,48 @@ export const theme = {
   },
 };
 
+// Dark mode color overrides
+export const darkTheme = {
+  // Dark mode neutral colors
+  neutral: {
+    50: '#171717',   // Darkest gray (was lightest)
+    100: '#262626',  // Very dark gray
+    200: '#404040',  // Deep gray
+    300: '#525252',  // Dark gray
+    400: '#737373',  // Primary gray
+    500: '#a3a3a3',  // Gray
+    600: '#d4d4d4',  // Medium gray
+    700: '#e5e5e5',  // Soft gray
+    800: '#f5f5f5',  // Light gray
+    900: '#fafafa',  // Very light gray (was darkest)
+  },
+
+  // Dark mode semantic colors
+  success: {
+    50: '#14532d',
+    500: '#22c55e',
+    600: '#4ade80',
+  },
+
+  warning: {
+    50: '#78350f',
+    500: '#f59e0b',
+    600: '#fbbf24',
+  },
+
+  error: {
+    50: '#7c2d12',
+    500: '#ef4444',
+    600: '#f87171',
+  },
+
+  info: {
+    50: '#1e3a8a',
+    500: '#3b82f6',
+    600: '#60a5fa',
+  },
+};
+
 // Color combinations for different UI elements
 export const colorCombinations = {
   // Primary gradient (orange to pink)
@@ -145,6 +187,27 @@ export const colorCombinations = {
   
   // Card gradients
   cardGradient: 'linear-gradient(135deg, #ffffff 0%, #fafafa 100%)',
+};
+
+// Dark mode color combinations
+export const darkColorCombinations = {
+  // Primary gradient (orange to pink) - adjusted for dark mode
+  primaryGradient: 'linear-gradient(135deg, #f97316 0%, #ec4899 100%)',
+  
+  // Secondary gradient (yellow to orange) - adjusted for dark mode
+  secondaryGradient: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)',
+  
+  // Accent gradient (blue to purple) - adjusted for dark mode
+  accentGradient: 'linear-gradient(135deg, #3b82f6 0%, #a855f7 100%)',
+  
+  // Success gradient (green) - adjusted for dark mode
+  successGradient: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+  
+  // Background gradients for dark mode
+  backgroundGradient: 'linear-gradient(135deg, #0a0a0a 0%, #171717 50%, #1e1e1e 100%)',
+  
+  // Card gradients for dark mode
+  cardGradient: 'linear-gradient(135deg, #262626 0%, #1e1e1e 100%)',
 };
 
 // Component-specific color schemes
@@ -192,6 +255,58 @@ export const componentColors = {
   // Progress indicators
   progress: {
     track: theme.neutral[200],
+    fill: theme.primary[500],
+    success: theme.success[500],
+    warning: theme.warning[500],
+    error: theme.error[500],
+  },
+};
+
+// Dark mode component colors
+export const darkComponentColors = {
+  // Buttons
+  button: {
+    primary: {
+      bg: theme.primary[500],
+      hover: theme.primary[600],
+      text: 'white',
+    },
+    secondary: {
+      bg: theme.secondary[500],
+      hover: theme.secondary[600],
+      text: 'white',
+    },
+    accent: {
+      bg: theme.accent[500],
+      hover: theme.accent[600],
+      text: 'white',
+    },
+    outline: {
+      bg: 'transparent',
+      border: theme.primary[500],
+      text: theme.primary[500],
+      hover: darkTheme.neutral[800],
+    },
+  },
+
+  // Cards
+  card: {
+    bg: darkTheme.neutral[100],
+    border: darkTheme.neutral[200],
+    shadow: '0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2)',
+  },
+
+  // Inputs
+  input: {
+    bg: darkTheme.neutral[100],
+    border: darkTheme.neutral[200],
+    focus: theme.primary[500],
+    placeholder: darkTheme.neutral[400],
+  },
+
+  // Progress indicators
+  progress: {
+    track: darkTheme.neutral[200],
     fill: theme.primary[500],
     success: theme.success[500],
     warning: theme.warning[500],

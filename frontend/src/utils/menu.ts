@@ -26,44 +26,46 @@ export const createMenuOptions = (config: MenuConfig): MenuOption[] => {
     {
       id: 'home',
       label: 'Home',
-      emoji: '',
+      emoji: '🏠',
       action: currentPage === 'home' ? () => {} : () => router.push('/home'),
       isCurrent: currentPage === 'home',
     },
     {
       id: 'sessions',
       label: 'Sessions',
-      emoji: '',
+      emoji: '📅',
       action: currentPage === 'sessions' ? () => {} : () => router.push('/sessions'),
       isCurrent: currentPage === 'sessions',
     },
     {
       id: 'dashboard',
       label: 'Booth Tracker',
-      emoji: '',
+      emoji: '🎯',
       action: currentPage === 'dashboard' ? () => {} : () => router.push('/dashboard'),
       isCurrent: currentPage === 'dashboard',
     },
     {
       id: 'history',
       label: 'My Journey',
-      emoji: '',
+      emoji: '📊',
       action: currentPage === 'history' ? () => {} : () => router.push('/history'),
       isCurrent: currentPage === 'history',
     },
-    {
-      id: 'how-it-works',
-      label: 'Help',
-      emoji: '',
-      action: currentPage === 'how-it-works' ? () => {} : () => router.push('/how-it-works'),
-      isCurrent: currentPage === 'how-it-works',
-    },
   ];
+
+  // Help option - navigates to how-it-works page
+  const helpOption: MenuOption = {
+    id: 'help',
+    label: 'Help & Tour',
+    emoji: '❓',
+    action: currentPage === 'how-it-works' ? () => {} : () => router.push('/how-it-works'),
+    isCurrent: currentPage === 'how-it-works',
+  };
 
   const adminOption: MenuOption[] = adminStatus?.isAdmin ? [{
     id: 'admin',
     label: 'Admin Panel',
-    emoji: '',
+    emoji: '⚙️',
     action: currentPage === 'admin' ? () => {} : () => router.push('/admin'),
     isCurrent: currentPage === 'admin',
     isAdmin: true,
@@ -72,7 +74,7 @@ export const createMenuOptions = (config: MenuConfig): MenuOption[] => {
   const logoutOption: MenuOption = {
     id: 'logout',
     label: 'Logout',
-    emoji: '',
+    emoji: '🚪',
     action: handleLogout,
     isDanger: true,
   };
@@ -80,10 +82,10 @@ export const createMenuOptions = (config: MenuConfig): MenuOption[] => {
   const contactOption: MenuOption = {
     id: 'contact',
     label: 'Contact Us',
-    emoji: '',
+    emoji: '📧',
     action: currentPage === 'contact' ? () => {} : () => router.push('/contact'),
     isCurrent: currentPage === 'contact',
   };
 
-  return [...baseOptions, contactOption, ...adminOption, logoutOption];
+  return [...baseOptions, helpOption, contactOption, ...adminOption, logoutOption];
 }; 

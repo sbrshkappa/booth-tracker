@@ -11,10 +11,12 @@ import MenuDropdown from '@/components/MenuDropdown';
 import SessionCard from '@/components/SessionCard';
 import BackgroundImage from '@/components/BackgroundImage';
 import Logo from '@/components/Logo';
+import AppTour from '@/components/AppTour';
 import { 
   getCurrentSession,
   getTestTime
 } from '@/utils/conference';
+import { shouldShowFirstTimeTour, markTourCompleted, markFirstTimeTourSeen } from '@/utils/tour';
 
 // Conference start date - July 11, 2025 at 9:00 AM
 const CONFERENCE_START = new Date('2025-07-11T09:00:00');
@@ -28,6 +30,10 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [currentSession, setCurrentSession] = useState<Session | null>(null);
+  
+  // Tour state (only for first-time users)
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [isFirstTimeUser, setIsFirstTimeUser] = useState(false);
 
   // Check if conference has started
   const isConferenceStarted = currentTime >= CONFERENCE_START;
@@ -47,8 +53,6 @@ export default function HomePage() {
 
   const countdown = getCountdown();
 
-
-
   useEffect(() => {
     const checkAuth = async () => {
       const userData = getUserFromStorage();
@@ -57,6 +61,17 @@ export default function HomePage() {
       if (userData) {
         const adminData = await checkAdminStatus(userData.email);
         setAdminStatus(adminData);
+        
+        // Check if this is a first-time user
+        const shouldShowTour = shouldShowFirstTimeTour();
+        setIsFirstTimeUser(shouldShowTour);
+        
+        // Auto-start tour for first-time users after a short delay
+        if (shouldShowTour) {
+          setTimeout(() => {
+            setIsTourOpen(true);
+          }, 1000);
+        }
       }
     };
 
@@ -104,6 +119,23 @@ export default function HomePage() {
   }, []);
 
   const handleLogoutClick = () => handleLogout(router);
+
+  const handleTourComplete = () => {
+    if (isFirstTimeUser) {
+      markTourCompleted();
+      setIsFirstTimeUser(false);
+    } else {
+      markFirstTimeTourSeen();
+    }
+  };
+
+  const handleTourClose = () => {
+    setIsTourOpen(false);
+    if (isFirstTimeUser) {
+      markFirstTimeTourSeen();
+      setIsFirstTimeUser(false);
+    }
+  };
 
   const menuOptions = createMenuOptions({
     currentPage: 'home',
@@ -207,7 +239,7 @@ export default function HomePage() {
       <div className="relative z-10 flex flex-col w-full max-w-4xl mx-auto flex-1">
         {!isConferenceStarted && countdown ? (
           /* Countdown Timer */
-          <div className="text-center py-12">
+          <div className="text-center py-12 countdown-timer">
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-lg border border-gray-100">
               <h2 className="text-2xl font-bold text-gray-800 mb-6">
                 Conference Starts In
@@ -237,7 +269,7 @@ export default function HomePage() {
           </div>
         ) : currentSession ? (
           /* Current Session Card */
-          <div className="space-y-6">
+          <div className="space-y-6 current-session">
             <div className="text-center mb-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-2">
                 Currently Happening
@@ -283,6 +315,16 @@ export default function HomePage() {
           </div>
         )}
       </div>
+
+      {/* Tour Component */}
+      {isTourOpen && (
+        <AppTour
+          isOpen={isTourOpen}
+          onClose={handleTourClose}
+          onComplete={handleTourComplete}
+          isFirstTime={isFirstTimeUser}
+        />
+      )}
     </div>
   );
 } 
