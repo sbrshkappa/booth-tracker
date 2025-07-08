@@ -20,6 +20,7 @@ export interface SessionFormData {
   is_children_friendly: boolean;
   requires_registration: boolean;
   tags: string[];
+  parent_session_id?: number | null;
 }
 
 const SESSION_TYPES = [
@@ -42,7 +43,8 @@ export default function SessionForm({ onSubmit, onCancel, isLoading = false, ini
     capacity: undefined,
     is_children_friendly: false,
     requires_registration: false,
-    tags: []
+    tags: [],
+    parent_session_id: undefined,
   });
 
   const [tagInput, setTagInput] = useState('');
@@ -222,6 +224,26 @@ export default function SessionForm({ onSubmit, onCancel, isLoading = false, ini
             onChange={handleInputChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
             placeholder="Specific room"
+          />
+        </div>
+
+        {/* Parent Session ID */}
+        <div>
+          <label htmlFor="parent_session_id" className="block text-sm font-medium text-gray-700 mb-2">
+            Parent Session ID
+          </label>
+          <input
+            type="number"
+            id="parent_session_id"
+            name="parent_session_id"
+            value={formData.parent_session_id ?? ''}
+            onChange={e => setFormData(prev => ({
+              ...prev,
+              parent_session_id: e.target.value === '' ? null : parseInt(e.target.value, 10)
+            }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            placeholder="Enter parent session ID (optional)"
+            min="1"
           />
         </div>
       </div>

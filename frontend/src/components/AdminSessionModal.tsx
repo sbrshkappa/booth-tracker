@@ -70,7 +70,8 @@ export default function AdminSessionModal({
                 capacity: session.capacity || undefined,
                 is_children_friendly: session.is_children_friendly,
                 requires_registration: session.requires_registration,
-                tags: session.tags || []
+                tags: session.tags || [],
+                parent_session_id: session.parent_session_id ?? null,
               }}
             />
           ) : (

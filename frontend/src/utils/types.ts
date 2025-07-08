@@ -115,4 +115,5 @@ export interface SessionFormData {
   is_children_friendly: boolean;
   requires_registration: boolean;
   tags: string[];
+  parent_session_id?: number | null;
 } 

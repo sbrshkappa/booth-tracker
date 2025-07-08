@@ -32,7 +32,8 @@ export default function SessionFormModal({
     capacity: session?.capacity || undefined,
     is_children_friendly: session?.is_children_friendly || false,
     requires_registration: session?.requires_registration || false,
-    tags: session?.tags || []
+    tags: session?.tags || [],
+    parent_session_id: session?.parent_session_id ?? null,
   })
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
@@ -71,7 +72,7 @@ export default function SessionFormModal({
     onSubmit(formData)
   }
 
-  const handleInputChange = (field: keyof SessionFormData, value: string | number | boolean | undefined) => {
+  const handleInputChange = (field: keyof SessionFormData, value: string | number | boolean | null | undefined) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
     if (errors[field]) {
@@ -265,6 +266,24 @@ export default function SessionFormModal({
                 min="1"
                 disabled={isLoading}
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="parent_session_id" className="block text-sm font-medium text-gray-700 mb-1">
+                  Parent Session ID
+                </label>
+                <input
+                  type="number"
+                  id="parent_session_id"
+                  value={formData.parent_session_id ?? ''}
+                  onChange={e => handleInputChange('parent_session_id', e.target.value === '' ? null : parseInt(e.target.value, 10))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                  placeholder="Enter parent session ID (optional)"
+                  min="1"
+                  disabled={isLoading}
+                />
+              </div>
             </div>
 
             <div className="flex items-center gap-6">
