@@ -88,10 +88,17 @@ export const resetTourState = () => {
   }
 };
 
+declare global {
+  interface Window {
+    resetTour: () => void;
+    toggleTourTestMode: () => void;
+  }
+}
+
 // Development helper - expose reset function globally for easy testing
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  (window as any).resetTour = resetTourState;
-  (window as any).toggleTourTestMode = () => {
+  window.resetTour = resetTourState;
+  window.toggleTourTestMode = () => {
     const current = localStorage.getItem('force-tour-test-mode');
     if (current === 'true') {
       localStorage.removeItem('force-tour-test-mode');
