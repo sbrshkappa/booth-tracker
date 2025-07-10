@@ -105,13 +105,14 @@ export default function Home() {
         <div className="flex flex-col items-center mb-8 w-full">
           <div className="mb-4">
             <Logo 
-              className="w-auto h-16 sm:h-20 object-contain"
-              width={200}
-              height={100}
+              className="w-auto h-20 sm:h-28 object-contain"
+              width={280}
+              height={140}
               showNavigation={false}
             />
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-black mb-1 sm:mb-2 text-center">Conference Companion</h1>
+          <p className="text-sm sm:text-base text-gray-600 text-center max-w-md">App for the Sri Sathya Sai National Conference 2025</p>
         </div>
         <form onSubmit={handleSubmit} className="w-full max-w-[95vw] sm:max-w-md flex flex-col gap-4 mb-4">
           <TextInput

@@ -226,8 +226,8 @@ export default function HomePage() {
         {/* SSSIO Logo */}
         <div className="text-center mb-8">
           <Image 
-            src="/assets/ssio-logo-english.png" 
-            alt="SSSIO Logo" 
+            src="/assets/NC-Logo-basic.png" 
+            alt="SSSIO National Conference Logo" 
             className="h-32 w-auto mx-auto"
             width={128}
             height={128}
