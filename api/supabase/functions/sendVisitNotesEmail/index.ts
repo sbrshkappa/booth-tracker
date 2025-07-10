@@ -488,13 +488,13 @@ async function sendEmail(toEmail: string, htmlContent: string, subject: string):
         'Authorization': `Bearer ${RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        from: 'SSSIO USA <onboarding@resend.dev>',
-        to: [toEmail],
-        subject: subject,
-        html: htmlContent,
-        text: plainTextContent, // Add plain text fallback
-      }),
+              body: JSON.stringify({
+          from: 'Sri Sathya Sai International Organization - USA <no-reply@sathyasai.us>',
+          to: [toEmail],
+          subject: subject,
+          html: htmlContent,
+          text: plainTextContent, // Add plain text fallback
+        }),
     })
 
     if (!response.ok) {

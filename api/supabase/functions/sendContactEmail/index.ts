@@ -97,14 +97,14 @@ async function sendContactEmail(name: string, email: string, message: string, at
         'Authorization': `Bearer ${RESEND_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        from: 'SSSIO Conference Companion <onboarding@resend.dev>',
-        to: ['2025-nc-core-group@sathyasai.us'], // Replace with actual organizer email
-        reply_to: email,
-        subject: `Contact Form Submission from ${name}`,
-        html: htmlContent,
-        text: plainTextContent,
-      }),
+              body: JSON.stringify({
+          from: 'Sri Sathya Sai International Organization - USA <no-reply@sathyasai.us>',
+          to: ['2025-nc-core-group@sathyasai.us'], // Replace with actual organizer email
+          reply_to: email,
+          subject: `Contact Form Submission from ${name}`,
+          html: htmlContent,
+          text: plainTextContent,
+        }),
     })
 
     if (!response.ok) {
