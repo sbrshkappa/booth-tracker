@@ -158,7 +158,7 @@ export default function ContactPage() {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#fba758] focus:border-transparent transition-colors"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#fba758] focus:border-transparent transition-colors text-gray-900 bg-white"
                 placeholder="Your full name"
                 required
               />
@@ -175,7 +175,7 @@ export default function ContactPage() {
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#fba758] focus:border-transparent transition-colors"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#fba758] focus:border-transparent transition-colors text-gray-900 bg-white"
                 placeholder="your.email@example.com"
                 required
               />
@@ -192,7 +192,7 @@ export default function ContactPage() {
                 value={formData.message}
                 onChange={handleInputChange}
                 rows={6}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#fba758] focus:border-transparent transition-colors resize-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#fba758] focus:border-transparent transition-colors resize-none text-gray-900 bg-white"
                 placeholder="Tell us about your question, feedback, or concern..."
                 required
               />

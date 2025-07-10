@@ -75,10 +75,10 @@ const HowItWorksPage: React.FC = () => {
   }
 
   return (
-    <div className="h-screen bg-white flex flex-col px-4 py-6 relative overflow-hidden">
+    <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-auto">
       <BackgroundImage />
-      {/* Header with title and menu */}
-      <div className="mb-6">
+      {/* Header with title and menu - Fixed at top */}
+      <div className="mb-6 flex-shrink-0">
         {/* Top row: Logo and Menu */}
         <div className="flex justify-between items-center mb-4">
           <Logo />
@@ -96,8 +96,8 @@ const HowItWorksPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center w-full max-w-2xl mx-auto">
+      {/* Main content - Scrollable */}
+      <div className="relative z-10 flex-1 flex flex-col w-full max-w-2xl mx-auto">
         {/* Tour button */}
         <div className="w-full mb-6">
           <button
