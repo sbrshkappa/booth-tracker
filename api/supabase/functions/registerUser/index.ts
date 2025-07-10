@@ -41,7 +41,36 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_ANON_KEY")!
   )
 
-  const userData: any = { email, first_name, last_name };
+  // Check for existing user with case-insensitive email
+  const { data: existingUser, error: checkError } = await supabase
+    .from("users")
+    .select("email")
+    .ilike("email", email)
+    .single()
+
+  if (checkError && checkError.code !== 'PGRST116') { // PGRST116 is "not found"
+    console.error("Error checking existing user:", checkError)
+    return new Response(JSON.stringify({ error: "Database error occurred" }), { 
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  }
+
+  if (existingUser) {
+    return new Response(JSON.stringify({ 
+      error: `A user with the email address "${existingUser.email}" already exists. Please login instead.` 
+    }), { 
+      status: 409,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    })
+  }
+
+  const userData: any = { 
+    email: email.toLowerCase(), // Store email in lowercase
+    first_name, 
+    last_name 
+  };
+  
   if (badge_number) {
     userData.badge_number = badge_number;
   }
