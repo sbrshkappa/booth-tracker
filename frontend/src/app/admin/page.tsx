@@ -42,6 +42,7 @@ export default function AdminPage() {
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
   const [isEditingSession, setIsEditingSession] = useState(false);
   const [isSessionLoading, setIsSessionLoading] = useState(false);
+  const [sessionTypeFilter, setSessionTypeFilter] = useState<string>('all');
   
   // Users state
   const [users, setUsers] = useState<UserWithAdmin[]>([]);
@@ -712,12 +713,52 @@ export default function AdminPage() {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold text-gray-800">All Sessions</h3>
                 <div className="flex items-center gap-2">
+                  {/* Session Type Filter */}
+                  <select
+                    value={sessionTypeFilter}
+                    onChange={(e) => setSessionTypeFilter(e.target.value)}
+                    className="px-2 py-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-gray-900 text-base max-h-32 overflow-y-auto"
+                    size={1}
+                  >
+                    <option value="all">All Types</option>
+                    <option value="workshop">Workshop</option>
+                    <option value="keynote">Keynote</option>
+                    <option value="panel">Panel</option>
+                    <option value="networking">Networking</option>
+                    <option value="talk">Talk</option>
+                    <option value="q&a">Q&A</option>
+                    <option value="opening_ceremony">Opening Ceremony</option>
+                    <option value="closing_ceremony">Closing Ceremony</option>
+                    <option value="award_ceremony">Award Ceremony</option>
+                    <option value="devotional">Devotional</option>
+                    <option value="address">Address</option>
+                    <option value="welcome">Welcome</option>
+                    <option value="fireside_chat">Fireside Chat</option>
+                    <option value="interview">Interview</option>
+                    <option value="debate">Debate</option>
+                    <option value="roundtable">Roundtable</option>
+                    <option value="demo">Demo</option>
+                    <option value="poster_session">Poster Session</option>
+                    <option value="performance">Performance</option>
+                    <option value="video">Video</option>
+                    <option value="exhibition">Exhibition</option>
+                    <option value="wellness">Wellness</option>
+                    <option value="registration">Registration</option>
+                    <option value="lunch">Lunch</option>
+                    <option value="dinner">Dinner</option>
+                    <option value="break">Break</option>
+                  </select>
+                  
+                  {/* Create Session Button */}
                   <button
                     onClick={() => setShowSessionForm(true)}
-                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                    className="w-10 h-10 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center text-xl font-bold"
+                    title="Create Session"
                   >
-                    Create Session
+                    +
                   </button>
+                  
+                  {/* Refresh Button */}
                   <button
                     onClick={fetchSessions}
                     disabled={isLoadingSessions}
@@ -741,7 +782,9 @@ export default function AdminPage() {
               ) : (
                 <div className="h-full overflow-y-auto pr-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {sessions.map((session) => (
+                    {sessions
+                      .filter(session => sessionTypeFilter === 'all' || session.type === sessionTypeFilter)
+                      .map((session) => (
                       <div
                         key={session.id}
                         onClick={() => handleSessionCardClick(session)}
@@ -775,6 +818,15 @@ export default function AdminPage() {
                       </div>
                     ))}
                   </div>
+                  
+                  {/* Show message if no sessions match filter */}
+                  {sessions.filter(session => sessionTypeFilter === 'all' || session.type === sessionTypeFilter).length === 0 && (
+                    <div className="text-center py-8">
+                      <div className="text-4xl mb-4">🔍</div>
+                      <p className="text-gray-600">No sessions found for the selected type.</p>
+                      <p className="text-sm text-gray-500 mt-2">Try changing the filter or create a new session.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

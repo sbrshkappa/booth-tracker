@@ -12,6 +12,13 @@ import BackgroundImage from '@/components/BackgroundImage';
 import Logo from '@/components/Logo';
 import { markTourCompleted, markFirstTimeTourSeen } from '@/utils/tour';
 
+const SESSIONS_INFO = [
+  "View the complete 3-day conference schedule with session times and details.",
+  "Find sessions by day, type, or location to plan your conference experience.",
+  "Discover children's festival activities running parallel to main sessions.",
+  "Check session capacity and registration requirements before attending."
+];
+
 const BOOTH_TRACKING_STEPS = [
   "Visit each booth at the conference to discover amazing activities and services.",
   "Collect secret phrases from each booth to unlock your journey progress.",
@@ -19,11 +26,10 @@ const BOOTH_TRACKING_STEPS = [
   "Complete all booths to experience the full conference impact—and qualify for prizes!"
 ];
 
-const SESSIONS_INFO = [
-  "View the complete 3-day conference schedule with session times and details.",
-  "Find sessions by day, type, or location to plan your conference experience.",
-  "Discover children's festival activities running parallel to main sessions.",
-  "Check session capacity and registration requirements before attending."
+const PARKING_INFO = [
+  "ALL guests, including those with a TOLLTAG: Enter DFW Airport Toll Plaza through lanes marked \"TICKET ONLY\".",
+  "Pull a ticket and provide to the hotel attendant for validation.",
+  "DO NOT ENTER through lanes marked TollTag. Otherwise, your TollTag will be charged and you will be responsible for the daily parking rate."
 ];
 
 const HowItWorksPage: React.FC = () => {
@@ -33,6 +39,21 @@ const HowItWorksPage: React.FC = () => {
   
   // Tour state
   const [isTourOpen, setIsTourOpen] = useState(false);
+
+  // Collapsible sections state
+  const [expandedSections, setExpandedSections] = useState({
+    sessions: true,
+    boothTracker: true,
+    parking: true,
+    proTips: true
+  });
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
 
   useEffect(() => {
     // Check if user is logged in
@@ -113,61 +134,131 @@ const HowItWorksPage: React.FC = () => {
         </div>
 
         {/* Help content */}
-        <div className="space-y-8 w-full">
-          {/* Booth Tracking Section */}
-          <div className="bg-white/80 rounded-xl p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-[#fba758] mb-6">
-              How to Track Your Booth Visits
-            </h2>
-            <div className="space-y-4">
-              {BOOTH_TRACKING_STEPS.map((step, index) => (
-                <div key={index} className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 bg-[#fba758] text-white rounded-full flex items-center justify-center font-bold text-sm">
-                    {index + 1}
-                  </div>
-                  <p className="text-gray-700 leading-relaxed">
-                    {step}
-                  </p>
+        <div className="space-y-4 w-full">
+          {/* Sessions Section */}
+          <div className="bg-white/80 rounded-xl shadow-lg overflow-hidden">
+            <button
+              onClick={() => toggleSection('sessions')}
+              className="w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+            >
+              <h2 className="text-2xl font-bold text-[#fe84a0]">
+                How to Use Sessions Page
+              </h2>
+              <span className={`text-xl text-[#fe84a0] transition-transform duration-200 ${expandedSections.sessions ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </button>
+            {expandedSections.sessions && (
+              <div className="px-6 pb-6">
+                <div className="space-y-4">
+                  {SESSIONS_INFO.map((info, index) => (
+                    <div key={index} className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-6 h-6 bg-[#fe84a0] text-white rounded-full flex items-center justify-center font-bold text-xs">
+                        •
+                      </div>
+                      <p className="text-gray-700 leading-relaxed">
+                        {info}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
-          {/* Sessions Section */}
-          <div className="bg-white/80 rounded-xl p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-[#fe84a0] mb-6">
-              About Conference Sessions
-            </h2>
-            <div className="space-y-4">
-              {SESSIONS_INFO.map((info, index) => (
-                <div key={index} className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-6 h-6 bg-[#fe84a0] text-white rounded-full flex items-center justify-center font-bold text-xs">
-                    •
-                  </div>
-                  <p className="text-gray-700 leading-relaxed">
-                    {info}
-                  </p>
+          {/* Booth Tracking Section */}
+          <div className="bg-white/80 rounded-xl shadow-lg overflow-hidden">
+            <button
+              onClick={() => toggleSection('boothTracker')}
+              className="w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+            >
+              <h2 className="text-2xl font-bold text-[#fba758]">
+                How to Use Booth Tracker
+              </h2>
+              <span className={`text-xl text-[#fba758] transition-transform duration-200 ${expandedSections.boothTracker ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </button>
+            {expandedSections.boothTracker && (
+              <div className="px-6 pb-6">
+                <div className="space-y-4">
+                  {BOOTH_TRACKING_STEPS.map((step, index) => (
+                    <div key={index} className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-8 h-8 bg-[#fba758] text-white rounded-full flex items-center justify-center font-bold text-sm">
+                        {index + 1}
+                      </div>
+                      <p className="text-gray-700 leading-relaxed">
+                        {step}
+                      </p>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
+          </div>
+
+          {/* Parking Information */}
+          <div className="bg-white/80 rounded-xl shadow-lg overflow-hidden">
+            <button
+              onClick={() => toggleSection('parking')}
+              className="w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+            >
+              <h2 className="text-2xl font-bold text-[#fdbc3f]">
+                Parking Information
+              </h2>
+              <span className={`text-xl text-[#fdbc3f] transition-transform duration-200 ${expandedSections.parking ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </button>
+            {expandedSections.parking && (
+              <div className="px-6 pb-6">
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                  <h3 className="font-semibold text-blue-800 mb-2">Complimentary Self Parking:</h3>
+                </div>
+                <div className="space-y-4">
+                  {PARKING_INFO.map((info, index) => (
+                    <div key={index} className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-6 h-6 bg-[#fdbc3f] text-white rounded-full flex items-center justify-center font-bold text-xs">
+                        •
+                      </div>
+                      <p className="text-gray-700 leading-relaxed">
+                        {info}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Additional Tips */}
-          <div className="bg-white/80 rounded-xl p-8 shadow-lg">
-            <h2 className="text-2xl font-bold text-[#fdbc3f] mb-6">
-              Pro Tips
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <p className="text-gray-700">Use the hamburger menu to navigate between different sections of the app.</p>
+          <div className="bg-white/80 rounded-xl shadow-lg overflow-hidden">
+            <button
+              onClick={() => toggleSection('proTips')}
+              className="w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+            >
+              <h2 className="text-2xl font-bold text-[#fdbc3f]">
+                Pro Tips
+              </h2>
+              <span className={`text-xl text-[#fdbc3f] transition-transform duration-200 ${expandedSections.proTips ? 'rotate-180' : ''}`}>
+                ▼
+              </span>
+            </button>
+            {expandedSections.proTips && (
+              <div className="px-6 pb-6">
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <p className="text-gray-700">Use the hamburger menu to navigate between different sections of the app.</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <p className="text-gray-700">Email your visit summary from the History page to keep a record of your experience.</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <p className="text-gray-700">Rate booths and add notes to help you remember your favorite experiences.</p>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-start gap-3">
-                <p className="text-gray-700">Email your visit summary from the History page to keep a record of your experience.</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <p className="text-gray-700">Rate booths and add notes to help you remember your favorite experiences.</p>
-              </div>
-            </div>
+            )}
           </div>
         </div>
         
