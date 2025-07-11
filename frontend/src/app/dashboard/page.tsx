@@ -263,7 +263,7 @@ export default function Dashboard() {
   else headerText = `Only ${progress.remaining} more to go!`;
 
   return (
-    <div className="h-screen bg-white flex flex-col px-4 py-6 relative overflow-hidden">
+    <div className="min-h-screen bg-white flex flex-col px-4 py-6 relative overflow-auto">
       <BackgroundImage />
       {/* Header with title and menu */}
       <div className="mb-6">
