@@ -289,7 +289,7 @@ export default function MyJourneyPage() {
           >
             All ({stats.total})
           </button>
-          <button
+          {/* <button
             onClick={() => setActiveFilter('booths')}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${
               activeFilter === 'booths'
@@ -298,7 +298,7 @@ export default function MyJourneyPage() {
             }`}
           >
             Booths ({stats.booths})
-          </button>
+          </button> */}
           <button
             onClick={() => setActiveFilter('sessions')}
             className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 ${
@@ -332,7 +332,7 @@ export default function MyJourneyPage() {
                 </h3>
                 <p className="text-gray-600 mb-6">
                   {activeFilter === 'all' 
-                    ? "Visit booths and attend sessions to start building your conference journey. Your notes and ratings will appear here."
+                    ? "Attend sessions to start building your conference journey. Your notes and ratings will appear here."
                     : activeFilter === 'booths'
                     ? "Visit booths and leave notes or ratings to see them here."
                     : "Attend sessions and take notes or give ratings to see them here."
@@ -341,12 +341,12 @@ export default function MyJourneyPage() {
                 <div className="space-y-2">
                   {activeFilter === 'all' && (
                     <>
-                      <button
+                      {/* <button
                         onClick={() => router.push('/dashboard')}
                         className="w-full bg-[#fba758] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#fba758]/90 transition-colors"
                       >
                         Visit Booths
-                      </button>
+                      </button> */}
                       <button
                         onClick={() => router.push('/sessions')}
                         className="w-full bg-gray-100 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-200 transition-colors"
@@ -355,14 +355,14 @@ export default function MyJourneyPage() {
                       </button>
                     </>
                   )}
-                  {activeFilter === 'booths' && (
+                  {/* {activeFilter === 'booths' && (
                     <button
                       onClick={() => router.push('/dashboard')}
                       className="w-full bg-[#fba758] text-white px-4 py-2 rounded-lg font-medium hover:bg-[#fba758]/90 transition-colors"
                     >
                       Start Booth Hunting
                     </button>
-                  )}
+                  )} */}
                   {activeFilter === 'sessions' && (
                     <button
                       onClick={() => router.push('/sessions')}

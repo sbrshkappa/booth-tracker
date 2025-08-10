@@ -2,14 +2,14 @@ import { Session } from './types';
 
 // Conference date mapping
 export const CONFERENCE_DATES: Record<number, string> = {
-  1: '2025-07-11',
-  2: '2025-07-12', 
-  3: '2025-07-13'
+  1: '2025-09-05',
+  2: '2025-09-06', 
+  3: '2025-09-07'
 };
 
 // Test mode - set to true to enable testing with simulated times
 export const TEST_MODE = false;
-let TEST_TIME = new Date('2025-07-11T10:00:00'); // Default test time
+let TEST_TIME = new Date('2025-09-04T10:00:00'); // Default test time
 
 // Function to update test time (for testing purposes)
 export const updateTestTime = (newTime: Date) => {
@@ -113,8 +113,8 @@ export const isDayCurrent = (day: number, currentTime: Date) => {
   const timeToUse = TEST_MODE ? getCurrentTimeForTesting() : currentTime;
   
   // Only show current day if we're actually during the conference dates
-  const conferenceStart = new Date('2025-07-11T00:00:00');
-  const conferenceEnd = new Date('2025-07-13T23:59:59');
+  const conferenceStart = new Date('2025-09-05T00:00:00');
+  const conferenceEnd = new Date('2025-09-07T23:59:59');
   
   // If we're not during the conference dates, no day should be considered current
   if (timeToUse < conferenceStart || timeToUse > conferenceEnd) {

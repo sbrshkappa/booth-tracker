@@ -19,7 +19,7 @@ import {
 import { shouldShowFirstTimeTour, markTourCompleted, markFirstTimeTourSeen } from '@/utils/tour';
 
 // Conference start date - July 11, 2025 at 9:00 AM
-const CONFERENCE_START = new Date('2025-07-11T09:00:00');
+const CONFERENCE_START = new Date('2025-09-05T09:00:00');
 
 export default function HomePage() {
   const router = useRouter();

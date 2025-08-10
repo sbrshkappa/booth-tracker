@@ -37,13 +37,13 @@ export const createMenuOptions = (config: MenuConfig): MenuOption[] => {
       action: currentPage === 'sessions' ? () => {} : () => router.push('/sessions'),
       isCurrent: currentPage === 'sessions',
     },
-    {
-      id: 'dashboard',
-      label: 'Booth Tracker',
-      emoji: '🎯',
-      action: currentPage === 'dashboard' ? () => {} : () => router.push('/dashboard'),
-      isCurrent: currentPage === 'dashboard',
-    },
+    // {
+    //   id: 'dashboard',
+    //   label: 'Booth Tracker',
+    //   emoji: '🎯',
+    //   action: currentPage === 'dashboard' ? () => {} : () => router.push('/dashboard'),
+    //   isCurrent: currentPage === 'dashboard',
+    // },
     {
       id: 'history',
       label: 'My Journey',

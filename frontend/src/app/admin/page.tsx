@@ -25,13 +25,13 @@ export default function AdminPage() {
   const [user, setUser] = useState<User | null>(null);
   const [adminStatus, setAdminStatus] = useState<AdminStatus | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
-  const [showBoothForm, setShowBoothForm] = useState(false);
-  const [isCreatingBooth, setIsCreatingBooth] = useState(false);
-  const [boothMessage, setBoothMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [booths, setBooths] = useState<Booth[]>([]);
-  const [isLoadingBooths, setIsLoadingBooths] = useState(false);
-  const [selectedBooth, setSelectedBooth] = useState<Booth | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // const [showBoothForm, setShowBoothForm] = useState(false);
+  // const [isCreatingBooth, setIsCreatingBooth] = useState(false);
+  // const [boothMessage, setBoothMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  // const [booths, setBooths] = useState<Booth[]>([]);
+  // const [isLoadingBooths, setIsLoadingBooths] = useState(false);
+  // const [selectedBooth, setSelectedBooth] = useState<Booth | null>(null);
+  // const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Sessions state
   const [showSessionForm, setShowSessionForm] = useState(false);
@@ -60,7 +60,7 @@ export default function AdminPage() {
   const [metricsError, setMetricsError] = useState<string | null>(null);
 
   // Collapsible state for overview sections
-  const [isBoothsCollapsed, setIsBoothsCollapsed] = useState(false);
+  // const [isBoothsCollapsed, setIsBoothsCollapsed] = useState(false);
   const [isSessionTypesCollapsed, setIsSessionTypesCollapsed] = useState(false);
 
   useEffect(() => {
@@ -77,9 +77,10 @@ export default function AdminPage() {
   }, [router]);
 
   useEffect(() => {
-    if (activeTab === 'booths') {
-      fetchBooths();
-    } else if (activeTab === 'sessions') {
+    // if (activeTab === 'booths') {
+    //   fetchBooths();
+    // } else 
+    if (activeTab === 'sessions') {
       fetchSessions();
     } else if (activeTab === 'users') {
       fetchUsers();
@@ -108,23 +109,23 @@ export default function AdminPage() {
     }
   };
 
-  const fetchBooths = async () => {
-    setIsLoadingBooths(true);
-    try {
-      const response = await fetch('/api/getBooths');
-      const data = await response.json();
+  // const fetchBooths = async () => {
+  //   setIsLoadingBooths(true);
+  //   try {
+  //     const response = await fetch('/api/getBooths');
+  //     const data = await response.json();
       
-      if (response.ok) {
-        setBooths(data.booths || []);
-      } else {
-        console.error('Failed to fetch booths:', data.error);
-      }
-    } catch (err) {
-      console.error('Error fetching booths:', err);
-    } finally {
-      setIsLoadingBooths(false);
-    }
-  };
+  //     if (response.ok) {
+  //       setBooths(data.booths || []);
+  //     } else {
+  //       console.error('Failed to fetch booths:', data.error);
+  //     }
+  //   } catch (err) {
+  //     console.error('Error fetching booths:', err);
+  //   } finally {
+  //     setIsLoadingBooths(false);
+  //   }
+  // };
 
   const fetchUsers = async () => {
     setIsLoadingUsers(true);
@@ -165,83 +166,83 @@ export default function AdminPage() {
     }
   };
 
-  const handleCreateBooth = async (boothData: { name: string; phrase: string; description?: string }) => {
-    if (!user?.email) return;
+  // const handleCreateBooth = async (boothData: { name: string; phrase: string; description?: string }) => {
+  //   if (!user?.email) return;
     
-    setIsCreatingBooth(true);
-    setBoothMessage(null);
+  //   setIsCreatingBooth(true);
+  //   setBoothMessage(null);
     
-    try {
-      const response = await fetch('/api/registerBooth', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...boothData,
-          userEmail: user.email,
-        }),
-      });
+  //   try {
+  //     const response = await fetch('/api/registerBooth', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         ...boothData,
+  //         userEmail: user.email,
+  //       }),
+  //     });
 
-      const data = await response.json();
+  //     const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create booth');
-      }
+  //     if (!response.ok) {
+  //       throw new Error(data.error || 'Failed to create booth');
+  //     }
 
-      setBoothMessage({ type: 'success', text: 'Booth created successfully!' });
-      setShowBoothForm(false);
+  //     setBoothMessage({ type: 'success', text: 'Booth created successfully!' });
+  //     setShowBoothForm(false);
       
-      // Refresh booths list
-      setTimeout(() => {
-        fetchBooths();
-      }, 1000);
-    } catch (err) {
-      setBoothMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to create booth' });
-    } finally {
-      setIsCreatingBooth(false);
-    }
-  };
+  //     // Refresh booths list
+  //     setTimeout(() => {
+  //       fetchBooths();
+  //     }, 1000);
+  //   } catch (err) {
+  //     setBoothMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to create booth' });
+  //   } finally {
+  //     setIsCreatingBooth(false);
+  //   }
+  // };
 
-  const handleUpdateBooth = async (boothId: number, boothData: { name: string; phrase: string; description?: string }) => {
-    if (!user?.email) return;
+  // const handleUpdateBooth = async (boothId: number, boothData: { name: string; phrase: string; description?: string }) => {
+  //   if (!user?.email) return;
     
-    try {
-      const response = await fetch('/api/updateBooth', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          boothId,
-          ...boothData,
-          userEmail: user.email,
-        }),
-      });
+  //   try {
+  //     const response = await fetch('/api/updateBooth', {
+  //       method: 'PUT',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({
+  //         boothId,
+  //         ...boothData,
+  //         userEmail: user.email,
+  //       }),
+  //     });
 
-      const data = await response.json();
+  //     const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to update booth');
-      }
+  //     if (!response.ok) {
+  //       throw new Error(data.error || 'Failed to update booth');
+  //     }
 
-      // Update local state
-      setBooths(prev => prev.map(booth => 
-        booth.id === boothId 
-          ? { ...booth, name: boothData.name, phrase: boothData.phrase, description: boothData.description }
-          : booth
-      ));
+  //     // Update local state
+  //     setBooths(prev => prev.map(booth => 
+  //       booth.id === boothId 
+  //         ? { ...booth, name: boothData.name, phrase: boothData.phrase, description: boothData.description }
+  //         : booth
+  //     ));
 
-      return Promise.resolve();
-    } catch (err) {
-      return Promise.reject(err);
-    }
-  };
+  //     return Promise.resolve();
+  //   } catch (err) {
+  //     return Promise.reject(err);
+  //   }
+  // };
 
-  const handleBoothCardClick = (booth: Booth) => {
-    setSelectedBooth(booth);
-    setIsModalOpen(true);
-  };
+  // const handleBoothCardClick = (booth: Booth) => {
+  //   setSelectedBooth(booth);
+  //   setIsModalOpen(true);
+  // };
 
   const handleCreateSession = async (sessionData: SessionFormData) => {
     if (!user?.email) return;
@@ -469,7 +470,7 @@ export default function AdminPage() {
             >
               Overview
             </button>
-            <button
+            {/* <button
               onClick={() => setActiveTab('booths')}
               className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
                 activeTab === 'booths'
@@ -478,7 +479,7 @@ export default function AdminPage() {
               }`}
             >
               Booths
-            </button>
+            </button> */}
             <button
               onClick={() => setActiveTab('sessions')}
               className={`px-4 py-2 rounded-md font-medium transition-colors text-sm ${
@@ -558,8 +559,8 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Popular Booths */}
-                <div className="bg-gray-50 p-6 rounded-lg">
+                {/* Popular Booths - DISABLED */}
+                {/* <div className="bg-gray-50 p-6 rounded-lg">
                   <button
                     className="flex items-center w-full text-left focus:outline-none"
                     onClick={() => setIsBoothsCollapsed((prev) => !prev)}
@@ -589,7 +590,7 @@ export default function AdminPage() {
                       <p className="text-gray-600 text-center py-4 mt-4">No booth visit data available</p>
                     )
                   )}
-                </div>
+                </div> */}
 
                 {/* Popular Session Types */}
                 <div className="bg-gray-50 p-6 rounded-lg">
@@ -646,18 +647,46 @@ export default function AdminPage() {
           </div>
         )}
 
-        {activeTab === 'booths' && (
+        {/* {activeTab === 'booths' && (
           <div className="flex-1 flex flex-col min-h-0">
-            {/* Booths List */}
             <div className="bg-white/80 rounded-xl p-6 shadow-lg flex-1 flex flex-col min-h-0">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold text-gray-800">Manage Booths</h3>
-                <button
-                  onClick={() => setShowBoothForm(!showBoothForm)}
-                  className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors"
-                >
-                  {showBoothForm ? 'Cancel' : '+ Add Booth'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/fixBoothVisitCounts', {
+                          method: 'POST',
+                          headers: {
+                            'Content-Type': 'application/json',
+                          },
+                        });
+                        const data = await response.json();
+                        if (response.ok) {
+                          setBoothMessage({ type: 'success', text: data.message });
+                          setTimeout(() => {
+                            fetchBooths();
+                          }, 1000);
+                        } else {
+                          setBoothMessage({ type: 'error', text: data.error || 'Failed to fix visit counts' });
+                        }
+                      } catch (err) {
+                        setBoothMessage({ type: 'error', text: 'Failed to fix visit counts' });
+                      }
+                    }}
+                    className="bg-blue-500 text-white px-3 py-2 rounded-lg font-medium hover:bg-blue-600 transition-colors text-sm"
+                    title="Fix booth visit counts"
+                  >
+                    🔧 Fix Counts
+                  </button>
+                  <button
+                    onClick={() => setShowBoothForm(!showBoothForm)}
+                    className="bg-orange-500 text-white px-4 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors"
+                  >
+                    {showBoothForm ? 'Cancel' : '+ Add Booth'}
+                  </button>
+                </div>
               </div>
               
               {boothMessage && (
@@ -704,7 +733,7 @@ export default function AdminPage() {
               )}
             </div>
           </div>
-        )}
+        )} */}
 
         {activeTab === 'sessions' && (
           <div className="flex-1 flex flex-col min-h-0">
@@ -966,8 +995,8 @@ export default function AdminPage() {
         )}
       </div>
 
-      {/* Booth Modal */}
-      <BoothModal
+      {/* Booth Modal - DISABLED */}
+      {/* <BoothModal
         booth={selectedBooth}
         isOpen={isModalOpen}
         onClose={() => {
@@ -975,7 +1004,7 @@ export default function AdminPage() {
           setSelectedBooth(null);
         }}
         onUpdate={handleUpdateBooth}
-      />
+      /> */}
 
       {/* Admin Session Modal */}
       <AdminSessionModal
