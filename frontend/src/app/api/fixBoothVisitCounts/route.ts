@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/fixBoothVisitCounts`, {
       method: 'POST',

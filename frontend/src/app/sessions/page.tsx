@@ -6,7 +6,7 @@ import SessionCard from "@/components/SessionCard";
 import SessionModal from "@/components/SessionModal";
 // import BoothCard from "@/components/BoothCard";
 import { AdminStatus } from "@/utils/admin";
-import { User, Booth, Session, TimelineItem } from "@/utils/types";
+import { User, Session, TimelineItem } from "@/utils/types";
 import { createMenuOptions } from "@/utils/menu";
 import { getUserFromStorage, checkAdminStatus, handleLogout } from "@/utils/auth";
 import { LoadingScreen } from "@/utils/ui";
