@@ -112,7 +112,7 @@ export default function Home() {
             />
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-black mb-1 sm:mb-2 text-center">Conference Companion</h1>
-          <p className="text-sm sm:text-base text-gray-600 text-center max-w-md">App for the Sri Sathya Sai National Conference 2025</p>
+          <p className="text-sm sm:text-base text-gray-600 text-center max-w-md">App for the Sri Sathya Sai International Conference 2025 - Zone 4</p>
         </div>
         <form onSubmit={handleSubmit} className="w-full max-w-[95vw] sm:max-w-md flex flex-col gap-4 mb-4">
           <TextInput

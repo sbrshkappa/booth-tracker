@@ -219,19 +219,23 @@ export default function HomePage() {
             Welcome {user.firstName}
           </h1>
           <h2 className="text-2xl font-semibold text-gray-700 mb-6 leading-tight" style={{ letterSpacing: 0.3 }}>
-            SSSIO National Conference 2025
+            SSSIO International Conference 2025 - Zone 4
           </h2>
         </div>
         
-        {/* SSSIO Logo */}
+        {/* Conference Title with Logo */}
         <div className="text-center mb-8">
-          <Image 
-            src="/assets/NC-Logo-basic.png" 
-            alt="SSSIO National Conference Logo" 
-            className="h-32 w-auto mx-auto"
-            width={128}
-            height={128}
-          />
+          <div className="flex items-center justify-center gap-2 text-4xl font-bold text-gray-800 mb-4">
+            <span>Celebrating</span>
+            <Image 
+              src="/assets/conference-companion.png" 
+              alt="100" 
+              className="h-12 w-auto"
+              width={48}
+              height={48}
+            />
+            <span>years of love, service and human values</span>
+          </div>
         </div>
       </div>
 
