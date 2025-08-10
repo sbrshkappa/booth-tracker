@@ -225,14 +225,14 @@ export default function HomePage() {
         
         {/* Conference Title with Logo */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 text-4xl font-bold text-gray-800 mb-4">
+          <div className="flex flex-wrap items-center justify-center gap-1 text-2xl font-bold text-gray-800 mb-4 leading-tight">
             <span>Celebrating</span>
             <Image 
               src="/assets/conference-companion.png" 
               alt="100" 
-              className="h-12 w-auto"
-              width={48}
-              height={48}
+              className="h-8 w-auto inline-block"
+              width={32}
+              height={32}
             />
             <span>years of love, service and human values</span>
           </div>
