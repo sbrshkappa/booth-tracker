@@ -6,6 +6,7 @@ export async function DELETE(request: NextRequest) {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase configuration:', { supabaseUrl: !!supabaseUrl, supabaseAnonKey: !!supabaseAnonKey });
       return NextResponse.json(
         { error: 'Supabase configuration missing' },
         { status: 500 }
@@ -13,6 +14,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log('Delete session request:', body);
 
     const response = await fetch(`${supabaseUrl}/functions/v1/deleteSession`, {
       method: 'POST',
@@ -24,8 +26,10 @@ export async function DELETE(request: NextRequest) {
     });
 
     const data = await response.json();
+    console.log('Supabase function response:', { status: response.status, data });
 
     if (!response.ok) {
+      console.error('Supabase function error:', data);
       return NextResponse.json(
         { error: data.error || 'Failed to delete session' },
         { status: response.status }

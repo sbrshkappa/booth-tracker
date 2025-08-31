@@ -25,7 +25,7 @@ serve(async (req) => {
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
     // Get user ID first
@@ -50,11 +50,29 @@ serve(async (req) => {
       .single()
 
     if (adminError || !adminUser) {
+      console.error('Admin check failed:', adminError)
       return new Response(
         JSON.stringify({ error: 'Unauthorized: Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    // Check if session exists first
+    const { data: existingSession, error: sessionCheckError } = await supabase
+      .from('sessions')
+      .select('id, topic')
+      .eq('id', sessionId)
+      .single()
+
+    if (sessionCheckError || !existingSession) {
+      console.error('Session check failed:', sessionCheckError)
+      return new Response(
+        JSON.stringify({ error: 'Session not found' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log(`Attempting to delete session ${sessionId}: ${existingSession.topic}`)
 
     // Delete session
     const { error: sessionError } = await supabase
@@ -65,10 +83,12 @@ serve(async (req) => {
     if (sessionError) {
       console.error('Error deleting session:', sessionError)
       return new Response(
-        JSON.stringify({ error: 'Failed to delete session' }),
+        JSON.stringify({ error: 'Failed to delete session', details: sessionError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    console.log(`Successfully deleted session ${sessionId}`)
 
     return new Response(
       JSON.stringify({ success: true, message: 'Session deleted successfully' }),

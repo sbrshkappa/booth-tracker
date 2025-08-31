@@ -347,6 +347,11 @@ export default function AdminPage() {
       setIsSessionModalOpen(false);
       setSelectedSession(null);
 
+      // Refresh sessions list to ensure sync with database
+      setTimeout(() => {
+        fetchSessions();
+      }, 500);
+
       return Promise.resolve();
     } catch (err) {
       return Promise.reject(err);
